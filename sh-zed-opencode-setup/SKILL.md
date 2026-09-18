@@ -1,0 +1,192 @@
+---
+name: sh-zed-opencode-setup
+description: 配置和修复 Zed 编辑器的 opencode 外部 Agent（Windows）：修复 "renaming .tmp-github-download" 安装失败、让思考档位默认 max 且不出现 effort 下拉框（GLM/Claude 中转）、维护 opencode.json 与 cc-switch 的供应商配置（名称=标识）、把 cc-switch 里 Claude Code 的供应商迁移到 opencode 段（SQLite 写入）。当用户提到 Zed opencode agent 装不上/rename 报错、opencode 思考深度/effort/max/默认 low、subclaude/zhipu glm 供应商配置、cc-switch 迁移或同步 opencode 配置时，务必使用本 skill。
+---
+
+# Zed + opencode 配置与修复手册
+
+本 skill 沉淀自 2026-08-28 的一次完整排障会话，已在 opencode **1.18.25** + Zed 1.17.2 + cc-switch（SQLite 版）上验证。
+2026-09-14 增补 DeepSeek 默认 max 实战（opencode 1.18.30 实测）：**变体按模型 ID 生成（与 provider 是否内置无关）**、四层验证法（含发线层抓包脚本 verify-wire-effort.mjs）。
+涉及 opencode 内部行为的修复**依赖其源码实现**（详见 `references/opencode-internals.md`），版本升级后可能失效——所以每个任务都带**实证验证步骤**，改完必须验证，不要盲信配置。
+
+## 总原则（每次使用先读）
+
+1. **改任何东西前先备份**：opencode.json 改前 `cp` 一份；cc-switch.db 改前必须整库复制到 `~/.cc-switch/backups/`。
+2. **涉及 cc-switch 的操作（尤其 Claude Code → opencode 迁移）必须先向用户展示计划并确认**，默认只 dry-run，用户明确同意后才 `--apply`。这是写数据库的操作，搞砸会影响用户所有供应商配置。
+3. **opencode 会回写 opencode.json**：在 Zed 里选一次模型，opencode 就把"解析后的配置"整体回写 opencode.json——手动改的文件可能被覆盖（实测把 `reasoning: false` 翻回 `true`、把 name 规范化成 ID）。所以：改完 opencode.json 后让用户**完全退出 Zed 再打开**验证；cc-switch 侧的同名条目也要同步更新（`liveConfigManaged` 双向同步）。
+4. **Zed 不会因开关 agent 面板重启 opencode 进程**，只有 Zed 完全退出才会。排障时用 `tasklist | grep -i opencode` 看进程是否是旧的（对比启动时间）。
+5. Windows Git Bash 坑：**curl 发中文会按 GBK 编码**导致 JSON parse error（用纯 ASCII payload）；PATH 里的 `python` 可能是 Windows 商店占位 stub（静默失败），脚本一律用 `node`（v22+ 自带 `node:sqlite`）。
+
+## 环境路径（按机器解析，不要硬编码）
+
+| 项 | 路径 |
+|---|---|
+| opencode 配置 | `~/.config/opencode/opencode.json`（Git Bash 下 `C:/Users/<user>/.config/opencode/opencode.json`） |
+| Zed 外部 agent 注册表 | `$LOCALAPPDATA/Zed/external_agents/registry/<agent>/<v_版本_哈希>/` |
+| Zed 日志 | `$LOCALAPPDATA/Zed/logs/Zed.log`（含 github_download 下载记录、ACP 错误） |
+| cc-switch 数据库 | `~/.cc-switch/cc-switch.db`（SQLite，表 `providers` 主键 `(id, app_type)`） |
+
+---
+
+## 任务 A：Zed 装 opencode 报 "renaming .tmp-github-download-xxx to v_xxx" 失败
+
+**根因**：Zed 流程是 下载 zip → 解压 179MB exe 到临时目录 → rename 成版本目录。Windows 下若杀毒/企业安全软件（如 CorpLink）正在扫描刚解压的 exe（持有句柄），rename 就 Access Denied；Zed 失败后删临时目录、重试又从头下载，反复输掉竞态。
+
+**诊断**（确认属于此问题）：
+```bash
+ls "$LOCALAPPDATA/Zed/external_agents/registry/opencode/"   # 失败后通常无 .tmp-* 残留（Zed 已清理）
+grep "github_download" "$LOCALAPPDATA/Zed/logs/Zed.log" | tail -3   # 看下载 URL 和重试次数
+```
+
+**修复**（绕过 rename，直接解压到最终目录名）：
+用 `scripts/zed-agent-install`，三个参数全部来自报错信息和日志：
+```bash
+bash scripts/zed-agent-install <agent名> <zip地址> <目标目录名>
+# 例: bash scripts/zed-agent-install opencode \
+#   https://github.com/anomalyco/opencode/releases/download/v1.18.25/opencode-windows-x64.zip \
+#   v_1.18.25_39ba1e44b4d80431_34afed0bf30609c5
+```
+zip 地址从 Zed.log 的 `github_download` 行拿；agent 名和目标目录名从报错 `renaming ".../registry/<agent>/.tmp-github-download-x" to ".../registry/<agent>/<目标目录名>"` 拿。
+装完让用户**完全重启 Zed**——它会认这个目录、不再下载，并自动清掉旧版本目录。
+
+若 `scripts/` 不可用，手工等效：`curl -L --retry 5 -C - -o` 下载 → `unzip -t` 校验 → `mkdir 目标目录 && unzip -o zip -d 目标目录` → 运行一次 `exe --version`（让杀毒扫完 + 验证）。
+
+---
+
+## 任务 B：思考档位默认 max、不出现 effort 下拉框
+
+**用户诉求**：在 Zed 里选模型就是 max，不需要（也不要出现）思考深度选择器。
+
+**机制（依赖源码，升级需重验）**：opencode 给有"变体"的模型在 Zed 里暴露 effort 下拉框；没选变体时回退到**变体列表第一项**（Claude 系是 low），且变体参数会覆盖模型 options 里的 effort。变体表**按模型 ID 生成**（models.dev 已知模型就带），与 provider 是否内置目录无关——2026-09-14 实测：自定义 provider `deepseek-max`（非目录 id）下 `deepseek-flash` 照样生成 [low,medium,high]、`deepseek-v4-pro` 生成 [low,medium,high,max]；glm-5.3 无变体只是该模型元数据没有档位，**不是**"自定义 provider 天然无变体"。解法是把模型的 `variants` 全部 `disabled`，变体表清空 → 无下拉框 → 永远用 options 里的 max。GLM 走 `@ai-sdk/openai-compatible` + `reasoningEffort`；Claude 走 `@ai-sdk/anthropic` + `effort`（键名不同，写错会被静默忽略！）。
+
+**opencode.json 模板**（供应商级 `name` 必须等于其 id，见任务 C）：
+
+GLM（zhipu coding 端点）：
+```json
+"zhipu-glm": {
+  "name": "zhipu-glm",
+  "npm": "@ai-sdk/openai-compatible",
+  "options": { "apiKey": "<key>", "baseURL": "https://open.bigmodel.cn/api/coding/paas/v4" },
+  "models": {
+    "glm-5.3": {
+      "name": "glm-5.3",
+      "interleaved": { "field": "reasoning_content" },
+      "options": { "reasoningEffort": "max" },
+      "reasoning": true
+    }
+  }
+}
+```
+
+DeepSeek（V4 官方 API，openai-compatible + 多模态 flash，2026-09-14 实测。注意：即使自定义 provider id，这两个模型 ID 也会生成变体表，必须禁用）：
+```json
+"deepseek-max": {
+  "name": "DeepSeek Max",
+  "npm": "@ai-sdk/openai-compatible",
+  "options": { "apiKey": "<key>", "baseURL": "https://api.deepseek.com/v1" },
+  "models": {
+    "deepseek-flash": {
+      "name": "DeepSeek V4 Flash",
+      "reasoning": true,
+      "interleaved": { "field": "reasoning_content" },
+      "options": { "reasoningEffort": "max" },
+      "modalities": { "input": ["text", "image"], "output": ["text"] },
+      "variants": { "low": { "disabled": true }, "medium": { "disabled": true }, "high": { "disabled": true }, "xhigh": { "disabled": true }, "max": { "disabled": true } }
+    },
+    "deepseek-v4-pro": {
+      "name": "DeepSeek V4 Pro",
+      "reasoning": true,
+      "interleaved": { "field": "reasoning_content" },
+      "options": { "reasoningEffort": "max" },
+      "variants": { "…同上五档全禁…" }
+    }
+  }
+}
+```
+DeepSeek V4 API 事实（官方文档 2026-09 核实）：`reasoning_effort` 取值 **low/high/max**（默认 high，medium→high、xhigh→max 映射）；思维链走 `reasoning_content`（与 Zhipu coding 端点同构，`interleaved` 照搬 GLM 模板）；思考默认开；flash（V4.1）多模态 text+image、pro 纯文本；带 tools 的请求必须完整回传历史 `reasoning_content` 否则 400。
+
+Claude 中转（Anthropic 兼容端点，如 subclaude）：
+```json
+"subclaude-xxx": {
+  "name": "subclaude-xxx",
+  "npm": "@ai-sdk/anthropic",
+  "options": { "authToken": "sk-...", "baseURL": "https://<中转域名>/v1" },
+  "models": {
+    "claude-opus-5": {
+      "name": "claude-opus-5",
+      "limit": { "context": 1000000, "output": 128000 },
+      "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+      "options": { "effort": "max" },
+      "reasoning": false,
+      "variants": {
+        "low": { "disabled": true }, "medium": { "disabled": true },
+        "high": { "disabled": true }, "xhigh": { "disabled": true },
+        "max": { "disabled": true }
+      }
+    },
+    "claude-sonnet-5": { "…同上…" }
+  }
+}
+```
+
+**视觉能力要点**：`vision: true` 是无效遗留字段（当前版本解析代码不读它）；生效的是模型级 `modalities.input` 含 `"image"`（无此块则 image 默认 false，贴图会被替换成 "model does not support image input" 错误文本，模型根本收不到图）。支持视觉的模型一律显式配 `modalities`。
+
+**关键细节**：
+- `variants.disabled` 是唯一对 `/config/providers`（Zed 实际读取的端点）生效的开关；**只设 `reasoning: false` 不够**（该端点不看它）。两处一起写。
+- GLM 模型保持 `reasoning: true`（思考内容显示需要）；Claude 中转设 `false`（中转本来不回思考内容）。
+- `reasoningEffort`（GLM）与 `effort`（Claude）键名不可混用。
+
+**验证（必做，防 opencode 升级后行为变化）**：
+```bash
+node scripts/verify-opencode-effort.mjs <opencode.exe路径> [端口] [--only 供应商ID子串]
+# 例: node scripts/verify-opencode-effort.mjs "$LOCALAPPDATA/Zed/external_agents/registry/opencode/v_*/opencode.exe" --only subclaude
+```
+脚本起临时 `opencode serve`，查 `/config/providers`，断言：目标模型 `variants` 为空、options 里 effort/reasoningEffort=max。注意要查 `/config/providers` 而**不是** `/api/model`——两者数据不同，前者才是 ACP/Zed 用的。**变体按模型 ID 生成，与 provider id 是否内置无关**——覆盖内置 id（如 zai-coding-plan、deepseek）时在 opencode.json 加同 id provider 段配 `variants.disabled` 合并生效；全新自定义 id 同样要在自己的模型级写 `variants` 全档 disabled，别指望改名规避。若验证失败，对照 `references/opencode-internals.md` 检查 opencode 新源码（重点：`acp/config-option.ts` 的 `selectVariant`、`provider/transform.ts` 的 `variants()`、`/config/providers` handler）。
+
+**四层验证法**（2026-09-14 新增——只验配置层不够，"配置说 max" ≠ "请求发 max" ≠ "服务商真跑 max"）：
+1. **配置层**：上面的 `verify-opencode-effort.mjs`。
+2. **发线层**：`verify-wire-effort.mjs`——把目标 provider 配置复制到 XDG 隔离环境（baseURL 换本地回显服务器、假 key），跑一次真实 `opencode run`，抓 POST 请求体断言 `reasoning_effort` 真的是 max。不动真实配置、不花钱：
+   ```bash
+   node scripts/verify-wire-effort.mjs <opencode.exe> deepseek-max/deepseek-flash --expect max
+   ```
+3. **API 行为层**：直接调官方 API 同 prompt A/B（reasoning_effort=low vs max），对比 `usage.completion_tokens_details.reasoning_tokens`——证明服务商端档位有真实区别（DeepSeek flash 实测 low 279 vs max 379 tokens，简单题；难题差距更大）。
+4. **体验层**：Zed 里无 effort 下拉框、难题思考段明显变长。
+
+---
+
+## 任务 C：cc-switch 与 opencode 配置同步 / Claude Code → opencode 迁移
+
+**⚠️ 此任务动 cc-switch 的 SQLite 数据库，必须先 dry-run 展示计划、经用户确认后再 `--apply`。**
+
+**背景**：cc-switch 的 opencode 段每个供应商的 `settings_config` 就是切换时写进 opencode.json `provider.<id>` 的完整 JSON。对 `liveConfigManaged: true` 的条目还有双向同步——**opencode.json 和 cc-switch 两侧必须一致**（尤其 `name`），否则互相把对方改回去。
+
+**名称约定**：供应商标识（id / opencode.json 的 provider key）用 slug 风格（如 `subclaude-dzw`、`zhipu-glm`）；**显示名（name）是用户偏好，不要擅自改**（例：用户明确要求 zhipu-glm 的显示名保持 "Zhipu GLM"，曾被我错误地强制改成标识而被骂）。仅当用户明确要求统一名称时才改。
+
+**迁移脚本**（把 claude 段的中转供应商复制为 opencode 段条目，照已验证的模式生成 models 配置）：
+```bash
+node scripts/cc-switch-migrate.mjs          # dry-run：打印将要新增/修改的条目
+node scripts/cc-switch-migrate.mjs --apply  # 用户确认后执行（自动备份 db 到 ~/.cc-switch/backups/）
+```
+脚本逻辑与库表结构见 `references/cc-switch-migration.md`。要点：读 claude 段各条目的 `env.ANTHROPIC_AUTH_TOKEN/BASE_URL` → 生成 opencode 段 `settings_config`（任务 B 的 Claude 模板）→ 同步更新已存在的 opencode 条目（name==id、补 variants 禁用）→ 插入 `providers` + `provider_endpoints` 行。跳过官方 OAuth 型条目和已有的 zhipu-glm（避免重复）。
+
+**写入后**：让用户**重启 cc-switch**（运行中的实例不会热加载新数据）。同时检查 opencode.json 里对应供应商的 `name` 是否已是标识风格，不一致就一起改。
+
+---
+
+## 常见坑速查
+
+| 症状 | 原因/处理 |
+|---|---|
+| `Failed to initialize provider: xxx` | `@ai-sdk/anthropic` 的 options **同时有 `apiKey` 和 `authToken` 时直接抛异常**（"Please use only one authentication method"）。cc-switch UI 编辑易产生双 key。anthropic 系只留 `authToken`（Bearer 头）；openai-compatible 系（zhipu）用 `apiKey`。opencode.json 和 cc-switch 库两侧都要清 |
+| 改了 opencode.json 不生效 | opencode 进程是旧的（Zed 没完全退出）；或已被 opencode 回写覆盖，diff 一下 |
+| Zed 模型下拉里出现 "(Low)…(Max)" 后缀条目 | 模型 variants 没禁用，走任务 B；验证用 /config/providers |
+| 自定义 provider id 也出现下拉框/被顶回 low | 变体**按模型 ID** 生成（models.dev 已知模型就带），换 provider id 规避无效；模型级 `variants` 全档 disabled（2026-09-14 实测踩坑） |
+| 努力改成 max 但请求还是 low | 选了 low 变体（变体覆盖 options）；禁用变体后重选 plain 模型 |
+| `subclaude-xxx/claude-opus-5 is not a valid value` 警告 | Zed 侧对自定义模型 ID 的校验提示，无害可无视 |
+| curl 报 JSON Invalid UTF-8 | Git Bash 中文按 GBK 发送，payload 换 ASCII |
+| node 脚本调 sqlite | 用 `require('node:sqlite')` 的 `DatabaseSync`，v22+ 可用 |
+
+## 深入资料
+
+- `references/opencode-internals.md` —— opencode 内部机制全记录（请求合并链、变体计算、双端点差异、SDK 选项名、版本锚点）。**opencode 升级后任务 B 验证失败时必读**。
+- `references/cc-switch-migration.md` —— cc-switch 数据库表结构、settings_config 形状、迁移脚本设计与回滚。

@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-pwsh7-install",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我在 Windows 上装个 PowerShell 7 吧，我要绿色便携版的，千万别改注册表、别动系统 PATH、别加右键菜单，系统自带的 5.1 必须保持能正常用。装到 D:\\Users\\zeddefault\\.pwsh7-skill-test\\eval1 这个目录里就行",
+      "expected_output": "通过 GitHub API 获取最新版本号，下载 win-x64 ZIP（设置 TLS1.2 和 ProgressPreference），解压到用户指定的 D:\\Users\\zeddefault\\.pwsh7-skill-test\\eval1 目录，验证 pwsh.exe 可运行（PSVersion 7.x、Core edition），验证 5.1 未受影响，清理安装包，汇报零影响清单",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我这台机器上是不是已经装过 pwsh 了？powershell 7 和系统自带的 5.1 到底什么关系，装 7 会不会把 5.1 覆盖掉或者搞坏？我有点担心",
+      "expected_output": "检测到 C:\\Users\\29580\\AppData\\Local\\Programs\\PowerShell\\7\\pwsh.exe 已存在（7.6.6），报告现有安装而不是盲目重新下载覆盖；解释 5.1 与 7.x 的并存关系（pwsh vs powershell.exe、.NET Framework vs .NET 8+、互不影响）；不修改任何现有文件",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "帮我下载一份 ARM64 版的 PowerShell 7 ZIP 包解压到 D:\\Users\\zeddefault\\.pwsh7-skill-test\\eval3 备用，另外说明下这种绿色版以后怎么卸载",
+      "expected_output": "正确拼接 ARM64 的下载 URL（PowerShell-<ver>-win-arm64.zip），下载并解压到指定目录，验证 zip 内容解压完整（pwsh.exe 等文件存在），说明卸载 = 直接删除文件夹、零残留",
+      "files": []
+    }
+  ]
+}

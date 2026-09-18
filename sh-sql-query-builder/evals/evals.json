@@ -1,0 +1,47 @@
+{
+  "skill_name": "sh-sql-query-builder",
+  "evals": [
+    {
+      "id": 1,
+      "dir": "eval-1-refactor-repo-list",
+      "prompt": "看下 src/infrastructure/orm/repo/email/email_session_repo.py 里的 list 方法，这个可维护性太差了，看代码根本不知道 SQL 到底是什么样，而且筛选条件全部写了两遍（stmt 和 count_stmt）。帮我优化一下。",
+      "expected_output": "把 list 的查询抽取到 src/infrastructure/orm/query/ 下的文本 SQL 模板 + builder 函数（返回 rows_sql / count_sql / params），SQL 可直接复制到数据库客户端执行；所有来自请求的值用 :param 绑定；repo 层退化为只负责执行且返回类型不变；重复的筛选条件收敛为单一实现。",
+      "expectations": [
+        "在 src/infrastructure/orm/query/ 下新建了 query builder 模块（而不是继续在 repo 里堆 Core 表达式，也不是只做函数拆分）",
+        "模块里存在三引号包裹的完整文本 SQL，包含 SELECT/FROM/JOIN 关键字，可直接复制到数据库客户端执行",
+        "提供 build_*_query() 形式的 builder 函数，一次返回 rows SQL、count SQL 和同一份 params（rows 与 count 共用同一套模板/条件，不是各写一遍）",
+        "所有来自 EmailSessionListQuery 的值（created_by、status、keyword、group_name、tag 等）通过 :param 绑定，SQL 文本里不出现用户值的 f-string/%-格式化拼接",
+        "动态筛选条件用片段列表 + join 拼接，没有出现 AND 1=1 之类的占位写法",
+        "repo.list 的签名与返回类型 tuple[list[EmailSession], int] 保持不变，方法体退化为 execute + 结果映射，service 层无需改动",
+        "原有业务分支未丢失：sys_tag 虚拟标签（starred/unread）、user_tags 匹配、创建者已读/未读子查询、keyword 跨 email_sends/email_replies 搜索都仍在新 SQL 中体现"
+      ]
+    },
+    {
+      "id": 2,
+      "dir": "eval-2-new-cte-union-query",
+      "prompt": "我要给邮件工作台加一个「联系人活跃度列表」的分页接口，数据来源有两块：一是 email_sends 里按收件人聚合出来的发送/打开/点击数，二是 cv_email_session 里按 influencer_email 聚合出来的会话数和最近一次互动时间。两块要合成一张列表，支持按邮箱域名过滤、按关键词搜邮箱、分页，还要返回总数。帮我在 backend 里把这个查询写出来。",
+      "expected_output": "在 src/infrastructure/orm/query/ 下新建 query builder 模块：一份 CTE 模板同时支撑 rows SQL 与 count SQL、UNION ALL 两侧列对齐（含 NULL 的类型标注）、动态条件用片段列表拼接而非 AND 1=1、域名/关键词全部走 :param 并对 LIKE 做转义；repo 只负责 execute。",
+      "expectations": [
+        "新查询写在 src/infrastructure/orm/query/ 下的独立模块中，而不是直接写在 repo / business / router 层",
+        "builder 函数返回 rows SQL、count SQL 与共用 params（形如 tuple[str, str, dict]），两条 SQL 共用同一份 CTE 模板",
+        "SQL 是三引号文本形式、带 CTE 分段注释，UNION ALL 两侧列数与顺序一致",
+        "UNION 中缺列位置用带类型标注的 NULL（如 NULL::text、NULL::bigint），不是裸 NULL",
+        "域名与关键词通过 :param 绑定，关键词做了 LIKE 转义（复用 escape_like_pattern 或等价实现）并显式声明 ESCAPE",
+        "动态条件按片段列表拼接，条件为空时返回空串而非 AND 1=1",
+        "字段与表名来自 work_backend 下真实 ORM 模型（email_sends / cv_email_session 等），没有凭空编造列名"
+      ]
+    },
+    {
+      "id": 3,
+      "dir": "eval-3-simple-query-no-extract",
+      "prompt": "在 src/infrastructure/orm/repo/email/email_session_repo.py 里加一个方法：按 created_by 和 platform 查该用户在某平台下的会话数量，返回 int。",
+      "expected_output": "直接用一小段 SQLAlchemy Core（select(func.count()).where(...)）实现即可，不应该为这种单表计数查询新建 query builder 模块或文本 SQL 模板——过度抽取算失败。",
+      "expectations": [
+        "没有为这个单表计数查询在 src/infrastructure/orm/query/ 下新建模块或新增文本 SQL 模板（过度抽取即失败）",
+        "方法直接加在 EmailSessionRepository 内，用一小段 SQLAlchemy Core（select(func.count()) + where）实现，返回 int",
+        "新增代码量克制（新增行数 < 40 行），没有引入 builder 函数、CTE 或占位符拼接",
+        "回复中没有把「必须抽取到 query 层」当成普适规则来推销"
+      ]
+    }
+  ]
+}

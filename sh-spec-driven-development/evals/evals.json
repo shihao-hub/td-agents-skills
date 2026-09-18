@@ -1,0 +1,29 @@
+{
+  "skill_name": "sh-spec-driven-development",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我给团队开发一个命令行待办事项工具，支持添加、完成、列出任务，数据要持久化。开工前先把文档整理好。",
+      "expected_output": "AI 触发 spec 工作流：按编号规则创建 specs/01-todo-cli/（或项目约定目录，编号为 specs/ 下最大数字前缀 +1），依次生成 EARS 格式的 requirements.md、design.md、tasks.md，每个阶段暂停等待用户批准后再继续；三份文件完成后停下等待用户明确执行指令，不自动开始执行 tasks.md。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I want to add a file upload feature to my existing Express app - images only, max 5MB, with virus scanning. Can you spec this out before coding?",
+      "expected_output": "AI 先浏览现有代码，然后按三阶段生成 requirements.md（EARS 格式）、design.md（贴合现有项目结构，含 Functional Requirements Table）、tasks.md（自包含任务，含确切文件路径、依赖版本、验证命令、Ref 引用），各阶段有批准关卡；三份文档获批后停下等待执行指令，不自动执行任务。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "咱们继续做上次那个用户认证功能，spec 文件已经写好了，开始执行任务吧。",
+      "expected_output": "AI 触发执行模式：先读 requirements.md、design.md、tasks.md，然后按默认方式一口气连续执行全部任务（不暂停等审查、不运行验证命令、跳过带 [test] 标签的测试编写任务），完成后统一标记 [x] 并一次性汇报结果（含跳过了哪些测试任务）。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "spec 都批好了，开始执行任务吧。一个一个来，每做完一个任务跑一下验证，我确认了再继续下一个。",
+      "expected_output": "AI 触发执行模式：先读三份 spec 文件，然后逐任务执行——每个任务完成后运行 tasks.md 中记录的 run/validate 命令，标记 [x]，停下来等用户确认后才继续下一个。",
+      "files": []
+    }
+  ]
+}

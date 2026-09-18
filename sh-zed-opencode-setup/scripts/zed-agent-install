@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# zed-agent-install — 手动安装 Zed 外部 Agent，绕过 Windows 上 rename 失败的问题
+#
+# 背景: Zed 下载 agent 后先解压到 .tmp-github-download-* 临时目录，再 rename 成
+# 版本目录。Windows 下若杀毒软件恰好正在扫描刚解压出来的 exe（持有文件句柄），
+# rename 就会 Access Denied，Zed 失败后删掉临时目录，下次重试又重头下载，反复失败。
+# 本脚本直接把 zip 解压到最终目录名下，全程不做 rename，绕开这个竞态。
+#
+# 用法（三个参数都能从报错和日志里拿到）:
+#   zed-agent-install <agent名> <zip下载地址> <目标目录名>
+#
+# 示例:
+#   zed-agent-install opencode \
+#     https://github.com/anomalyco/opencode/releases/download/v1.18.25/opencode-windows-x64.zip \
+#     v_1.18.25_39ba1e44b4d80431_34afed0bf30609c5
+#
+#   <agent名> 和 <目标目录名>: 直接复制 Zed 报错信息里的路径，例如
+#     renaming ".../registry/opencode/.tmp-github-download-xxx" to
+#     ".../registry/opencode/v_1.18.25_39ba1e44b4d80431_34afed0bf30609c5"
+#     → agent名=opencode，目标目录名=v_1.18.25_39ba1e44b4d80431_34afed0bf30609c5
+#   <zip下载地址>: grep github_download "$LOCALAPPDATA/Zed/logs/Zed.log" | tail -1
+#
+# 装完后完全重启 Zed 即可，它会认这个目录并自动清掉旧版本。
+
+set -euo pipefail
+
+if [ $# -ne 3 ]; then
+    grep '^#' "$0" | sed 's/^# \{0,1\}//'
+    exit 1
+fi
+
+agent="$1"; url="$2"; target_name="$3"
+base="$LOCALAPPDATA/Zed/external_agents/registry/$agent"
+target="$base/$target_name"
+zipfile="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "${LOCALAPPDATA//\\//}")/Temp/zed-agent-$(basename "$url")"
+
+if [ -d "$target" ]; then
+    echo "目标目录已存在: $target"
+    echo "若安装仍有问题，先删掉它再重跑本脚本。"
+    exit 1
+fi
+
+echo "[1/4] 下载: $url"
+curl -L --retry 5 --retry-delay 3 -C - --connect-timeout 20 -o "$zipfile" "$url"
+
+echo "[2/4] 校验 zip 完整性"
+unzip -t "$zipfile" | tail -1
+
+echo "[3/4] 直接解压到最终目录（不做 rename）: $target"
+mkdir -p "$target"
+unzip -o "$zipfile" -d "$target"
+
+echo "[4/4] 运行一次 exe 让杀毒软件扫完，顺便验证可执行"
+exe=$(find "$target" -maxdepth 2 -name '*.exe' | head -1)
+if [ -n "$exe" ]; then
+    "$exe" --version || true
+fi
+
+echo
+echo "完成。完全重启 Zed 后生效。临时 zip 保留在: $zipfile（可删）"

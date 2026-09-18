@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-bruno-collection",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "阅读 backend/src/openapi/channels/http/routers/v1/webhook.py，在 C:\\WorkingSoftwares\\bruno\\creativault\\webhook-test 给我创建 bruno 脚本。base_url 放环境里命名为 local，值 http://localhost:8000，token 放文件夹变量。",
+      "expected_output": "读 references/bruno-yaml-format.md 后生成 yml 请求文件；URL 追完整挂载链（含 /openapi 前缀）；认证头从代码确认；folder.yml 带 request.variables；环境文件含 base_url；全部通过 js-yaml 语法校验；总结中列出需手改的占位符",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我给收藏（collection）那组接口做个 bruno 测试集合，接口你自己找，放在已有的 bruno 目录里，环境用 local。",
+      "expected_output": "先在代码库 grep include_router/APIRouter 定位 collection 路由文件并追挂载链得到完整前缀；提取接口清单后向用户确认（清单 + token + 目录）再生成；不臆测认证方式和路径",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "在 C:\\WorkingSoftwares\\bruno\\legacy-api 这个老 collection 里给 users 接口加个 bruno 请求，它里面都是 .bru 文件。",
+      "expected_output": "探测到 collection 为 .bru 旧格式后用 .bru 格式生成（meta/headers/body:json 块语法），而不是混入 .yml 文件",
+      "files": []
+    }
+  ]
+}
