@@ -1,6 +1,9 @@
 ---
 name: sh-spec-driven-development
 description: 三阶段 spec 工作流：在写任何代码之前，把功能想法变成可实施的三份文档——requirements.md（需求，EARS 格式）、design.md（设计）、tasks.md（任务清单），随后按任务清单执行（默认一口气连续完成全部任务，不暂停不测试）。当用户想开发一个新功能、模块、服务、CLI 或完整应用且工作量值得先规划时使用本 skill，即使用户没有说出 "spec" 这个词。触发词包括："spec-driven development"、"feature spec"、"先写需求"、"先规划再开发"、"需求文档"、"设计文档"、"任务拆解"、"任务清单"、"帮我实现/开发 X 功能"（X 为非平凡功能），或任何要求生成 requirements/design/tasks 文档的请求。用户要求从已有 spec 文件继续工作或执行任务清单时也应触发。
+version: 1.1.0
+created: 2026-09-21
+updated: 2026-09-21
 ---
 
 # Spec-Driven Development
@@ -119,6 +122,8 @@ specs/01-ecommerce/
 
 将 requirements.md 呈现给用户，明确询问：**批准，还是需要修改**。根据反馈修订后重新呈现，如此往复，直到用户明确批准。批准后才进入 Phase 2。
 
+修订纪律：**修订前必须先读当前 requirements.md 全文**，在现有内容基础上修改，绝不从零重写——用户的批注与手改一经确认就是 ground truth，覆盖它们等于销毁已达成的事实基准。
+
 ### EARS format
 
 EARS 用五种固定的句子结构消除需求歧义，让每条需求都能直接转化为测试用例和任务引用：
@@ -196,6 +201,8 @@ EARS 用五种固定的句子结构消除需求歧义，让每条需求都能直
 - Detailed Design 不能只是文件卡片清单：文件卡片回答「每个文件做什么」，「Module Collaboration and Data Flow」小节回答「它们如何被拼装与协作」（依赖方向、组装顺序、数据流、并发模型）。只有卡片没有协作说明的 design.md 不合格——读者看完仍不知道如何组织实现
 - Functional Requirements Table 把 design.md 和 requirements.md 对应起来：需求文档里的每一条需求都要出现在表中，并映射到具体的设计组件
 - Action checklist 将相关工作按设计组件分组并标注需求 ID——它是粗粒度的"要做什么"；tasks.md 才是细粒度、有顺序、可直接执行的任务分解，两者不要混淆
+- 可选深化：当功能包含核心不变量（输入-输出必须恒成立的关系）时，在 Detailed Design 中为每条不变量写一句**正确性属性**（形如"对任意合法输入 X，系统应始终满足 Y"），供测试阶段做基于属性的验证——概念引导即可，不强制，也不引入额外工具链
+- 文档较长时先输出一行进度（如"正在生成 design.md…"）再动笔，避免长时间静默
 
 ### Caution
 
@@ -206,6 +213,8 @@ EARS 用五种固定的句子结构消除需求歧义，让每条需求都能直
 ### Approval loop
 
 将 design.md 呈现给用户，明确询问：**批准，还是需要修改**。修订并重新呈现，直到用户明确批准。批准后才进入 Phase 3。
+
+修订纪律：**修订前必须先读当前 design.md 全文**，在现有内容基础上修改，绝不从零重写；与已批准的 requirements.md 冲突时，以 requirements.md 为准。
 
 ## Phase 3: Create Task List
 
@@ -237,6 +246,8 @@ EARS 用五种固定的句子结构消除需求歧义，让每条需求都能直
 
 测试类任务（编写单元测试、集成测试、测试脚本、测试用例等）在任务描述末尾额外标注 `[test]` 标签，例如：`- [ ] 5. Create unit tests for storage module [test]`——执行阶段靠这个标签识别并默认跳过它们。
 
+任务清单较长时先输出一行进度（如"正在生成 tasks.md…"）再动笔，避免长时间静默。
+
 示例（格式良好的任务）：
 
 ```
@@ -252,7 +263,9 @@ EARS 用五种固定的句子结构消除需求歧义，让每条需求都能直
 
 将 tasks.md 呈现给用户，明确询问：**批准，还是需要修改**。修订并重新呈现，直到用户明确批准。
 
-tasks.md 获批即三份文档全部就绪，此时必须停下：明确告知用户"三份 spec 文档已完成"，然后**等待用户的执行指令**——批准文档不等于授权执行，在用户明确说"开始执行"之类指令之前，不要执行任何任务。
+修订纪律：**修订前必须先读当前 tasks.md 全文**，在现有内容基础上修改，绝不从零重写；与已批准的 requirements.md / design.md 冲突时，以后者为准。
+
+tasks.md 获批即三份文档全部就绪，此时必须停下：明确告知用户"三份 spec 文档已完成"，然后**等待用户的执行指令**——批准文档不等于授权执行，在用户明确说"开始执行"之类指令之前，不要执行任何任务。停下时附带一行选项方便用户下令：`[OPTIONS: 开始执行全部任务 | 逐任务执行 | 暂不执行]`——选项只是指令入口，用户选中之前不执行任何任务。
 
 ## Executing the tasks
 
@@ -297,3 +310,15 @@ tasks.md 获批即三份文档全部就绪，此时必须停下：明确告知�
 | Approval not requested between phases | Explicitly ask the user to approve before proceeding to the next phase |
 | File writes blocked by current mode | Tell the user the current mode disallows writing files, ask them to switch to a writable mode, then resume from the interrupted step |
 | Stopped during task execution | Ensure each task is fully completed before marking it as complete |
+| Regeneration overwrote manual edits | Read the current file in full before revising; treat confirmed content as ground truth |
+
+---
+
+**最后更新：** 2026-09-21
+**版本：** v1.1.0
+
+## 变更记录
+
+| 版本 | 日期 | 说明 |
+|---|---|---|
+| 1.1.0 | 2026-09-21 | 引入版本管理（此前无版本记录，初版视为 v1.0.0）。并入生产级 spec 工作流机制（已去产品化）：三个 approval loop 均新增修订纪律（修订前必读当前文件、绝不从零重写、已确认内容为 ground truth、与上游文档冲突时以上游为准）；tasks.md 完成后的停止点附带执行选项行 `[OPTIONS: 开始执行全部任务 | 逐任务执行 | 暂不执行]`（不改变"批准≠执行授权"硬性关卡）；design.md 要点新增"可选深化：正确性属性"与文档生成进度提示；Troubleshooting 新增"再生成覆盖手改"条目。specs/{NN}-{feature_name}/ 三文档目录与编号约定维持不变 |
