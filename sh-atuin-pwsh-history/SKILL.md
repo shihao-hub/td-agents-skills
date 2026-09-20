@@ -1,6 +1,6 @@
 ---
 name: sh-atuin-pwsh-history
-description: 在 Windows 上配置/修复 atuin「当前目录最近命令」历史显示（PowerShell 5.1 + Tabby/任意终端）：winget 装 atuin、写带 UTF-8 BOM 的 $PROFILE（atuin init 必须在 search 之前）、提供 hh 命令按需刷新（默认 5 条，hh N 自定义条数）。只要用户提到 atuin、shell/命令历史、"当前目录上次执行的命令"、开终端想看历史、新电脑配 Tabby/PowerShell 环境、ATUIN_SESSION 报错、atuin search 不显示或报错、profile 中文乱码、Set-Alias h AllScope 冲突、profile 被覆盖想恢复，都必须使用本 skill——即使用户只说"帮我配一下命令历史"也要触发；诊断任何 profile "不生效/不显示"类问题时也必须使用。
+description: 在 Windows 上配置/修复 atuin「当前目录最近命令」历史显示（PowerShell 5.1 + Tabby/任意终端）：winget 装 atuin、写带 UTF-8 BOM 的 $PROFILE（atuin init 必须在 search 之前）、提供 hh 命令按需刷新（默认 5 条，hh N 自定义条数）、上/下键恢复经典召回行为（atuin 搜索挪到 Ctrl+r、enter_accept=false 选中不直接执行）。只要用户提到 atuin、shell/命令历史、"当前目录上次执行的命令"、开终端想看历史、新电脑配 Tabby/PowerShell 环境、ATUIN_SESSION 报错、atuin search 不显示或报错、按上键变成 atuin 全屏搜索、按上键选中直接执行、上下键不能像以前一样召回命令、profile 中文乱码、Set-Alias h AllScope 冲突、profile 被覆盖想恢复，都必须使用本 skill——即使用户只说"帮我配一下命令历史"也要触发；诊断任何 profile "不生效/不显示"类问题时也必须使用。
 ---
 
 # atuin + PowerShell「当前目录最近命令」配置（Windows / Tabby）
@@ -28,7 +28,7 @@ powershell -ExecutionPolicy Bypass -File <本skill目录>/scripts/install-profil
 powershell -ExecutionPolicy Bypass -File <本skill目录>/scripts/install-profile.ps1 -AutoShow  # 开窗自动显示一次
 ```
 
-手动路径（无脚本时）：用**单引号 here-string** `@'...'@` 包住下方模板 + `Set-Content -Path $PROFILE -Encoding UTF8`（PS 5.1 的 UTF8 自带 BOM）。绝不能用双引号 here-string（`$` 和反引号会被当场展开）。
+手动路径（无脚本时）：用**单引号 here-string** `@'...'@` 包住下方模板 + `Set-Content -Path $PROFILE -Encoding UTF8`（PS 5.1 的 UTF8 自带 BOM）。绝不能用双引号 here-string（`$` 和反引号会被当场展开）。另外别忘了 `~\.config\atuin\config.toml` 里设 `enter_accept = false`（脚本会自动处理：不存在则创建、已有 true 则改写、缺行则追加）。
 
 ### 3. 重开终端窗口，敲 `hh` 验证
 
@@ -41,6 +41,11 @@ powershell -ExecutionPolicy Bypass -File <本skill目录>/scripts/install-profil
 
 # 先初始化 atuin（这一步才会设置 ATUIN_SESSION，必须在 search 之前）
 Invoke-Expression (& { (atuin init powershell) -join "`n" })
+
+# 上/下键恢复经典行为：召回上/下一条命令到输入行，可直接编辑（必须写在 init 之后才能覆盖 atuin 的绑定）
+# atuin 全屏搜索保留在 Ctrl+r
+Set-PSReadLineKeyHandler -Chord UpArrow -Function PreviousHistory
+Set-PSReadLineKeyHandler -Chord DownArrow -Function NextHistory
 
 # 显示当前目录最近执行过的命令；敲 hh 刷新（默认5条），hh 20 显示20条（h 是系统内置别名，别用）
 function Show-CwdHistory {
@@ -74,6 +79,7 @@ Set-Alias hh Show-CwdHistory
 3. **别用 `h` 做别名**。`h` 是内置 AllScope 别名（→ `Get-History`），`Set-Alias h ...` 会报"无法从别名 h 中删除 AllScope 选项"。用 `hh`（已验证空闲）。
 4. **别手拆 atuin 默认输出**。默认列是 duration/exit/time/command 的 tab 分隔，靠列号猜容易错；而且多行脏命令（比如历史里混进的 here-string）会内嵌换行，把输出打成残片。用 `--format "{exit}`t{command}"` + 数字前缀校验：真正的每条记录以退出码（纯数字）+tab 开头，多行命令的残片行没有数字前缀，自动被滤掉。
 5. **子进程验证时 PSReadLine 假警报**。`powershell -NoProfile -Command` 非交互会话不自动加载 PSReadLine，atuin init 会 `Write-Error "Atuin requires the PSReadLine module to be installed."` 然后退出——这是复现环境的假信号，不是用户真实环境的问题。子进程里先 `Import-Module PSReadLine` 再测。
+6. **上键被 atuin 接管，丢失经典"召回可编辑"**。atuin 18 默认把 UpArrow 绑成全屏搜索，且新版安装默认 `enter_accept = true`——搜索界面选中回车**立即执行**，用户失去"按上键召回上一条、补个参数再跑"的习惯（强烈差评）。修复两处：① profile 里 init **之后**重绑 `Set-PSReadLineKeyHandler -Chord UpArrow -Function PreviousHistory`（DownArrow 同理 NextHistory）——必须写在 init 之后，否则会被 atuin 的绑定盖掉；② `~\.config\atuin\config.toml` 设 `enter_accept = false`，让 atuin 搜索（Ctrl+r）选中后放回输入行而不是直接执行。重绑后 Up/Down 走的是 PSReadLine 自己的历史文件（atuin 运行时它仍持续记录，行为与装 atuin 前完全一致）。
 
 ## 诊断流程（"不显示历史"）
 
