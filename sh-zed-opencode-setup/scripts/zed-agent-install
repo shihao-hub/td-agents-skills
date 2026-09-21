@@ -19,6 +19,11 @@
 #     ".../registry/opencode/v_1.18.25_39ba1e44b4d80431_34afed0bf30609c5"
 #     → agent名=opencode，目标目录名=v_1.18.25_39ba1e44b4d80431_34afed0bf30609c5
 #   <zip下载地址>: grep github_download "$LOCALAPPDATA/Zed/logs/Zed.log" | tail -1
+#   <目标目录名> 也可离线推算（不依赖报错，2026-09-21 逆向 Zed 源码验证）:
+#     v_{版本}_{sha256(版本字符串)前16hex}_{sha256(zip地址)前16hex}
+#     版本从 external_agents/registry/registry.json 的 agents 数组拿;
+#     仅当 manifest 带 sha256 或 GitHub release 时才把 digest 混入第二个哈希,
+#     非 GitHub 直链(如 dl.google.com)为纯 URL 哈希. 详见 SKILL.md 任务 A.
 #
 # 装完后完全重启 Zed 即可，它会认这个目录并自动清掉旧版本。
 

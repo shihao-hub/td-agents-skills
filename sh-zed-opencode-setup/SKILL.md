@@ -1,12 +1,15 @@
 ---
 name: sh-zed-opencode-setup
-description: 配置和修复 Zed 编辑器的 opencode 外部 Agent（Windows）：修复 "renaming .tmp-github-download" 安装失败、让思考档位默认 max 且不出现 effort 下拉框（GLM/Claude 中转）、维护 opencode.json 与 cc-switch 的供应商配置（名称=标识）、把 cc-switch 里 Claude Code 的供应商迁移到 opencode 段（SQLite 写入）。当用户提到 Zed opencode agent 装不上/rename 报错、opencode 思考深度/effort/max/默认 low、subclaude/zhipu glm 供应商配置、cc-switch 迁移或同步 opencode 配置时，务必使用本 skill。
+description: 配置和修复 Zed 编辑器的 opencode 外部 Agent（Windows）：修复 "renaming .tmp-github-download" 安装失败、让思考档位默认 max 且不出现 effort 下拉框（GLM/Claude 中转）、修复 Zed 不显示当前上下文指示器（模型 limit）、维护 opencode.json 与 cc-switch 的供应商配置（名称=标识）、把 cc-switch 里 Claude Code 的供应商迁移到 opencode 段（SQLite 写入）。当用户提到 Zed opencode agent 装不上/rename 报错、opencode 思考深度/effort/max/默认 low、Zed 里看不到上下文/用量、subclaude/zhipu glm 供应商配置、cc-switch 迁移或同步 opencode 配置时，务必使用本 skill。
 ---
 
 # Zed + opencode 配置与修复手册
 
 本 skill 沉淀自 2026-08-28 的一次完整排障会话，已在 opencode **1.18.25** + Zed 1.17.2 + cc-switch（SQLite 版）上验证。
 2026-09-14 增补 DeepSeek 默认 max 实战（opencode 1.18.30 实测）：**变体按模型 ID 生成（与 provider 是否内置无关）**、四层验证法（含发线层抓包脚本 verify-wire-effort.mjs）。
+2026-09-21 增补 antigravity-acp（Google ACP registry agent）安装实战：**目标目录名可离线推算**（逆向 Zed 源码 `versioned_archive_cache_dir`，双实例验证），任务 A 适用所有 registry agent（含 dl.google.com 等非 GitHub 直链），不限 opencode。
+2026-09-21 增补（二）：**Zed「当前上下文」指示器**由 ACP `usage_update` 驱动，opencode 只在模型 `limit.context > 0` 时上报；**`limit` 与 variants 正相反、不按模型 ID 从 models.dev 合并**，自定义 provider 必须显式写（任务 B2，实战 zhipu-glm/deepseek-max 补 limit）。
+2026-09-21 增补（三）：antigravity 等 ACP agent 的**登录排障**（OAuth 成功页≠登录成功、代理/CA env 注入、旧进程复用、stdio 认证探针）已独立成 skill **sh-zed-acp-agent-env**——本 skill 任务 A 只管安装竞态，登录问题去那边。
 涉及 opencode 内部行为的修复**依赖其源码实现**（详见 `references/opencode-internals.md`），版本升级后可能失效——所以每个任务都带**实证验证步骤**，改完必须验证，不要盲信配置。
 
 ## 总原则（每次使用先读）
@@ -14,8 +17,8 @@ description: 配置和修复 Zed 编辑器的 opencode 外部 Agent（Windows）
 1. **改任何东西前先备份**：opencode.json 改前 `cp` 一份；cc-switch.db 改前必须整库复制到 `~/.cc-switch/backups/`。
 2. **涉及 cc-switch 的操作（尤其 Claude Code → opencode 迁移）必须先向用户展示计划并确认**，默认只 dry-run，用户明确同意后才 `--apply`。这是写数据库的操作，搞砸会影响用户所有供应商配置。
 3. **opencode 会回写 opencode.json**：在 Zed 里选一次模型，opencode 就把"解析后的配置"整体回写 opencode.json——手动改的文件可能被覆盖（实测把 `reasoning: false` 翻回 `true`、把 name 规范化成 ID）。所以：改完 opencode.json 后让用户**完全退出 Zed 再打开**验证；cc-switch 侧的同名条目也要同步更新（`liveConfigManaged` 双向同步）。
-4. **Zed 不会因开关 agent 面板重启 opencode 进程**，只有 Zed 完全退出才会。排障时用 `tasklist | grep -i opencode` 看进程是否是旧的（对比启动时间）。
-5. Windows Git Bash 坑：**curl 发中文会按 GBK 编码**导致 JSON parse error（用纯 ASCII payload）；PATH 里的 `python` 可能是 Windows 商店占位 stub（静默失败），脚本一律用 `node`（v22+ 自带 `node:sqlite`）。
+4. **Zed 不会因开关 agent 面板、新建线程或改 `agent_servers.*.env` 重启 ACP agent 进程（opencode/antigravity/codex-acp 等一律如此）**，只有 Zed 完全退出或手动杀进程才会——改 env 后不杀旧进程，新配置永不生效（详见 sh-zed-acp-agent-env）。排障时用 `tasklist | grep -i opencode` 看进程是否是旧的（对比启动时间）。
+5. Windows Git Bash 坑：**curl 发中文会按 GBK 编码**导致 JSON parse error（用纯 ASCII payload）；PATH 里的 `python` 可能是 Windows 商店占位 stub（静默失败），脚本一律用 `node`（v22+ 自带 `node:sqlite`）；**`bash` 命令可能解析到 WSL**（读不到 `C:/` 路径、无 `$LOCALAPPDATA`，报 "No such file or directory"）——调 Git Bash 脚本显式用全路径：`& 'D:\Program Files\Git\bin\bash.exe' <script> <args>`（PowerShell 下脚本路径用正斜杠）。
 
 ## 环境路径（按机器解析，不要硬编码）
 
@@ -46,10 +49,22 @@ bash scripts/zed-agent-install <agent名> <zip地址> <目标目录名>
 #   https://github.com/anomalyco/opencode/releases/download/v1.18.25/opencode-windows-x64.zip \
 #   v_1.18.25_39ba1e44b4d80431_34afed0bf30609c5
 ```
-zip 地址从 Zed.log 的 `github_download` 行拿；agent 名和目标目录名从报错 `renaming ".../registry/<agent>/.tmp-github-download-x" to ".../registry/<agent>/<目标目录名>"` 拿。
+zip 地址从 Zed.log 的 `github_download` 行拿；agent 名和目标目录名从报错 `renaming ".../registry/<agent>/.tmp-github-download-x" to ".../registry/<agent>/<目标目录名>"` 拿。**拿不到报错也没关系，目标目录名可离线推算**（见下）。
 装完让用户**完全重启 Zed**——它会认这个目录、不再下载，并自动清掉旧版本目录。
 
-若 `scripts/` 不可用，手工等效：`curl -L --retry 5 -C - -o` 下载 → `unzip -t` 校验 → `mkdir 目标目录 && unzip -o zip -d 目标目录` → 运行一次 `exe --version`（让杀毒扫完 + 验证）。
+若 `scripts/` 不可用，手工等效：`curl -L --retry 5 -C - -o` 下载 → `unzip -t` 校验 → `mkdir 目标目录 && unzip -o zip -d 目标目录` → 运行一次 `exe --version`（让杀毒扫完 + 验证；个别 agent 如 antigravity 不支持 `--version`，直接看 Zed.log 有无启动日志即可）。
+
+**目标目录名推算（2026-09-21 逆向 Zed 源码 `crates/project/src/agent_server_store.rs` 的 `versioned_archive_cache_dir()`，双实例验证）**：
+```
+v_{版本}_{sha256(版本字符串)前16hex}_{sha256(zip完整URL)前16hex}
+```
+- 输入来源：版本号 = 本地 `external_agents/registry/registry.json` 的 agents 数组里该 agent 的 `version`；zip URL = Zed.log `github_download` 行。
+- 第二个哈希**仅当** manifest 目标带 `sha256`（哈希前拼 `\0sha256:<小写digest>`）或 URL 是 GitHub release（查 release API 的 asset digest）时才混入；**非 GitHub 直链（如 dl.google.com）→ 纯 URL 哈希**。
+- 校验法：拿本机已装好的 agent 目录名反验。实测：opencode 1.18.31 → sha256("1.18.31")[..16]=`63d6aa92d4dda7e4` 命中；antigravity 1.1.1 → `v_1.1.1_c5752c93158aa0bc_fceef341456e3fe9` 与 Zed 自行安装的目录名一字不差。
+- 版本目录**不需要任何 metadata 文件**：Zed 只查 `is_dir(版本目录)` 与 `is_file(cmd 指向的 exe)`（cmd 见 registry.json，如 `./agy_acp_server.exe`）；目录存在即整体跳过下载直接启动。
+- PowerShell 一行算哈希：`(Get-FileHash -InputStream ([IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes("1.1.1")))).Hash.Substring(0,16).ToLower()`
+
+**实测案例（2026-09-21，antigravity-acp，dl.google.com 直链）**：竞态输掉后 Zed 反复重下（30 分钟内 5+ 次），残留 48MB 半解压 tmp 目录；用户再试一次时 Zed 自行成功。坑：该 zip 含两个 exe（agy_acp_server.exe 430MB + localharness_external.exe 130MB，解压慢、杀软扫描窗口更长，更容易输竞态）；失败残留的 `.tmp-*` 目录 Zed 通常自删，偶尔留空壳/半解压目录，可手动清。
 
 ---
 
@@ -70,6 +85,7 @@ GLM（zhipu coding 端点）：
   "models": {
     "glm-5.3": {
       "name": "glm-5.3",
+      "limit": { "context": 1000000, "output": 131072 },
       "interleaved": { "field": "reasoning_content" },
       "options": { "reasoningEffort": "max" },
       "reasoning": true
@@ -87,6 +103,7 @@ DeepSeek（V4 官方 API，openai-compatible + 多模态 flash，2026-09-14 实�
   "models": {
     "deepseek-flash": {
       "name": "DeepSeek V4 Flash",
+      "limit": { "context": 1000000, "output": 384000 },
       "reasoning": true,
       "interleaved": { "field": "reasoning_content" },
       "options": { "reasoningEffort": "max" },
@@ -95,6 +112,7 @@ DeepSeek（V4 官方 API，openai-compatible + 多模态 flash，2026-09-14 实�
     },
     "deepseek-v4-pro": {
       "name": "DeepSeek V4 Pro",
+      "limit": { "context": 1000000, "output": 384000 },
       "reasoning": true,
       "interleaved": { "field": "reasoning_content" },
       "options": { "reasoningEffort": "max" },
@@ -154,6 +172,30 @@ node scripts/verify-opencode-effort.mjs <opencode.exe路径> [端口] [--only �
 
 ---
 
+## 任务 B2：Zed 显示「当前上下文」指示器（模型 `limit`，2026-09-21 实测 opencode 1.18.31 / Zed 1.20.2）
+
+**症状**：Zed agent 面板输入框下方的上下文百分比环永不出现；opencode 自家 TUI/客户端却能看到上下文用量。
+
+**机制链**：Zed 指示器 ← ACP `sessionUpdate: "usage_update"`（`used/size/cost`；0.10.8 引入 unstable、0.13.6 于 2026-06 转正；Zed 1.20.2 workspace 锁 `agent-client-protocol = "=2.0.0"` 已支持，协议层无障碍）← opencode `acp/usage.ts`：`size = 模型 limit.context`，**`if (!size) return`——limit 为 0 就永不上报**（Zed 侧无法可配，只能 opencode 侧修）。
+
+**关键坑（与 variants 正相反）**：变体按模型 ID 从 models.dev 生成（自定义 provider 也生成，见任务 B）；**`limit` 不做此合并**——自定义 provider 的模型不显式写 `limit`，`/config/providers` 里就是 `{"context":0,"output":0}`。内置 provider 有目录值可抄。
+
+**实测值（2026-09-21 从内置 provider /config/providers 抄写）**：
+- glm-5.3 / glm-5.3-flash（内置 zhipuai-coding-plan）→ `{ "context": 1000000, "output": 131072 }`
+- deepseek-flash / deepseek-v4-pro（内置 deepseek）→ `{ "context": 1000000, "output": 384000 }`
+
+**修复**：opencode.json 模型级补 `limit`（任务 B 模板已含）→ cc-switch 同名条目 `settings_config` 同步（`cc-update-provider-config.mjs`，见 sh-cc-switch-db；`liveConfigManaged` 双向同步，漏一侧会被写回旧值）→ 完全重启 Zed。
+
+**三态诊断（2026-09-21 深挖，读 Zed thread_view.rs / opencode service.ts 源码实证）**：
+- **完全不显示** = 该线程从没收到过 usage_update（Zed `token_usage()` 为 None 直接不渲染）。修复 limit 只影响**新完成的 turn**——旧轮次不会补发。处置：在该线程里完整跑一轮。
+- **显示 0%** = 收到过，但最后一次 `used=0`。opencode 每轮 turn 结束才发一次（service.ts 的 prompt/command/compact 三个返回点），`used` 取**最后一条 assistant 消息**的 input+cacheRead+cacheWrite；被打断/异常的 turn 会留下 tokens=0 的空消息行（opencode.db `message` 表可见），不过滤 0 → 发 used=0。处置：再正常完整跑一轮即覆盖。dev 分支同款逻辑（未修）。
+- **正常百分比** = 完整 turn 后的真实值。**无最小阈值**：Zed 显示 `round(used/max*100)%`，TokenUsageRatio 只管变色（≥80% 警告色）。
+- opencode TUI 能显示上下文**不代表** Zed 链路通（TUI 不走 ACP）；「没到上下文限制就不显示」是误解，不存在阈值。
+
+**验证**：起 `opencode serve --port <p>` 查 `GET /config/providers`（返回 `{providers:[数组], default}`——providers 是**数组**按 `id` 找，模型挂 `provider.models.<modelID>`（**对象**），看 `.limit.context` 非 0）；Zed 发一条消息后指示器才出现（**首条 usage_update 到达才渲染**，空会话不显示属正常）。注意 opencode TUI 能显示上下文**不代表** Zed 链路通（TUI 不走 ACP）。
+
+---
+
 ## 任务 C：cc-switch 与 opencode 配置同步 / Claude Code → opencode 迁移
 
 **⚠️ 此任务动 cc-switch 的 SQLite 数据库，必须先 dry-run 展示计划、经用户确认后再 `--apply`。**
@@ -182,11 +224,15 @@ node scripts/cc-switch-migrate.mjs --apply  # 用户确认后执行（自动备�
 | Zed 模型下拉里出现 "(Low)…(Max)" 后缀条目 | 模型 variants 没禁用，走任务 B；验证用 /config/providers |
 | 自定义 provider id 也出现下拉框/被顶回 low | 变体**按模型 ID** 生成（models.dev 已知模型就带），换 provider id 规避无效；模型级 `variants` 全档 disabled（2026-09-14 实测踩坑） |
 | 努力改成 max 但请求还是 low | 选了 low 变体（变体覆盖 options）；禁用变体后重选 plain 模型 |
+| Zed 里「当前上下文」指示器永不出现 | 模型 `limit.context=0`：自定义 provider 的 **limit 不从 models.dev 合并**（与 variants 相反）；模型级显式写 `limit` 并同步 cc-switch，完全重启 Zed，见任务 B2 |
 | `subclaude-xxx/claude-opus-5 is not a valid value` 警告 | Zed 侧对自定义模型 ID 的校验提示，无害可无视 |
+| 装 antigravity 等 ACP registry agent 反复重下 / 卡 rename | 同任务 A 竞态，**适用所有 registry agent**（含非 GitHub 直链）；目录名可推算（见任务 A），`zed-agent-install` 照用 |
+| Zed 里 antigravity（或其它 ACP agent）登录：浏览器显示认证成功但 Zed 仍要求登录 / 日志反复 `onboarding_failed` | agent 进程没拿到代理/CA 环境变量 + 旧进程复用；`agent_servers.<id>.env` 注入并杀旧进程，见 **sh-zed-acp-agent-env** |
+| bash 跑脚本报 No such file or directory（`C:/` 路径明明存在） | `bash` 解析到了 WSL；显式用 Git Bash 全路径 `& 'D:\Program Files\Git\bin\bash.exe'` |
 | curl 报 JSON Invalid UTF-8 | Git Bash 中文按 GBK 发送，payload 换 ASCII |
 | node 脚本调 sqlite | 用 `require('node:sqlite')` 的 `DatabaseSync`，v22+ 可用 |
 
 ## 深入资料
 
-- `references/opencode-internals.md` —— opencode 内部机制全记录（请求合并链、变体计算、双端点差异、SDK 选项名、版本锚点）。**opencode 升级后任务 B 验证失败时必读**。
+- `references/opencode-internals.md` —— opencode 内部机制全记录（请求合并链、变体计算、双端点差异、SDK 选项名、用量上报链 usage_update/limit、版本锚点）。**opencode 升级后任务 B/B2 验证失败时必读**。
 - `references/cc-switch-migration.md` —— cc-switch 数据库表结构、settings_config 形状、迁移脚本设计与回滚。

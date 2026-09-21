@@ -78,3 +78,19 @@ DeepSeek V4 API（官方文档 2026-09 核实）：
 - `reasoning_effort`（openai 兼容请求体顶层）：取值 **low/high/max**，默认 high；medium→high、xhigh→max 映射（不报错但归档）。思考默认开；关闭用 `thinking: {"type": "disabled"}`（OpenAI SDK 需放 extra_body）。
 - 思维链走 `reasoning_content`（流式 `delta.reasoning_content`），与 Zhipu coding 端点同构——opencode 的 `interleaved: {field: "reasoning_content"}` 直接照搬 GLM 模板。
 - 带 tools 的请求必须完整回传历史轮次的 `reasoning_content`，否则 400。
+
+## 10. 上下文用量上报链（usage_update，2026-09-21 实测，opencode 1.18.31 / Zed 1.20.2）
+
+- Zed「当前上下文」指示器由 ACP `session/update`（`sessionUpdate: "usage_update"`，字段 `used/size/cost`）驱动。协议时间线：0.10.8（2026-02-04）unstable 引入 → 0.13.6（2026-06-05）stabilize（v1 schema）；Zed 1.20.2 workspace 锁 `agent-client-protocol = "=2.0.0"`（含 unstable feature），协议层无障碍。
+- opencode `packages/opencode/src/acp/usage.ts`（v1.18.31 已存在，仓库 anomalyco/opencode）：
+  - `used = tokens.input + cache.read + cache.write`（不含 output/reasoning token）
+  - `size = providers[providerID]?.models[modelID]?.limit.context`（走内部 Provider.list，与 `/config/providers` 同源）
+  - **闸门：`if (!size) return` → limit.context=0 永不发 usage_update**；另要求最后一条 assistant 消息带 providerID/modelID（正常会话都满足）。
+- **limit 与 variants 不对称（本次最大坑）**：`variants()` 按模型 ID 从 models.dev 生成（§4）；`limit` 无此合并——自定义 provider 模型不显式写就是 `{context:0, output:0}`（/config/providers 实测）。内置 provider 有目录值：zhipuai-coding-plan 的 glm-5.3 / glm-5.3-flash = 1000000/131072；deepseek 的 deepseek-flash / deepseek-v4-pro = 1000000/384000。
+- 探测注：`/config/providers` 返回 `{providers: [...], default}`——providers 是**数组**（按 `id` 找），模型挂在 `provider.models.<modelID>`（**对象**），limit 在 `.limit.context`。
+- UI 行为：Zed 指示器在**首条 usage_update 到达后才渲染**（发一条消息后才出现，空会话没有属正常）；opencode 自家 TUI 的上下文显示不走 ACP 链路，TUI 能显示 ≠ Zed 链路通。
+- **触发时机**（service.ts 实证）：每轮 turn 结束才发一次——普通 prompt 返回后、已知 command 返回后、compact 后各一个调用点（`sendUsageUpdate`）。流式中不发。
+- **Zed 侧渲染**（thread_view.rs `render_token_usage`）：`token_usage()` 为 None → 整个不渲染；有值就渲染 16px ring + `round(used/max*100)%`，**无最小阈值**；`TokenUsageRatio`（≥0.8 Warning / ≥1.0 Exceeded）只控制颜色，tooltip 含 used/max 与 cost。
+- **显示 0% 的根因**：被打断/异常的 turn 在 opencode 留下 tokens 全 0 的 assistant 消息行；`latestAssistantMessage` 取最后一条不过滤 0 → used=0。dev 分支同款。再正常跑一轮即自愈。
+- **opencode 1.18.x 数据探查**：storage 文件已迁 SQLite——`~/.local/share/opencode/opencode.db`（实测 1.8GB，WAL 活跃）。只读 `DatabaseSync(path,{readOnly:true})` 并发读安全；`message` 表 `data` JSON 含 per-message tokens（input/output/cache.read/cache.write/reasoning/cost），`session` 表有聚合列。opencode.log 只记 permission 评估，别指望它有 usage 线索。
+- 升级后复验入口：GitHub `anomalyco/opencode` 对应 tag 的 `packages/opencode/src/acp/usage.ts` + `/config/providers` handler；ACP 侧看 agentclientprotocol/agent-client-protocol 的 CHANGELOG（usage/session 相关行）。

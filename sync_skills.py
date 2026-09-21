@@ -2,15 +2,15 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""skills 同步器：以 .agents/skills 为唯一源，同步到 Claude Code / Codex / opencode。
+"""skills 同步器：以 .agents/skills 为唯一源，同步到 Claude Code / Codex / opencode / Antigravity。
 
 默认 link 模式（junction，无需管理员权限）：
-- claude / opencode：整个 skills 目录建成指向源的 junction，源即真身，改源三端即时生效
+- claude / opencode / antigravity：整个 skills 目录建成指向源的 junction，源即真身，改源四端即时生效
 - codex：skills 本体保持真实目录（保留内置 .system），其下每个 skill 建 per-skill junction
 copy 模式（--mode copy）：镜像复制实体文件，并淘汰目标中源没有的内容（codex 的 .system 保留）。
 
 用法：
-    uv run sync_skills.py [--mode link|copy] [--agent claude|codex|opencode|all] [--check]
+    uv run sync_skills.py [--mode link|copy] [--agent claude|codex|opencode|antigravity|all] [--check]
     sync_skills.bat            # 等价于 uv run sync_skills.py（默认 link + all）
 """
 
@@ -27,11 +27,13 @@ from pathlib import Path
 # 源 = 本脚本所在目录（.agents/skills），目录整体搬移也不用改代码
 SRC = Path(__file__).resolve().parent
 
-# 三个 agent 的 skills 根目录
+# 四个 agent 的 skills 根目录
+# 2026-09-21 新增 .antigravity
 AGENTS = {
     "claude": Path.home() / ".claude" / "skills",
     "codex": Path.home() / ".codex" / "skills",
     "opencode": Path.home() / ".config" / "opencode" / "skills",
+    "antigravity": Path.home() / ".antigravity" / "skills",
 }
 
 # 同步时必须保留、绝不删除的目标内条目（按 agent -> 名称集合）
@@ -59,6 +61,7 @@ def remove_path(p: Path) -> None:
 
 def make_junction(link: Path, target: Path) -> None:
     """mklink /J 创建目录联接（cmd 内建命令，需经 cmd 调用）"""
+    link.parent.mkdir(parents=True, exist_ok=True)
     r = subprocess.run(
         ["cmd", "/c", "mklink", "/J", str(link), str(target)],
         capture_output=True,
@@ -101,7 +104,7 @@ class Sync:
     # ---------- link 模式 ----------
 
     def sync_link_whole(self, agent: str) -> None:
-        """claude / opencode：整个 skills 目录替换为指向 SRC 的 junction"""
+        """claude / opencode / antigravity：整个 skills 目录替换为指向 SRC 的 junction"""
         dst = AGENTS[agent]
         if not dst.exists():
             self.do(agent, "LINK", dst, "->", SRC,
@@ -153,7 +156,7 @@ class Sync:
     # ---------- copy 模式 ----------
 
     def sync_copy_whole(self, agent: str) -> None:
-        """claude / opencode：删除整个目标目录后镜像复制"""
+        """claude / opencode / antigravity：删除整个目标目录后镜像复制"""
         dst = AGENTS[agent]
 
         def copy() -> None:
@@ -203,7 +206,7 @@ def main() -> int:
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
         sys.stdout.reconfigure(encoding="utf-8")
 
-    ap = argparse.ArgumentParser(description="以 .agents/skills 为源同步 skills 到三个 agent")
+    ap = argparse.ArgumentParser(description="以 .agents/skills 为源同步 skills 到四个 agent")
     ap.add_argument("--mode", choices=["link", "copy"], default="link",
                     help="link=junction 链接（默认）；copy=镜像复制实体文件")
     ap.add_argument("--agent", choices=[*AGENTS, "all"], default="all",

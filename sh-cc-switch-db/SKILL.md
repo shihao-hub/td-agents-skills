@@ -7,6 +7,7 @@ description: 直接读写 cc-switch 的 SQLite 数据库（~/.cc-switch/cc-switc
 
 沉淀自 2026-09-06 实操（cc-switch v3.20.0，Windows，SQLite 版），关键结论经源码交叉验证（farion1231/cc-switch）。cc-switch 升级后表结构可能变化——用 `cc-db.mjs tables` 先核对再动手。
 2026-09-14 增补：改既有条目/改 id 两脚本（cc-update-provider-config / cc-rename-provider-id）、**providers.id 外键坑**（见总原则 9）、DeepSeek→opencode 段默认 max 实战案例（app-config-shapes.md）。
+2026-09-21 增补：opencode 段模型级 `limit` 坑——自定义 provider 的 `limit.context=0` 会让 Zed 永不显示上下文指示器（limit 不从 models.dev 合并；机制、实测值与修法见 sh-zed-opencode-setup 任务 B2）。实战用 `cc-update-provider-config.mjs` 同步 zhipu-glm / deepseek-max 两条 settings_config。
 
 ## 总原则（每次先读）
 
@@ -85,7 +86,7 @@ Copy-Item "<备份文件>" "$env:USERPROFILE\.cc-switch\cc-switch.db" -Force
 ## 与 sh-zed-opencode-setup 的分工
 
 - 本 skill：cc-switch 数据库通用机制（表结构/读写/备份/各段形状/pi 机制）。
-- sh-zed-opencode-setup：opencode 侧思考档位（effort/reasoningEffort、variants 禁用）、opencode.json 回写行为、claude→opencode 迁移脚本（cc-switch-migrate.mjs）。动 opencode 段时两个都读。
+- sh-zed-opencode-setup：opencode 侧思考档位（effort/reasoningEffort、variants 禁用）、模型 `limit`（Zed 上下文指示器）、opencode.json 回写行为、claude→opencode 迁移脚本（cc-switch-migrate.mjs）。动 opencode 段时两个都读。
 
 ## 深入资料
 
