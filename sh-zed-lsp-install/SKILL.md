@@ -1,6 +1,6 @@
 ---
 name: sh-zed-lsp-install
-description: 修复 Zed 编辑器 GitHub 下载型语言服务器（languages\ 目录：rust-analyzer、gopls 等）的安装失败：rename .tmp-github-download-* 报 os error 5/拒绝访问、反复重新下载、手工装的目录被 Zed 清掉。提供杀毒竞态根因分析、metadata 快速通道绕过、手工安装脚本与零下载验证。当用户提到 Zed 的 rust-analyzer/gopls/语言服务器下载失败、装不上、rename 报错、Access Denied、os error 5 时，务必使用本 skill。
+description: 排障：Zed 语言服务器下载失败/rename os error 5；杀毒竞态根因+手工安装。点名使用
 ---
 
 # Zed 语言服务器安装失败修复手册（languages\ 目录）

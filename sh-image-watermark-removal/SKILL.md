@@ -1,6 +1,6 @@
 ---
 name: sh-image-watermark-removal
-description: 用 Python(PIL+numpy) 从图片中去除水印/角标/平台标识（如「元宝AI生成」「AI生成」章、logo 贴纸、日期角标），特别擅长水印压在图案笔画上的复杂情形。当用户发来图片或图片路径并要求"去水印""去掉右下角/角标""去掉 logo""清理图片上的标记"，或图片任务涉及 inpaint、修补、抹掉画面局部时必须使用本 skill——即使用户只说"帮我把这个去掉"也要触发。不含 AI 拼图、裁剪、缩放等常规编辑。
+description: 去水印/角标：PIL+numpy 局部修补，擅长水印压在图案笔画上的复杂情形。点名使用
 ---
 
 # 图片水印去除（PIL+numpy 修补管线）

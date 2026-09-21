@@ -1,6 +1,6 @@
 ---
 name: sh-bruno-collection
-description: 为 HTTP 接口生成 Bruno API 测试脚本（OpenCollection YAML / .bru 格式）。当用户要求创建 bruno 脚本、bruno collection、bruno 请求文件、把 FastAPI/后端接口做成 bruno 测试、给接口写调试脚本、维护 bruno 环境变量或文件夹变量，或者说"帮我写个 bruno 脚本测一下这些接口"、"把这个路由文件转成 bruno"、"接口调通了没，做个 bruno 集合"时使用此技能——即使用户没有明确说出 "bruno"，只要是想为一批接口生成可执行的测试请求集合，也应使用。
+description: 为 HTTP 接口生成 Bruno API 测试集合（.bru）。点名使用
 ---
 
 # sh-bruno-collection — 生成 Bruno 接口测试脚本

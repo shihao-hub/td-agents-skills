@@ -1,6 +1,6 @@
 ---
 name: sh-video-transcribe
-description: 从视频或音频文件中提取字幕（语音转文字）并总结内容：ffprobe 探流 → ffmpeg 抽音轨 → faster-whisper 本地转写产出 SRT+TXT → AI 总结（自动修正 ASR 同音错字）。当用户给出 .mp4/.mov/.mkv/.webm/.mp3/.m4a/.wav/.flac 等媒体文件，要求"提取字幕""转成文字""语音转文字""这个视频/播客/录音讲了什么""帮我总结这个视频"，或任何把媒体里的语音变成文字再提炼内容的请求时，必须使用本 skill——即使用户没提"字幕"或"转写"二字，只丢来一个视频文件问内容也要触发。已有字幕/文本文件的纯总结不触发本 skill（直接读文件总结即可）。
+description: 视频/音频提取字幕并总结：ffmpeg 抽音轨→faster-whisper 本地转写 SRT/TXT→AI 总结。点名使用
 ---
 
 # 视频字幕提取与总结

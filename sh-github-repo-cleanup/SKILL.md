@@ -1,6 +1,6 @@
 ---
 name: sh-github-repo-cleanup
-description: GitHub 账号仓库大扫除：只读审计全部仓库（纯收藏型 fork 判定/活跃度/空仓库）→ 快照备份 → fork 收藏转 Star（可选 List）→ mirror 备份后批量删除/归档 → 终检核验。包含 gh CLI 授权排障（gh auth login/refresh 授权"不生效"的根因）、OAuth 设备流自驱动、GitHub Lists GraphQL API，以及 Windows PowerShell 5.1 下 gh/git/curl 的全部兼容写法。当用户提到清理 GitHub 仓库、fork 太多/太乱、fork 只是拿来收藏、删 fork、归档旧仓库、备份后删除仓库、收藏转 Star、建 GitHub List、gh auth 授权反复失效、gh 命令在 PowerShell 报 accepts 1 arg(s) / ConvertFrom-Json 报错 / 中文乱码时，必须使用本 skill——即使用户只说"我的 GitHub 仓库乱七八糟想整理"也要触发。
+description: GitHub 仓库大扫除：审计→fork 转 Star→mirror 备份→批量删除/归档。点名使用
 ---
 
 # GitHub 账号仓库大扫除

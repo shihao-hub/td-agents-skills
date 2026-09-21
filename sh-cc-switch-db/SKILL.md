@@ -1,6 +1,6 @@
 ---
 name: sh-cc-switch-db
-description: 直接读写 cc-switch 的 SQLite 数据库（~/.cc-switch/cc-switch.db）：探查表结构、查询/备份/回滚、绕过 UI 直改 providers/provider_endpoints/settings 表，向 claude/codex/gemini/opencode/pi 等任意应用段新增或修改供应商条目，并理解数据库与各应用原生配置文件（opencode.json、pi 的 models.json 等）的同步语义。当用户提到 cc-switch 数据库、写库、直改、备份或回滚 cc-switch、providers 表、把某供应商加到 pi 段/opencode 段/codex 段、cc-switch 里的数据、迁移供应商条目时必须使用——即使用户只说"帮我看看 cc-switch 里的数据"或"把 xx 配到 pi 段"也要触发。opencode 段的思考档位/variants 细节与 claude→opencode 迁移脚本归 sh-zed-opencode-setup，本 skill 负责通用数据库机制。
+description: 直接读写 cc-switch SQLite，绕过 UI 配置各应用供应商。点名使用
 ---
 
 # Skill: sh-cc-switch-db（cc-switch 数据库直改手册）

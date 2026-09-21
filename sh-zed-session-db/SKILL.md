@@ -1,6 +1,6 @@
 ---
 name: sh-zed-session-db
-description: 通过 Zed 编辑器本地 SQLite 数据库（%LOCALAPPDATA%\Zed\db\0-stable\db.sqlite 的 sidebar_threads 等表）排查、恢复和管理 agent 会话记录。当用户提到「Zed 会话/历史丢失、不见了、找不到、清空了」「恢复/找回 Zed 会话」「归档/解档/删除/清理会话」「改会话标题」「合并项目/换工作区后历史消失」「agent 面板历史是空的」，或要求查询、统计、导出、迁移 Zed agent 会话列表时，务必使用本 skill——即使用户没提"数据库"或"sqlite"也要触发。只管理 Zed 侧的会话元数据；会话正文在 opencode 等外部 agent 自己的存储里，不归本 skill 管。
+description: 排障：Zed 会话丢失/恢复/归档，直接查 SQLite sidebar_threads 表。点名使用
 ---
 
 # Zed Agent 会话数据库操作

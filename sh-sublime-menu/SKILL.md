@@ -1,6 +1,6 @@
 ---
 name: sh-sublime-menu
-description: 管理 Windows 下 Sublime Text 的右键菜单："用 Sublime Text 打开"（覆盖任意文件/文件夹/文件夹空白处/磁盘，带图标、置顶），支持添加、删除、状态检查，以及 Win11 新版/经典右键菜单样式的切换与撤回。当用户提到 sublime 右键、右键用 sublime 打开、添加或删除"用 Sublime Text 打开"、右键菜单里找不到 Sublime、Win11 显示更多选项/恢复经典右键菜单时使用——即使用户只是随口说"给 sublime 加个右键"、"把 sublime 右键去掉"，也应使用本技能。
+description: 装机：Sublime 右键菜单添加/删除/检查，Win11 菜单样式切换。点名使用
 ---
 
 # sh-sublime-menu — Sublime Text 右键菜单管理

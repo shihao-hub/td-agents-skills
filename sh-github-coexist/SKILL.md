@@ -1,6 +1,6 @@
 ---
 name: sh-github-coexist
-description: 同一台电脑上让个人 GitHub 与公司 GitLab 共存并自动隔离提交身份：生成 GitHub 专用 SSH key、按 remote URL 自动切换 commit 身份（includeIf hasconfig，任意目录生效）、安装登录 gh CLI、把本地 git 仓库批量创建远程仓库并 push（含 td- 前缀命名、git-filter-repo + mailmap 历史身份改写、脏仓库 stash 保护）。当用户说「连 github」「电脑连了 gitlab 还想连 github」「双 git 账号」「个人仓库别用公司邮箱提交」「把本地仓库推到 github」「批量创建远程仓库」「历史提交改邮箱」「commit 身份切换」时使用——即使只说「我还有个 github 想一起用」「这几个目录帮我传 github」也要触发。
+description: 装机：个人 GitHub 与公司 GitLab 共存，SSH key+includeIf 身份自动切换+批量推仓库。点名使用
 ---
 
 # GitHub 与公司 GitLab 共存（Windows 实战版）

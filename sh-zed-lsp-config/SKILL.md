@@ -1,6 +1,6 @@
 ---
 name: sh-zed-lsp-config
-description: '为指定项目目录配置 Zed 编辑器的 .zed/settings.json LSP 白名单，配合全局 enable_language_server: false 实现"默认零 LSP、按项目白名单开启、尽量省内存"。当用户要求给某个目录/仓库"配置 zed / 来一个 .zed / 开跳转 / 阅读源码省内存"，或提到 vtsls、basedpyright、language_servers、enable_language_server、zed 内存占用等场景时使用。'
+description: 配置：给项目目录配 Zed .zed/settings.json LSP 白名单，按项目开启省内存。点名使用
 ---
 
 # Zed LSP 项目白名单配置

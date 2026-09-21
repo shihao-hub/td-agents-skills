@@ -1,6 +1,6 @@
 ---
 name: sh-atuin-pwsh-history
-description: 在 Windows 上配置/修复 atuin「当前目录最近命令」历史显示（PowerShell 5.1 + Tabby/任意终端）：winget 装 atuin、写带 UTF-8 BOM 的 $PROFILE（atuin init 必须在 search 之前）、提供 hh 命令按需刷新（默认 5 条，hh N 自定义条数）、上/下键恢复经典召回行为（atuin 搜索挪到 Ctrl+r、enter_accept=false 选中不直接执行）。只要用户提到 atuin、shell/命令历史、"当前目录上次执行的命令"、开终端想看历史、新电脑配 Tabby/PowerShell 环境、ATUIN_SESSION 报错、atuin search 不显示或报错、按上键变成 atuin 全屏搜索、按上键选中直接执行、上下键不能像以前一样召回命令、profile 中文乱码、Set-Alias h AllScope 冲突、profile 被覆盖想恢复，都必须使用本 skill——即使用户只说"帮我配一下命令历史"也要触发；诊断任何 profile "不生效/不显示"类问题时也必须使用。
+description: 装机/排障：Windows atuin 命令历史配置与 profile 修复（hh、Ctrl+r、上下键召回）。点名使用
 ---
 
 # atuin + PowerShell「当前目录最近命令」配置（Windows / Tabby）

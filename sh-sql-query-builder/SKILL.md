@@ -1,6 +1,6 @@
 ---
 name: sh-sql-query-builder
-description: 把后端复杂只读查询从 SQLAlchemy Core 表达式（select/join/case/union_all/literal/cast 层层嵌套）抽取到 infrastructure/orm/query/ 下的文本 SQL 模板 + builder 函数，让 SQL 一眼可读、能直接复制到数据库客户端复现，repo 层退化为只负责执行。当用户抱怨「看代码不知道 SQL 是什么」「SQL 拼接太复杂」「这种写法深恶痛绝/维护不了」「等于把业务逻辑写进 SQL 拼接里了」「想直接在数据库上复现这个查询」，或要求抽取/重构 repository 里的查询、新写一个带 CTE/UNION/多条件动态筛选的复杂读查询、给分页查询补 count SQL 时，必须使用本 skill——即使用户只说「这个函数可维护性太差，怎么优化」也要触发。
+description: 重构 SOP：把 SQLAlchemy Core 嵌套只读查询抽取为文本 SQL 模板+builder，适用任意 Python 后端项目。点名使用
 ---
 
 # 复杂 SQL 抽取到 Query Builder 层

@@ -1,6 +1,6 @@
 ---
 name: sh-cluacpp-build
-description: native_projects（C/C++/Lua 混合语言子仓）的工具链与构建手册。Windows 下 LLVM/Ninja/MSVC 工具链检测与安装（含 GitHub 下载慢的 curl 断点续传方案、静默装完不写 PATH 的补法）、CMake+CMakePresets+Ninja 双编译器项目搭建、FetchContent 集成 Lua 5.1.5 与 doctest、MSVC 编码/Lua API/VS 生成器目录等 12 条踩坑速查、clangd(.clangd) 编译数据库配置、Zed 扩展与 LSP（neocmake 高亮、Lua 5.1 runtime、宿主全局 @meta 声明）。当用户要在 language_projects 总仓新建/编译/调试 C、C++、Lua 项目，安装 clang/LLVM/ninja，遇到 'lua.h' file not found、C2065 中文乱码、LUA_OK 未定义、链接 32 位 Lua 报错、FetchContent 拉 Lua 失败、CMakeLists.txt 无高亮、Lua LSP 跳转到 5.4 等场景时必须使用。
+description: C/C++/Lua 项目工具链与构建手册：LLVM/Ninja/MSVC、CMake Presets、FetchContent 集成 Lua、clangd、编译报错速查。点名使用
 ---
 
 # sh-cluacpp-build —— native_projects 构建手册

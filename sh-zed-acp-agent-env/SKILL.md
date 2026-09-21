@@ -1,6 +1,6 @@
 ---
 name: sh-zed-acp-agent-env
-description: Zed 编辑器 ACP 外部 agent（antigravity-acp / Google Antigravity / codex-acp / claude-acp / opencode registry agent）的 Windows 排障手册：环境变量注入（agent_servers.*.env）、系统代理（Clash）与 CA 证书、Google OAuth 登录失败（浏览器显示认证成功但 Zed 仍要求登录、反复 onboarding_failed、凭据被清）、改 env 不生效（Zed 复用旧 agent 进程）、以及不经 Zed UI 直接对 agent 做 stdio JSON-RPC 认证探针。当用户说 Zed 里 Antigravity/Google agent 登录不了、登录成功了却没登录态、ACP agent 不走代理或不信任证书、怀疑 agent 进程是旧的、要杀 agy_acp_server 进程、或要验证 ACP agent 认证链路时，必须使用本 skill。
+description: 排障：Zed ACP 外部 agent（antigravity/codex/claude/opencode）登录失败、代理/CA 不生效、改 env 不起效（旧进程复用）；附 stdio 认证探针。点名使用
 ---
 
 # Zed ACP 外部 agent 环境注入与登录排障手册（Windows）

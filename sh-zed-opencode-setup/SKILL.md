@@ -1,6 +1,6 @@
 ---
 name: sh-zed-opencode-setup
-description: 配置和修复 Zed 编辑器的 opencode 外部 Agent（Windows）：修复 "renaming .tmp-github-download" 安装失败、让思考档位默认 max 且不出现 effort 下拉框（GLM/Claude 中转）、修复 Zed 不显示当前上下文指示器（模型 limit）、维护 opencode.json 与 cc-switch 的供应商配置（名称=标识）、把 cc-switch 里 Claude Code 的供应商迁移到 opencode 段（SQLite 写入）。当用户提到 Zed opencode agent 装不上/rename 报错、opencode 思考深度/effort/max/默认 low、Zed 里看不到上下文/用量、subclaude/zhipu glm 供应商配置、cc-switch 迁移或同步 opencode 配置时，务必使用本 skill。
+description: 配置：Zed 的 opencode agent 安装修复、思考档位、供应商配置、cc-switch 迁移。点名使用
 ---
 
 # Zed + opencode 配置与修复手册

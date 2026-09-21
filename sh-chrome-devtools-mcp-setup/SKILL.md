@@ -1,6 +1,6 @@
 ---
 name: sh-chrome-devtools-mcp-setup
-description: 为 opencode 配置 Chrome DevTools 浏览器控制（chrome-devtools-mcp）：新电脑/新环境打通"AI 操作浏览器"能力（导航、DOM 快照、鼠标点击、键盘输入、截图、网络与性能分析）。当用户要在 opencode 里配置 MCP 浏览器工具、提到 chrome devtools、想让 AI 操作/自动化/调试浏览器、或问"新电脑怎么配浏览器控制"时使用——即使用户只说"我能操作浏览器吗"或"帮我配个 devtools"也应触发。
+description: 装机：opencode 配置 chrome-devtools-mcp 浏览器控制。点名使用
 ---
 
 # Chrome DevTools MCP 配置（opencode）

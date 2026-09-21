@@ -1,6 +1,6 @@
 ---
 name: sh-opencode-glm-auth
-description: 排查 opencode 里 GLM（智谱）"身份验证失败"/401：apiKey 三处来源的生效优先级（opencode.json options.apiKey > auth.json > 环境变量）、bigmodel 双端点（coding/paas 与标准/paas）key 混用矩阵实测、日志定位到具体 provider/run、PowerShell curl 复现验证。当用户说 opencode 连 GLM 报身份验证失败/authentication failed/401、"key 明明是通的"、auth login 后仍失败、zhipuai-coding-plan 或 zhipu-glm 报错、bigmodel.cn 端点 401/429、apiKey 被覆盖/不生效、要换 opencode 供应商 key 时必须使用——即使用户只说"GLM 又挂了"也要触发。opencode 供应商条目迁移/思考档位归 sh-zed-opencode-setup 与 sh-cc-switch-db，本 skill 专注认证链路诊断。
+description: 排障：opencode 连 GLM 报 401/身份验证失败；apiKey 优先级、双端点 key 矩阵。点名使用
 ---
 
 # Skill: sh-opencode-glm-auth（opencode GLM 身份验证失败排查）

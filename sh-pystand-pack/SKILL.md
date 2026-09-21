@@ -1,6 +1,6 @@
 ---
 name: sh-pystand-pack
-description: 用 PyStand + 嵌入式 Python 把 Python 项目打包成免安装的独立文件夹（绿色版 exe）。当用户提到 PyStand、嵌入式 Python、embed package、把 Python 程序打包成文件夹/独立运行/免安装/绿色版/standalone、给别人分发 Python 程序但对方没装 Python、给 exe 换图标、打包 tkinter 桌面程序，或说"帮我用 PyStand 打包"、"做成拷走就能跑的目录"、"打包成不用装 Python 的版本"时使用此技能——即使用户没说出 "PyStand"，只要目标是"把 Python 项目变成一个可整体拷贝分发的文件夹"就应使用。
+description: PyStand+嵌入式 Python 把 Python 项目打包成免安装绿色文件夹。点名使用
 ---
 
 # sh-pystand-pack — PyStand 独立打包

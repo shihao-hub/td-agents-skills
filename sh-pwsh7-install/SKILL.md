@@ -1,6 +1,6 @@
 ---
 name: sh-pwsh7-install
-description: 在 Windows 上零影响安装 PowerShell 7.x（跨平台 pwsh）：ZIP 绿色版安装到用户目录，不写注册表、不改系统 PATH、不加右键菜单、绝不覆盖系统自带的 5.1，删除文件夹即卸载。当用户提到安装/升级 PowerShell 7、pwsh、PS7，想要绿色版/便携版/免安装 PowerShell，担心装了会影响现有系统、怕覆盖 5.1，问 5.1 和 7.x 的区别/共存关系，或说"帮我装 pwsh 但别动我系统"、"装个新版 powershell 但要能随时卸干净"时使用——即使只说"装个新版 powershell"也应触发。
+description: 装机：PowerShell 7 绿色版 ZIP 安装，零影响可卸干净。点名使用
 ---
 
 # sh-pwsh7-install — PowerShell 7.x 零影响安装
