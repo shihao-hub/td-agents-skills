@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-disk-space-cleanup",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我的 C 盘快满了，帮我看看空间都被什么占了",
+      "expected_output": "全程只读：Get-Volume 总/剩余、C 盘根系统文件（hiberfil/pagefile）、用户目录与 AppData\\Local、AppData\\Roaming 子目录大小排行、vhdx 定位、回收站大小；输出大头清单并按 A/B/C 分级给处置建议，等待用户拍板，不执行任何删除",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "把 Temp 里那些 _MEI 开头的目录清掉",
+      "expected_output": "枚举 %LOCALAPPDATA%\\Temp 下 _MEI* 目录并列出数量与总大小，逐个 Remove-Item -LiteralPath -Recurse -Force 且 ErrorAction Continue 跳过占用，最后报告 deleted/skipped 数与释放量；不碰 Temp 内其他内容",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "那个 32GB 的 WSL 虚拟磁盘我不用了，帮我删掉",
+      "expected_output": "先读 HKCU Lxss 注册表把 vhdx 路径映射到发行版名并 wsl -l -v 复核，明确告知不可逆；确认后 wsl --unregister <名>，输出乱码不误判失败，用 Test-Path vhdx 与 Get-Volume 验证释放量；docker-desktop 的 vhdx 不动",
+      "files": []
+    }
+  ]
+}
