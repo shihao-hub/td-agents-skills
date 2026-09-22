@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-uwp-proxy-loopback",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "电脑开了代理（如 Clash 7897 端口），打开微软商店提示“出现错误，Microsoft Store初始化失败。请尝试刷新或稍后返回”，浏览器上网正常，帮我定位并修复。",
+      "expected_output": "诊断出 UWP AppContainer 本地回环隔离机制；解释普通浏览器与 UWP 应用的区别；给出 CheckNetIsolation 管理员豁免命令，提醒 PowerShell 下需加 `--%` 避免参数无效报错；并给出批量豁免或 TUN 模式备选方案。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我在管理员 PowerShell 里执行 CheckNetIsolation.exe LoopbackExempt -a -n=Microsoft.WindowsStore_8wekyb3d8bbwe 报了“错误: 参数无效”，怎么回事？",
+      "expected_output": "指出 PowerShell 参数解析器会把 `-n=` 拆解导致等号丢失的坑；给出正确的命令写法（使用 `--%` 停止解析符，或通过 `cmd /c` 调用）。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "不仅微软商店打不开，其他几个自带应用（Xbox、便签）在开代理时也连不上网，有没有一劳永逸解除所有 UWP 应用回环限制的方法？",
+      "expected_output": "提供 PowerShell 循环批量遍历 `(Get-AppxPackage).PackageFamilyName` 并配合 CheckNetIsolation 批量解除豁免的命令，或者指导在代理客户端开启 TUN 模式 / UWP Loopback 工具。",
+      "files": []
+    }
+  ]
+}

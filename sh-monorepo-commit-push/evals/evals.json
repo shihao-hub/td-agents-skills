@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-monorepo-commit-push",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "这个总仓库里 python、go 两个子仓库都有改动，python 子仓库下面还有两个新项目。请把当前授权范围内的项目分别检查、分别 commit 并在每次 commit 后 push，最后更新父仓库指针。不要把所有东西一次性提交。",
+      "expected_output": "先盘点父仓库和两个子仓库的状态，按项目边界验证并分别提交推送；所有子仓库成功后再单独提交父仓库子模块指针，并汇报每个 commit 和 push 结果。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "请整理并提交这个 Python 项目。目录里有源码、uv.lock、.venv、__pycache__、pytest 缓存和一个运行时 SQLite 文件。源码要先跑项目已有的检查，提交时只能包含源码和必要配置，缓存、虚拟环境和运行时数据库不能进 Git；提交后马上 push。",
+      "expected_output": "先依据项目规则识别并排除运行时产物，执行真实可用的验证命令，精确暂存项目文件，检查 staged diff 后单独 commit 并立即 push；如果没有测试，应明确报告而不是虚报测试通过。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "子仓库的功能修复已经 commit 但还没有 push，父仓库也有文档和子模块指针变化。请按正确顺序完成提交。远端如果拒绝 push 或分支发生分叉，不要 force push，也不要继续处理后续项目。",
+      "expected_output": "先处理并确认子仓库 commit 的 push，成功后再提交父仓库指针和其他独立主题；遇到远端拒绝或分叉立即停止当前流程并报告，不执行 force push 或批量回滚。",
+      "files": []
+    }
+  ]
+}
