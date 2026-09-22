@@ -1,4 +1,3 @@
-Skills 目录可以 Commit and Push 了。
 ---
 name: sh-spec-driven-development
 description: spec 驱动开发工作流（Feature 新功能 / Bug Fix 修缺陷双类型；需求先行 / 设计先行 / 快速三条路径）：把想法或缺陷报告变成可实施的三份文档——requirements.md 或 bugfix.md（含编号、具体、可测的验收标准）、design.md（设计）、tasks.md（任务清单），存于 specs/{NN}-{feature_name}/；每个文档先获用户批准再继续，三份全部批准后停下等待执行指令；执行默认连续完成全部任务、不写测试不跑测试。当用户要开发新功能/模块/服务/CLI 且工作量值得先规划，或要系统性修复缺陷（"修 bug"、"修复"、"报错了"、"崩溃"、"回归"、"行为不符合预期"），或说 "spec-driven development"、"feature spec"、"先写需求"、"需求文档"、"设计文档"、"任务拆解"、"帮我实现/开发 X 功能"、"修复 X 报错/回归" 时使用——即使没说 "spec" 这个词。用户要求从已有 spec 文件继续工作或执行任务清单时也应触发。轻量单文件计划流程改用 sh-plan-driven-development。

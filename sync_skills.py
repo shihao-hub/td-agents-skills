@@ -2,15 +2,18 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""skills 同步器：以 .agents/skills 为唯一源，同步到 Claude Code / Codex / opencode / Antigravity。
+"""skills 同步器：以 .agents/skills 为唯一源，同步到 Claude Code / Codex / opencode / Gemini。
 
 默认 link 模式（junction，无需管理员权限）：
-- claude / opencode / antigravity：整个 skills 目录建成指向源的 junction，源即真身，改源四端即时生效
+- claude / opencode / gemini：整个 skills 目录建成指向源的 junction，源即真身，改源即时生效
 - codex：skills 本体保持真实目录（保留内置 .system），其下每个 skill 建 per-skill junction
 copy 模式（--mode copy）：镜像复制实体文件，并淘汰目标中源没有的内容（codex 的 .system 保留）。
 
+pi 例外：pi 原生就把 ~/.agents/skills（即本源目录）当全局 skills 加载，并按其真实路径去重，
+因此无需任何链接或复制；本脚本仅登记其路径，--agent pi / --agent all 时给出说明而不做改动。
+
 用法：
-    uv run sync_skills.py [--mode link|copy] [--agent claude|codex|opencode|antigravity|all] [--check]
+    uv run sync_skills.py [--mode link|copy] [--agent claude|codex|opencode|gemini|pi|all] [--check]
     sync_skills.bat            # 等价于 uv run sync_skills.py（默认 link + all）
 """
 
@@ -27,13 +30,17 @@ from pathlib import Path
 # 源 = 本脚本所在目录（.agents/skills），目录整体搬移也不用改代码
 SRC = Path(__file__).resolve().parent
 
-# 四个 agent 的 skills 根目录
-# 2026-09-21 新增 .antigravity
+# 需要同步（链接/复制）的 agent 的 skills 根目录
 AGENTS = {
     "claude": Path.home() / ".claude" / "skills",
     "codex": Path.home() / ".codex" / "skills",
     "opencode": Path.home() / ".config" / "opencode" / "skills",
-    "antigravity": Path.home() / ".antigravity" / "skills",
+    "gemini": Path.home() / ".gemini" / "config" / "skills",
+}
+
+# 原生读取源目录、无需同步的 agent；仅登记其 skills 路径用于说明
+NATIVE_AGENTS = {
+    "pi": Path.home() / ".pi" / "agent" / "skills",
 }
 
 # 同步时必须保留、绝不删除的目标内条目（按 agent -> 名称集合）
@@ -187,10 +194,19 @@ class Sync:
 
         self.do(agent, "MIRROR", SRC, "->", dst_root, fn=copy)
 
+    # ---------- 原生读取源目录的 agent ----------
+
+    def sync_native(self, agent: str) -> None:
+        """pi：原生读取源目录，不做任何链接/复制，只给出说明"""
+        self.log(agent, "NATIVE", f"{NATIVE_AGENTS[agent]}（原生读取 {SRC}，无需同步）")
+        self.skips += 1
+
     # ---------- 入口 ----------
 
     def sync(self, agent: str) -> None:
-        if self.mode == "link":
+        if agent in NATIVE_AGENTS:
+            self.sync_native(agent)
+        elif self.mode == "link":
             if agent == "codex":
                 self.sync_link_per_skill(agent)
             else:
@@ -206,16 +222,17 @@ def main() -> int:
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
         sys.stdout.reconfigure(encoding="utf-8")
 
-    ap = argparse.ArgumentParser(description="以 .agents/skills 为源同步 skills 到四个 agent")
+    ap = argparse.ArgumentParser(
+        description="以 .agents/skills 为源同步 skills 到各 agent（pi 原生读取源目录，无需同步）")
     ap.add_argument("--mode", choices=["link", "copy"], default="link",
                     help="link=junction 链接（默认）；copy=镜像复制实体文件")
-    ap.add_argument("--agent", choices=[*AGENTS, "all"], default="all",
-                    help="目标 agent（默认 all）")
+    ap.add_argument("--agent", choices=[*AGENTS, *NATIVE_AGENTS, "all"], default="all",
+                    help="目标 agent（默认 all；pi 为原生读取，仅提示不同步）")
     ap.add_argument("--check", action="store_true",
                     help="dry-run：只打印将执行的动作，不做任何修改")
     args = ap.parse_args()
 
-    targets = list(AGENTS) if args.agent == "all" else [args.agent]
+    targets = [*AGENTS, *NATIVE_AGENTS] if args.agent == "all" else [args.agent]
     s = Sync(args.mode, args.check)
 
     src_count = len([p for p in SRC.iterdir() if p.is_dir()])

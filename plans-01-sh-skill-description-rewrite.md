@@ -64,32 +64,32 @@
 
 ## 任务分解
 
-Task 1: 确认 git 回滚基线
+- [x] Task 1: 确认 git 回滚基线
   - 文件：无（仓库级操作）
   - 实现：确认 `~/.agents/skills` 工作区干净（落盘时已确认）；若有未提交变更则整体 commit 一次作快照
   - 验证：`git status --porcelain` 输出为空；否则记录快照 commit hash
   - Demo：明确回滚点，失败可 `git checkout -- .` 一键还原
 
-Task 2: 重写 23 个 SKILL.md 的 description 行
+- [x] Task 2: 重写 23 个 SKILL.md 的 description 行
   - 文件（相对 `~/.agents/skills/`，同一改动模式跨多文件，逐个替换 frontmatter 中 `description:` 单行，正文与其余 frontmatter 不动）：
     sh-atuin-pwsh-history/SKILL.md、sh-bruno-collection/SKILL.md、sh-cc-switch-db/SKILL.md、sh-chrome-devtools-mcp-setup/SKILL.md、sh-cluacpp-build/SKILL.md、sh-github-coexist/SKILL.md、sh-github-repo-cleanup/SKILL.md、sh-image-watermark-removal/SKILL.md、sh-lark-chat-archive/SKILL.md、sh-opencode-glm-auth/SKILL.md、sh-pwsh7-install/SKILL.md、sh-pystand-pack/SKILL.md、sh-sql-query-builder/SKILL.md、sh-sublime-menu/SKILL.md、sh-video-transcribe/SKILL.md、sh-web-archive/SKILL.md、sh-zed-acp-agent-env/SKILL.md、sh-zed-lsp-config/SKILL.md、sh-zed-lsp-install/SKILL.md、sh-zed-opencode-setup/SKILL.md、sh-zed-session-db/SKILL.md、sh-backend-design/SKILL.md、sh-tech-doc-writing/SKILL.md
   - 实现：按上表 23 条逐一替换；保持单行 YAML 格式，不引入换行
   - 验证：`git diff --stat` 显示恰好 23 个文件各 1 行增 1 行删；`git diff` 抽查 3 个确认只动 description 行
   - Demo：任选一个 skill 目录 cat SKILL.md，frontmatter 干净一行
 
-Task 3: 全量校验
+- [x] Task 3: 全量校验
   - 文件：无（只读校验）
   - 实现：PowerShell 扫描全部 26 个 sh-*：description ≤1024 字符、不含"必须使用"与"也要触发"、frontmatter name 仍与目录名一致（未误改）
   - 验证：`$bad = Get-ChildItem "$env:USERPROFILE\.agents\skills" -Directory -Filter 'sh-*' | ForEach-Object { $raw = Get-Content (Join-Path $_.FullName 'SKILL.md') -Raw -Encoding UTF8; $name = if ($raw -match '(?m)^name:\s*(.+)$') { $Matches[1].Trim() }; $desc = if ($raw -match '(?m)^description:\s*(.+)$') { $Matches[1] }; [PSCustomObject]@{ dir=$_.Name; len=$desc.Length; badPhrase=($desc -match '必须使用|也要触发'); nameMismatch=($name -ne $_.Name) } } | Where-Object { $_.len -gt 1024 -or $_.badPhrase -or $_.nameMismatch }; $bad` 输出 0 行
   - Demo：空输出即全部合规
 
-Task 4: evals 影响检查（只报告，不修改）
+- [x] Task 4: evals 影响检查（只报告，不修改）
   - 文件：5 个带 evals/ 的 skill 目录下 eval 文件
   - 实现：grep eval 文件中按旧触发语言写的用例（含"必须使用/也要触发"或长触发短语），列出清单
   - 验证：`rg -l "必须使用|也要触发" --glob "evals/**"` 于 `~/.agents/skills` 输出受影响文件清单（含 lark-* 等非本轮范围的仅记录）
   - Demo：报告哪些 eval 用例会按设计失效，交用户决定是否延后批量更新
 
-Task 5: 前后对比收尾
+- [x] Task 5: 前后对比收尾
   - 文件：无（统计输出）
   - 实现：重跑 description 字符统计，输出 sh-* 合计与全目录合计
   - 验证：统计命令输出 sh-* 26 个合计 ≤2,600 字符（23 个新写 ~1,900 + 3 个 plan 三件套原样 ~1,307）
@@ -102,7 +102,18 @@ Task 5: 前后对比收尾
 - evals 用例按新 description 批量更新
 - 未来 50+ skill 时路由器（mega-skill）试点
 
+
+
+## 实施说明（2026-09-22 执行完毕）
+
+- Task 1：基线 commit `dc41996`（工作区仅计划文件未跟踪，随基线一并提交；HEAD 即回滚点）
+- Task 2：23/23 替换 OK，全部文件无 BOM、行尾保持原样；git diff --stat 恰好 23 文件各 1 行增 1 行删
+- Task 3：26 个 sh-* 全量校验 0 命中（长度≤1024、无""必须使用/也要触发""、name==目录名；plan 三件套原文也不含该二短语）
+- Task 4：evals 检查 0 命中；5 个 evals 目录（sh-bruno-collection/sh-pwsh7-install/sh-spec-driven-development/sh-sql-query-builder/sh-tech-doc-writing），用例为任务式 prompt 且新 description 保留任务关键词，语义仍对齐，无需修改
+- Task 5：sh-* 26 个 description 合计 9,482 → **2,582** 字符（23 个新写合计 1,275，trio 原样 1,307）≤2,600 达标；全目录 68 个 21,242 → **14,342** 字符
+- 偏差：计划预估 23 条新写 ~1,900 字符，实际 1,275（更精简），全目录预估 ~13,300，实际 14,342（全目录基线按 67 个计，未含后增的 sh-zed-acp-agent-env 451 字符，口径修正后一致）
+- 变更未提交，保留工作区供 git diff 审阅
 ---
-**最后更新：** 2026-09-21
+**最后更新：** 2026-09-22
 **作者：** AI & User
 **版本：** v1
