@@ -8,6 +8,7 @@ description: 直接读写 cc-switch SQLite，绕过 UI 配置各应用供应商�
 沉淀自 2026-09-06 实操（cc-switch v3.20.0，Windows，SQLite 版），关键结论经源码交叉验证（farion1231/cc-switch）。cc-switch 升级后表结构可能变化——用 `cc-db.mjs tables` 先核对再动手。
 2026-09-14 增补：改既有条目/改 id 两脚本（cc-update-provider-config / cc-rename-provider-id）、**providers.id 外键坑**（见总原则 9）、DeepSeek→opencode 段默认 max 实战案例（app-config-shapes.md）。
 2026-09-21 增补：opencode 段模型级 `limit` 坑——自定义 provider 的 `limit.context=0` 会让 Zed 永不显示上下文指示器（limit 不从 models.dev 合并；机制、实测值与修法见 sh-zed-opencode-setup 任务 B2）。实战用 `cc-update-provider-config.mjs` 同步 zhipu-glm / deepseek-max 两条 settings_config。
+2026-09-23 增补：codex 段代理翻译坑——`meta.apiFormat` 决定本地代理透传还是翻译（GLM 无 `/responses`，必须 `openai_chat` + `codexChatReasoning`）；模型目录 `modelCatalog.inputModalities` 控制 Codex 应用贴图能力；新增 `cc-update-meta.mjs`（改 meta 通用脚本）。
 
 ## 总原则（每次先读）
 
@@ -50,6 +51,9 @@ node scripts/cc-add-provider.mjs --app pi --id zhipu-glm --config cfg.json \
 # 改既有条目的 settings_config（任意 app 段；默认 dry-run）
 node scripts/cc-update-provider-config.mjs --app opencode --id deepseek-max --config cfg.json [--db 沙箱.db --apply]
 
+# 改既有条目的 meta（任意 app 段；默认 dry-run）
+node scripts/cc-update-meta.mjs --app codex --id <id> --meta meta.json [--db 沙箱.db --apply]
+
 # 改供应商 id（providers 主键 + provider_endpoints/provider_health 外键一起迁移；内置 defer FK）
 node scripts/cc-rename-provider-id.mjs --app opencode --from deepseek-official --to deepseek-max [--db 沙箱.db --apply]
 ```
@@ -83,6 +87,17 @@ Copy-Item "$env:USERPROFILE\.cc-switch\cc-switch.db" "$env:USERPROFILE\.cc-switc
 Copy-Item "<备份文件>" "$env:USERPROFILE\.cc-switch\cc-switch.db" -Force
 ```
 
+## 任务 E：Codex 段代理翻译与模型目录（2026-09-23 实战）
+
+cc-switch 开本地代理（`enableLocalProxy`）后 codex live 配置被接管：`base_url=http://127.0.0.1:15721/v1` + `wire_api="responses"` + `experimental_bearer_token="PROXY_MANAGED"`，上游实际发什么由 provider `meta` 决定：
+
+- `meta.apiFormat="openai_responses"` → 代理透传 `{base_url}/responses`（上游须原生支持 Responses API）
+- `meta.apiFormat="openai_chat"` → 代理把 Responses 请求翻译成 `{base_url}/chat/completions`，响应转回；推理映射看 `meta.codexChatReasoning`
+
+**智谱 GLM coding 端点没有 `/responses`（实测 404）**，GLM 渠道必须 `openai_chat` + `codexChatReasoning`——配错 `openai_responses` 的症状是代理报 `upstream_status: HTTP 404; path /v4/responses`。排查：直连上游对比 `/responses` vs `/chat/completions` → `curl` 代理 `http://127.0.0.1:15721/v1/responses` → `tail ~/.cc-switch/logs/cc-switch.log | grep '\[Codex\] >>> 请求目标'` 看实际转发。
+
+`modelCatalog.models[].inputModalities` 控制 Codex 应用贴图（`["text","image"]`；能力先直连 API 实测，智谱 glm-5.3-flash ✅ / glm-5.3 ❌ 报 1210）；改完 settings_config 重启 cc-switch 会重新生成 `~/.codex/cc-switch-model-catalog.json`，Codex 应用还需重启重载。改 meta 用 `cc-update-meta.mjs`（dry-run/备份/回读）。完整字段表与验证命令见 `references/app-config-shapes.md` codex 段。
+
 ## 与 sh-zed-opencode-setup 的分工
 
 - 本 skill：cc-switch 数据库通用机制（表结构/读写/备份/各段形状/pi 机制）。
@@ -91,4 +106,4 @@ Copy-Item "<备份文件>" "$env:USERPROFILE\.cc-switch\cc-switch.db" -Force
 ## 深入资料
 
 - `references/db-schema.md` —— 全部 18 张表清单、providers 表逐列详解、meta JSON 字段、settings 表已知键。
-- `references/app-config-shapes.md` —— 各 app_type 的 settings_config 形状、Switch vs Additive 同步模式、pi 深挖（models.json schema、thinking 级联）、完整实战案例。
+- `references/app-config-shapes.md` —— 各 app_type 的 settings_config 形状、Switch vs Additive 同步模式、codex 代理翻译与模型目录（apiFormat/codexChatReasoning/inputModalities）、pi 深挖（models.json schema、thinking 级联）、完整实战案例。

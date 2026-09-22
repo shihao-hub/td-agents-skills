@@ -18,7 +18,7 @@
 }
 ```
 
-## codex 段
+## codex 段（Switch 型）
 
 `auth`（对象）+ `config`（**TOML 文本**）+ `modelCatalog`：
 
@@ -29,6 +29,61 @@
   "modelCatalog": { "models": [{ "model": "glm-5.3", "displayName": "GLM-5.3", "contextWindow": 1000000, "reasoningLevels": ["max"], "defaultReasoningLevel": "max" }] }
 }
 ```
+
+### 代理模式下的 live 形状（enableLocalProxy=true，2026-09-23 实测）
+
+切换/启动时 cc-switch 接管 `~/.codex/config.toml`：`[model_providers.custom].base_url` 被改写为 `http://127.0.0.1:15721/v1`、追加 `experimental_bearer_token = "PROXY_MANAGED"`、`model_catalog_json = "cc-switch-model-catalog.json"`；`~/.codex/auth.json` 保留官方 OAuth（`preserveCodexOfficialAuthOnSwitch`）。settings_config 里的 `base_url` 仍是直连上游地址，只存 DB。
+
+### meta.apiFormat：代理透传 vs 翻译（重点坑）
+
+| apiFormat | 代理行为 | 适用 |
+|---|---|---|
+| `openai_responses` | 透传 `{base_url}/responses` | 上游原生支持 Responses API |
+| `openai_chat` | 翻译为 `{base_url}/chat/completions`，响应转回 Responses 格式 | 上游只有 chat completions（**智谱 GLM**） |
+
+智谱 coding 端点（`https://open.bigmodel.cn/api/coding/paas/v4`）**没有 `/responses`（实测 404）**。GLM 渠道配成 `openai_responses` 时代理直接透传并报 `upstream_status: HTTP 404; path /v4/responses`；正确配置：
+
+```json
+"apiFormat": "openai_chat",
+"codexChatReasoning": {
+  "supportsThinking": true,           // 启用思考
+  "supportsEffort": false,            // 不向智谱发 reasoning_effort（GLM 不支持）
+  "thinkingParam": "thinking",        // 上游思考参数名
+  "effortParam": "none",
+  "outputFormat": "reasoning_content" // 从响应 reasoning_content 读思考内容
+}
+```
+
+### modelCatalog 与图片支持
+
+`modelCatalog.models[]` 生成 `~/.codex/cc-switch-model-catalog.json`，Codex 应用据此决定模型能力/UI：
+
+| DB 字段 | live catalog 字段 | 说明 |
+|---|---|---|
+| model / displayName | slug / display_name | 模型 ID 与显示名 |
+| contextWindow | context_window / max_context_window | |
+| inputModalities | input_modalities | **`["text","image"]` 才允许贴图**；仅 text 时应用报「此模型不支持图像输入」 |
+| reasoningLevels | supported_reasoning_levels | 可选思考档位 |
+| defaultReasoningLevel | default_reasoning_level | 缺省时 cc-switch 自己回落（实测 fallback=max） |
+| supportsParallelToolCalls | supports_parallel_tool_calls | |
+
+改完 settings_config 重启 cc-switch，live catalog 自动重新生成；**Codex 应用需重启才会重载**。模型是否真支持视觉必须实测——直连发 `image_url` content，智谱对不支持的模型回 `1210 参数非法`（实测 glm-5.3-flash ✅「红色圆形」、glm-5.3 ❌）。
+
+### 排查与验证命令（GLM 实战）
+
+```bash
+# 1) 上游能力：chat 通、responses 404
+curl -s https://open.bigmodel.cn/api/coding/paas/v4/responses -H "Authorization: Bearer $KEY" -d '{"model":"glm-5.3","input":"hi"}'
+# 2) 代理链路（修复后应返回 Responses 对象而非 upstream 404）
+curl -s -X POST http://127.0.0.1:15721/v1/responses -H "Authorization: Bearer PROXY_MANAGED" \
+  -H 'Content-Type: application/json' -d '{"model":"glm-5.3","input":"hi"}'
+# 3) 日志确认实际转发目标（应命中 /chat/completions）
+tail ~/.cc-switch/logs/cc-switch.log | grep '\[Codex\] >>> 请求目标'
+# 4) 端到端（图片：glm-5.3-flash + -i；提示走 stdin 传入）
+printf '%s' '描述图片' | codex exec --model glm-5.3-flash -i test.png
+```
+
+图片在代理翻译中为 Responses `input_image` → chat `image_url`，已验证；流式 SSE（`response.reasoning_summary_text.delta` 等）亦正常。
 
 ## opencode 段（Additive）
 

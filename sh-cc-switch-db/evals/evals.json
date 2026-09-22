@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-cc-switch-db",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "cc-switch 里 codex 切到 Zhipu GLM 渠道后，codex 请求报 404（代理日志显示 upstream_status: HTTP 404, path /v4/responses），帮我排查并修好。",
+      "expected_output": "定位到 providers.meta.apiFormat 被配成 openai_responses；直连智谱确认 coding 端点无 /responses（只有 chat/completions）；改为 openai_chat 并补 codexChatReasoning；退出 cc-switch、备份后用 cc-update-meta.mjs --apply 写库；重启后用 curl 代理 /v1/responses 验证不再 404 且日志转发目标为 /chat/completions",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Codex 应用里选 glm-5.3-flash 附加图片时提示「此模型不支持图像输入」，但 flash 是支持视觉的，帮我配置一下。",
+      "expected_output": "先直连智谱 API 实测能力（glm-5.3-flash 支持、glm-5.3 报 1210 参数非法）；改 providers.settings_config.modelCatalog 中 flash 的 inputModalities 为 [\"text\",\"image\"]（cc-update-provider-config.mjs）；重启 cc-switch 让 ~/.codex/cc-switch-model-catalog.json 重新生成；用代理 input_image 请求与 codex CLI -i 带图验证；提醒重启 Codex 应用重载目录",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "给 codex 段的 GLM 渠道配上智谱 coding plan 的用量显示，顺便确认该渠道的 API 格式是能用的状态。",
+      "expected_output": "用 cc-update-meta.mjs 更新 providers.meta（默认 dry-run 先展示，确认后备份+事务+回读）；usage_script 用 token_plan / codingPlanProvider=zhipu；apiFormat 为 openai_chat 且含 codexChatReasoning 翻译块；提醒重启 cc-switch 生效",
+      "files": []
+    }
+  ]
+}

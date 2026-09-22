@@ -56,6 +56,8 @@ const db = new DatabaseSync(dbPath, { readOnly: true }); // 探查一律 readOnl
     "autoQueryInterval": 5, "codingPlanProvider": "zhipu"
   },
   "endpointAutoSelect": true,  // 端点自动选择
+  "apiFormat": "openai_chat",  // codex 段代理行为：openai_responses=透传 /responses；openai_chat=翻译为 /chat/completions（GLM 必须，详见 app-config-shapes.md）
+  "codexChatReasoning": { ... }, // codex 段 chat 翻译的推理映射：supportsThinking/supportsEffort/thinkingParam/effortParam/outputFormat
   "liveConfigManaged": true    // opencode 段：与 opencode.json 双向同步，两侧必须一致（尤其 name）
 }
 ```
