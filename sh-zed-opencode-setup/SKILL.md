@@ -18,7 +18,7 @@ description: 配置：Zed 的 opencode agent 安装修复、思考档位、供�
 2. **涉及 cc-switch 的操作（尤其 Claude Code → opencode 迁移）必须先向用户展示计划并确认**，默认只 dry-run，用户明确同意后才 `--apply`。这是写数据库的操作，搞砸会影响用户所有供应商配置。
 3. **opencode 会回写 opencode.json**：在 Zed 里选一次模型，opencode 就把"解析后的配置"整体回写 opencode.json——手动改的文件可能被覆盖（实测把 `reasoning: false` 翻回 `true`、把 name 规范化成 ID）。所以：改完 opencode.json 后让用户**完全退出 Zed 再打开**验证；cc-switch 侧的同名条目也要同步更新（`liveConfigManaged` 双向同步）。
 4. **Zed 不会因开关 agent 面板、新建线程或改 `agent_servers.*.env` 重启 ACP agent 进程（opencode/antigravity/codex-acp 等一律如此）**，只有 Zed 完全退出或手动杀进程才会——改 env 后不杀旧进程，新配置永不生效（详见 sh-zed-acp-agent-env）。排障时用 `tasklist | grep -i opencode` 看进程是否是旧的（对比启动时间）。
-5. Windows Git Bash 坑：**curl 发中文会按 GBK 编码**导致 JSON parse error（用纯 ASCII payload）；PATH 里的 `python` 可能是 Windows 商店占位 stub（静默失败），脚本一律用 `node`（v22+ 自带 `node:sqlite`）；**`bash` 命令可能解析到 WSL**（读不到 `C:/` 路径、无 `$LOCALAPPDATA`，报 "No such file or directory"）——调 Git Bash 脚本显式用全路径：`& 'D:\Program Files\Git\bin\bash.exe' <script> <args>`（PowerShell 下脚本路径用正斜杠）。
+5. Windows Git Bash 坑：**curl 发中文会按 GBK 编码**导致 JSON parse error（用纯 ASCII payload）；PATH 里的 `python` 可能是 Windows 商店占位 stub（静默失败），脚本一律用 `node`（v22+ 自带 `node:sqlite`）；**`bash` 命令可能解析到 WSL**（读不到 `C:/` 路径、无 `$LOCALAPPDATA`，报 "No such file or directory"）——调 Git Bash 脚本要显式用 bash.exe 全路径，路径按机器探测（勿写死盘符）：`$bash = (Get-Command git).Source -replace '\\cmd\\git\.exe$','\bin\bash.exe'; if (-not (Test-Path $bash)) { $bash = "$env:ProgramFiles\Git\bin\bash.exe" }`，然后 `& $bash <script> <args>`（PowerShell 下脚本路径用正斜杠）。
 
 ## 环境路径（按机器解析，不要硬编码）
 
@@ -228,7 +228,7 @@ node scripts/cc-switch-migrate.mjs --apply  # 用户确认后执行（自动备�
 | `subclaude-xxx/claude-opus-5 is not a valid value` 警告 | Zed 侧对自定义模型 ID 的校验提示，无害可无视 |
 | 装 antigravity 等 ACP registry agent 反复重下 / 卡 rename | 同任务 A 竞态，**适用所有 registry agent**（含非 GitHub 直链）；目录名可推算（见任务 A），`zed-agent-install` 照用 |
 | Zed 里 antigravity（或其它 ACP agent）登录：浏览器显示认证成功但 Zed 仍要求登录 / 日志反复 `onboarding_failed` | agent 进程没拿到代理/CA 环境变量 + 旧进程复用；`agent_servers.<id>.env` 注入并杀旧进程，见 **sh-zed-acp-agent-env** |
-| bash 跑脚本报 No such file or directory（`C:/` 路径明明存在） | `bash` 解析到了 WSL；显式用 Git Bash 全路径 `& 'D:\Program Files\Git\bin\bash.exe'` |
+| bash 跑脚本报 No such file or directory（`C:/` 路径明明存在） | `bash` 解析到了 WSL；显式用探测到的 Git Bash 全路径：`(Get-Command git).Source` 把 `cmd\git.exe` 换成 `bin\bash.exe`，探测失败退 `"$env:ProgramFiles\Git\bin\bash.exe"`（见总原则 5） |
 | curl 报 JSON Invalid UTF-8 | Git Bash 中文按 GBK 发送，payload 换 ASCII |
 | node 脚本调 sqlite | 用 `require('node:sqlite')` 的 `DatabaseSync`，v22+ 可用 |
 
