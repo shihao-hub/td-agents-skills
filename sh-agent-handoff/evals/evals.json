@@ -3,26 +3,44 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "sh-agent-handoff: 把这次会话交接给另一个 agent，我要换到 claude code 里接着改这个 taskmon 的进程树过滤。",
-      "expected_output": "走到导出侧。先按平台解析用户级数据目录（优先 AGENT_HANDOFF_DIR，其次 %APPDATA%\\agent-handoff，不得写死用户名，不得放进当前项目目录），project 段取 git 仓库根目录名（taskmon），文件名为 <YYYYMMDD-HHmmss>-<英文主题>.md。先创建完整目录链再写文件。正文严格包含头部血缘（生成时间/来源 agent/来源工作目录/仓库根目录）与 Goal、Constraints & Preferences、Progress(Done/In Progress/Blocked)、Key Decisions、Next Steps、Critical Context、Referenced Files 七个部分，Referenced Files 每行同时给出仓库相对路径与绝对路径并标注 read/modified。全文 ≤150 行，磁盘上已有的内容只写路径不复制正文。回复最后单独输出一行 `sh-agent-handoff: <绝对路径>`，且不把简报正文再贴一遍。",
+      "prompt": "sh-agent-handoff",
+      "expected_output": "空手输入且本会话已有实质工作历史，判定为导出侧，不得反问「交接给谁」「主题是什么」「输出到哪里」。先按平台解析用户级数据目录（优先 AGENT_HANDOFF_DIR，其次 APPDATA 下的 agent-handoff，不得写死用户名，不得放进当前项目目录），project 段取 git 仓库根目录名，topic 由本次会话内容自行概括成 3-5 个英文小写单词，文件名为 <YYYYMMDD-HHmmss>-<topic>.md。先创建完整目录链再写文件。正文严格包含顶部血缘头部（生成时间 / 来源 agent / 来源工作目录 / 仓库根目录）与 Goal、Constraints & Preferences、Progress(Done / In Progress / Blocked)、Key Decisions、Next Steps、Critical Context、Referenced Files；Referenced Files 每行标注 read / modified，仓库内文件给「相对路径 + 绝对路径」，仓库外文件给绝对路径并标注「仓库外」。全文 <=150 行，磁盘上已有的内容只写路径不复制正文。回复简短，最后单独输出一行 sh-agent-handoff: <绝对路径>，且不把简报正文再贴一遍。",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "sh-agent-handoff: C:\\Users\\<user>\\AppData\\Roaming\\agent-handoff\\taskmon\\20260923-1845-process-tree-filter.md\n\n把这个过滤逻辑也加到 GUI 的进程列表视图里。",
-      "expected_output": "走到接管侧。完整读取该文件；随后逐条校验 Referenced Files 中的路径是否真实存在，对不上的路径列出来并请用户给出正确的仓库根目录（不跳过、不臆测）。动手前用不超过 6 行复述接手状态：目标、已完成、卡点、打算先做的下一步。之后再处理用户关于 GUI 进程列表视图的问题。简报里已写明的信息不得重复提问。",
+      "prompt": "sh-agent-handoff",
+      "expected_output": "空手输入，但本会话是刚开的、没有任何可交接的工作内容。正确行为：不得凭空生成一份空洞的交接简报，也不得默默什么都不做。应判断这几乎必然是「想接管却忘了写任务描述」，于是明确告知本会话没有可交接内容，并扫描交接根目录列出最近的候选交接件（主题、生成时间、来源 agent、仓库）询问用户是否要接管其中一个。若一个候选都没有，则请用户直接给出路径。",
       "files": []
     },
     {
       "id": 3,
-      "prompt": "sh-agent-handoff: 帮我把当前进度整理出来，接收方是网页版的 chat，它读不了本地文件。",
-      "expected_output": "走导出侧的\"直接输出正文\"分支而不是写文件。输出一份完整、自包含、结构符合模板（Goal/Constraints & Preferences/Progress/Key Decisions/Next Steps/Critical Context/Referenced Files）的 Markdown 简报，可直接整段粘贴。Referenced Files 仍要给出路径（网页版 agent 无法读取，但用户可能手工上传），并明确提示用户这些文件需要自行提供。不得输出 `sh-agent-handoff: <路径>` 这一行，因为没有产生文件。",
+      "prompt": "sh-agent-handoff 把 taskmon 的进程树过滤也加到 GUI 的进程列表视图里",
+      "expected_output": "带任务描述、未给路径，判定为接管侧并自动定位。扫描交接根目录并按文件名内时间戳倒序（不得用 mtime），只读每个候选文件顶部的血缘头部而不全文读，把当前工作目录所属 project 的候选排在前面。自动定位必须先经用户确认；本例候选有多个，因此列出最近 5 个（主题 / 生成时间 / 来源 agent / 仓库），把同 project 里最新那个标为默认建议并请用户确认序号，不得未经确认直接开干。用户确认后再完整读取、校验 Referenced Files 可达性、用不超过 6 行复述接手状态，最后处理「GUI 进程列表视图加过滤」这个任务。",
       "files": []
     },
     {
       "id": 4,
-      "prompt": "sh-agent-handoff: D:\\handoff\\20260923-1200-docs-site-config.md\n\n接着把搜索索引那块弄完。",
-      "expected_output": "接管侧读取成功后，发现简报中的 Referenced Files 绝对路径（如 D:\\Users\\language_projects\\docs\\...）在本机不存在——这是换了机器的典型信号。正确行为：明确报告哪些路径不可达、指出应改用简报里的仓库相对路径，并请用户提供本机上的仓库根目录；不得跳过这些文件继续执行，也不得凭文件名编造内容。用户给出仓库根目录后，用相对路径重新定位再复述理解、开始工作。",
+      "prompt": "sh-agent-handoff 继续把搜索索引那块弄完",
+      "expected_output": "带任务描述、未给路径，只能自动定位，因此无论候选有几个都必须先经用户确认。本例扫描后只有 1 个候选，正确行为是把该候选的主题、生成时间、来源 agent、仓库列出来，说明这是唯一找到的候选，并给出另一条出口（跨机器或存到别处时请用户直接给路径），然后等用户确认。不得因为只有一个候选就跳过确认直接读取并开干。用户确认后再完整读取、校验 Referenced Files 可达性、用不超过 6 行复述接手状态，最后继续搜索索引的工作。",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "sh-agent-handoff: C:/Users/me/AppData/Roaming/agent-handoff/taskmon/20260923-1845-process-tree-filter.md\n\n把这个过滤逻辑也加到 GUI 的进程列表视图里。",
+      "expected_output": "给了显式路径，跳过自动定位直接读该文件；随后逐条校验 Referenced Files 中的路径是否真实存在，对不上的路径列出来并请用户给出正确的仓库根目录（不跳过、不臆测）。动手前用不超过 6 行复述接手状态：目标、已完成、卡点、打算先做的下一步。之后再处理 GUI 进程列表视图的问题。简报里已写明的信息不得重复提问。",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "sh-agent-handoff 帮我把当前进度整理出来，接收方是网页版的 chat，它读不了本地文件。",
+      "expected_output": "走导出侧的「直接输出正文」分支而不是写文件。输出一份完整、自包含、结构符合模板（血脉头部 + Goal / Constraints & Preferences / Progress / Key Decisions / Next Steps / Critical Context / Referenced Files）的 Markdown 简报，可直接整段粘贴。Referenced Files 仍要给出路径（网页版 agent 读不到，但用户可能手工上传），并明确提示这些文件需要用户自行提供。不得输出 sh-agent-handoff: <路径> 这一行，因为没有产生文件。",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "sh-agent-handoff: D:/handoff/20260923-1200-docs-site-config.md\n\n接着把搜索索引那块弄完。",
+      "expected_output": "接管侧读取成功后，发现简报中的 Referenced Files 绝对路径（如 D:/Users/language_projects/docs/...）在本机不存在——这是换了机器的典型信号。正确行为：明确报告哪些路径不可达、指出应改用简报里的仓库相对路径，并请用户提供本机上的仓库根目录；不得跳过这些文件继续执行，也不得凭文件名编造内容。用户给出仓库根目录后，用相对路径重新定位，再复述理解、开始工作。",
       "files": []
     }
   ]
