@@ -25,7 +25,7 @@ description: 去水印/角标：PIL+numpy 局部修补，擅长水印压在图�
 
 - 用户给了路径 → 直接读。
 - opencode 会话里粘贴的图（消息里没有路径时）：贴图以 base64 data URL 存在
-  `C:\Users\29580\.local\share\opencode\opencode.db` 的 `part` 表（`data` JSON 字段，`type=="file"`、`url` 以 `data:image` 开头）。用本 skill 的 `scripts/extract_last_paste.py` 提取最新一张：
+  `~\.local\share\opencode\opencode.db` 的 `part` 表（`data` JSON 字段，`type=="file"`、`url` 以 `data:image` 开头）。用本 skill 的 `scripts/extract_last_paste.py` 提取最新一张：
   ```powershell
   python <skill目录>\scripts\extract_last_paste.py C:\...\Temp\opencode\pasted.png
   ```
