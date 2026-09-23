@@ -1,0 +1,29 @@
+{
+  "skill_name": "sh-agent-handoff",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "sh-agent-handoff: 把这次会话交接给另一个 agent，我要换到 claude code 里接着改这个 taskmon 的进程树过滤。",
+      "expected_output": "走到导出侧。先按平台解析用户级数据目录（优先 AGENT_HANDOFF_DIR，其次 %APPDATA%\\agent-handoff，不得写死用户名，不得放进当前项目目录），project 段取 git 仓库根目录名（taskmon），文件名为 <YYYYMMDD-HHmmss>-<英文主题>.md。先创建完整目录链再写文件。正文严格包含头部血缘（生成时间/来源 agent/来源工作目录/仓库根目录）与 Goal、Constraints & Preferences、Progress(Done/In Progress/Blocked)、Key Decisions、Next Steps、Critical Context、Referenced Files 七个部分，Referenced Files 每行同时给出仓库相对路径与绝对路径并标注 read/modified。全文 ≤150 行，磁盘上已有的内容只写路径不复制正文。回复最后单独输出一行 `sh-agent-handoff: <绝对路径>`，且不把简报正文再贴一遍。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "sh-agent-handoff: C:\\Users\\<user>\\AppData\\Roaming\\agent-handoff\\taskmon\\20260923-1845-process-tree-filter.md\n\n把这个过滤逻辑也加到 GUI 的进程列表视图里。",
+      "expected_output": "走到接管侧。完整读取该文件；随后逐条校验 Referenced Files 中的路径是否真实存在，对不上的路径列出来并请用户给出正确的仓库根目录（不跳过、不臆测）。动手前用不超过 6 行复述接手状态：目标、已完成、卡点、打算先做的下一步。之后再处理用户关于 GUI 进程列表视图的问题。简报里已写明的信息不得重复提问。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "sh-agent-handoff: 帮我把当前进度整理出来，接收方是网页版的 chat，它读不了本地文件。",
+      "expected_output": "走导出侧的\"直接输出正文\"分支而不是写文件。输出一份完整、自包含、结构符合模板（Goal/Constraints & Preferences/Progress/Key Decisions/Next Steps/Critical Context/Referenced Files）的 Markdown 简报，可直接整段粘贴。Referenced Files 仍要给出路径（网页版 agent 无法读取，但用户可能手工上传），并明确提示用户这些文件需要自行提供。不得输出 `sh-agent-handoff: <路径>` 这一行，因为没有产生文件。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "sh-agent-handoff: D:\\handoff\\20260923-1200-docs-site-config.md\n\n接着把搜索索引那块弄完。",
+      "expected_output": "接管侧读取成功后，发现简报中的 Referenced Files 绝对路径（如 D:\\Users\\language_projects\\docs\\...）在本机不存在——这是换了机器的典型信号。正确行为：明确报告哪些路径不可达、指出应改用简报里的仓库相对路径，并请用户提供本机上的仓库根目录；不得跳过这些文件继续执行，也不得凭文件名编造内容。用户给出仓库根目录后，用相对路径重新定位再复述理解、开始工作。",
+      "files": []
+    }
+  ]
+}
