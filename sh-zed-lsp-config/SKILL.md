@@ -7,7 +7,7 @@ description: 配置：给项目目录配 Zed .zed/settings.json LSP 白名单，
 
 ## 用户既定策略（前提，不要偏离）
 
-用户的全局配置 `C:\Users\shawn.zhang\AppData\Roaming\Zed\settings.json` 已有顶层 `"enable_language_server": false`（全关）。本 skill 的工作是在**指定项目根目录**创建/更新 `.zed/settings.json`，用语言级 `enable_language_server: true` 单独放开需要的语言——白名单模式，目标是在"能跳转阅读代码"的前提下尽量省内存。**不要改全局文件**，除非用户明确要求。
+先检查全局配置 `%APPDATA%\Zed\settings.json`（Windows）。若已有顶层 `"enable_language_server": false`（全关），本 skill 就在**指定项目根目录**创建/更新 `.zed/settings.json`，用语言级 `enable_language_server: true` 单独放开需要的语言——白名单模式，目标是在"能跳转阅读代码"的前提下尽量省内存。若全局还没关而用户想要省内存，先向用户提议全局关闭、获同意后再走白名单。**不要改全局文件**，除非用户明确要求。
 
 ## 工作流
 
