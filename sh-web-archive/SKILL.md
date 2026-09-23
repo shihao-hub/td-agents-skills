@@ -22,8 +22,8 @@ description: 公开网页存档为离线三 tab 页面（原文转录+AI 总结+
 
 | 路径 | 职责 |
 |---|---|
-| `C:\Users\29580\.agents\skills\sh-web-archive\` | **skill 本体**：SKILL.md、scripts、references（代码） |
-| `C:\Users\29580\agents-skills\sh-web-archive\`（`~\agents-skills\`） | **存档产物根目录**：每个网页一个「日期 标题」子目录（数据） |
+| `~\.agents\skills\sh-web-archive\`（skill 本体仓库，`~` 为用户主目录） | **skill 本体**：SKILL.md、scripts、references（代码） |
+| `~\agents-skills\sh-web-archive\` | **存档产物根目录**：每个网页一个「日期 标题」子目录（数据） |
 
 > 位置变更：最初用 `%APPDATA%\agents-skills\`，但 Chrome 的 showDirectoryPicker
 > 拒绝选择带隐藏属性目录链（AppData 默认 Hidden，报"包含系统文件"）导致编辑
@@ -37,7 +37,7 @@ description: 公开网页存档为离线三 tab 页面（原文转录+AI 总结+
    页面才继续；用户明确说需要登录的，直接说明本 skill 不做鉴权页。
 2. **fetch 抓取**：
    ```powershell
-   uv run C:\Users\29580\.agents\skills\sh-web-archive\scripts\build_archive.py `
+   uv run ~\.agents\skills\sh-web-archive\scripts\build_archive.py `
      fetch --url "<URL>" [--dir "<子目录名>"] [--title "<标题>"]
    ```
    默认目录名 `YYYY-MM-DD 标题`（标题取页面 og:title，非法字符自动清洗）。
@@ -54,7 +54,7 @@ description: 公开网页存档为离线三 tab 页面（原文转录+AI 总结+
    ```
 4. **render 渲染**：
    ```powershell
-   uv run C:\Users\29580\.agents\skills\sh-web-archive\scripts\build_archive.py `
+   uv run ~\.agents\skills\sh-web-archive\scripts\build_archive.py `
      render --dir "<存档目录>" --summary "<summary.json 路径>"
    ```
    首次渲染产出 `index.html` + `history/` 各 tab v1 快照 + `manifest.json`；
