@@ -11,16 +11,16 @@ description: 装机：个人 GitHub 与公司 GitLab 共存，SSH key+includeIf 
 - **身份层按 remote URL 切换，不按目录**：commit 身份用 git 的 `includeIf hasconfig:remote.*.url`（需 git >= 2.36）——任意目录下，只要仓库 remote 指向 github.com，就自动加载个人身份；其他仓库保持全局默认（公司身份）。用户明确不喜欢固定目录方案，"哪个目录要提交就用哪个"。
 - **边界情况**：本地 `git init` 且还没配 remote 的仓库会落到全局默认身份；`git remote add origin` 后自动切换，无需手动干预。
 
-## 本机既定参数（2026-08 配置定值；换机器/账号时视为占位符逐项向用户确认）
+## 身份参数（全部是占位符，使用前逐项向用户确认，禁止假设或沿用旧机器值）
 
-| 项 | 值 |
-|---|---|
-| GitHub 用户名 | shihao-hub |
-| 个人邮箱 | 2958017271@qq.com |
-| 公司身份 | shawn.zhang / shawn.zhang@tec-do.com |
-| 公司 GitLab | git.tec-do.com（HTTPS + GCM） |
-| 远程仓库名前缀 | td-（如 td-go_projects） |
-| SSH key | ~/.ssh/id_ed25519_github |
+| 项 | 占位符 | 获取方式 |
+|---|---|---|
+| GitHub 用户名 | `<github-user>` | 问用户，或 `gh auth status` |
+| 个人邮箱 | `<personal-email>` | 问用户（GitHub 绑定邮箱） |
+| 公司身份 | `<work-user>` / `<work-email>` | `git config --global user.name/email` |
+| 公司 GitLab | `<gitlab-host>`（HTTPS + GCM） | `git remote -v` 看现有仓库 |
+| 远程仓库名前缀 | `<repo-prefix>` | 问用户 |
+| SSH key | ~/.ssh/id_ed25519_github | GitHub 专用，与公司通道隔离 |
 
 ## 阶段 0：勘查现状（动任何东西之前）
 
@@ -38,7 +38,7 @@ git --version                                  # 必须 >= 2.36（includeIf hasc
 ```powershell
 # PowerShell 5.1 下空口令必须写 -N '""'（单引号包双引号）；
 # 直接写 -N "" 空串参数会被 PowerShell 吞掉，退化为交互式卡死
-ssh-keygen -t ed25519 -C "2958017271@qq.com" -f "$HOME\.ssh\id_ed25519_github" -N '""'
+ssh-keygen -t ed25519 -C "<personal-email>" -f "$HOME\.ssh\id_ed25519_github" -N '""'
 ```
 
 新建（或追加到）`~/.ssh/config`——只影响 github.com，不碰其他 Host：
@@ -63,7 +63,7 @@ Get-Content "$HOME\.ssh\id_ed25519_github.pub"
 
 ```powershell
 ssh -T git@github.com
-# Hi shihao-hub! You've successfully authenticated  → 成功
+# Hi <github-user>! You've successfully authenticated  → 成功
 # Permission denied (publickey)                    → 网络通，公钥还没加/加错
 # 超时                                             → 直连失败，兜底：config 里改
 #   HostName ssh.github.com / Port 443，再不行问代理
@@ -75,8 +75,8 @@ ssh -T git@github.com
 
 ```
 [user]
-	name = shihao-hub
-	email = 2958017271@qq.com
+	name = <github-user>
+	email = <personal-email>
 ```
 
 全局 `~/.gitconfig` 追加（三条 pattern 覆盖 ssh scp 风格 + https 风格；`**` 可跨斜杠）：
@@ -111,7 +111,7 @@ gh auth login -h github.com -p ssh --skip-ssh-key -w
 用户跑完后 agent 验证：
 
 ```powershell
-gh auth status   # 应显示 Logged in as shihao-hub，scopes 含 repo
+gh auth status   # 应显示 Logged in as <github-user>，scopes 含 repo
 ```
 
 ## 阶段 4：本地仓库批量上 GitHub
@@ -119,8 +119,8 @@ gh auth status   # 应显示 Logged in as shihao-hub，scopes 含 repo
 **先盘点**每个仓库的分支、脏文件数、历史身份（决定要不要改写）：
 
 ```powershell
-foreach ($d in 'go_projects','python_projects') {
-  $p = "C:\WorkingProjects\$d"
+foreach ($d in '<repo-1>','<repo-2>') {
+  $p = "<项目父目录>\$d"
   git -C $p branch --show-current
   (git -C $p status --porcelain | Measure-Object).Count
   git -C $p log --format='%an %ae' | Sort-Object -Unique
@@ -136,7 +136,7 @@ uv tool install git-filter-repo    # 本机用 uv；也可 pip install git-filte
 mailmap 文件（例如 `%TEMP%\rewrite.mailmap`，格式：`新名 <新邮箱> <旧邮箱>`）：
 
 ```
-shihao-hub <2958017271@qq.com> <shawn.zhang@tec-do.com>
+<github-user> <<personal-email>> <<work-email>>
 ```
 
 为什么用 mailmap 而不是 --name-callback：PowerShell 会剥掉传给原生命令的双引号，`'return b"x"'` 回调到达 filter-repo 时已残缺并静默失败（本机实测：报错被输出过滤吞掉，改写根本没发生还显示正常）。mailmap 文件完全绕开引号问题，且同时改 author + committer。
@@ -153,7 +153,7 @@ git -C $p stash pop
 **批量创建远程仓库 + 推送**（可见性先问用户，默认 Public 但历史必须先改写）：
 
 ```powershell
-gh repo create "shihao-hub/td-$d" --public --source "C:\WorkingProjects\$d" --remote origin --push
+gh repo create "<github-user>/<repo-prefix>$d" --public --source "<项目父目录>\$d" --remote origin --push
 # --source 自动添加 origin(ssh) 并推送当前分支、建好跟踪关系
 # 之后用户日常裸 git push 即可；新分支首次要 git push -u origin <分支>
 ```
@@ -161,7 +161,7 @@ gh repo create "shihao-hub/td-$d" --public --source "C:\WorkingProjects\$d" --re
 **最终验证**（每个仓库）：
 
 ```powershell
-git -C $p remote get-url origin        # git@github.com:shihao-hub/td-xxx.git
+git -C $p remote get-url origin        # git@github.com:<github-user>/<repo-prefix>-xxx.git
 git -C $p config user.email            # 个人邮箱（includeIf 已生效）
 git -C $p status -sb                   # ## main...origin/main 无 ahead/behind
 ```
