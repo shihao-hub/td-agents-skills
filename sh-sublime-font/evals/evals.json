@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-sublime-font",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我下载 YaHei Consolas Hybrid 字体到下载目录，并且检查一下下载好的文件大小和完整性，先不要执行安装。",
+      "expected_output": "通过 curl.exe 从 GitHub 仓库正确下载 YaHei Consolas Hybrid 1.12.ttf 到 $HOME\\Downloads，检查并报告文件完整性（约 13.8MB），说明安装方式但按要求暂停后续操作",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我已经装好了 YaHei Consolas Hybrid，帮我把 Sublime Text 和 Sublime Merge 的配置文件都改成使用这个字体，字号设置为推荐的 13。",
+      "expected_output": "跨机器动态定位 Sublime Text 与 Sublime Merge 的 Preferences.sublime-settings，写入 font_face 为 'YaHei Consolas Hybrid'，统一设置 font_size 为 13（防止低于 13 汉字发虚模糊），保留原有配置与注释不损坏",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我在 Sublime Merge 的配置里写了 font_face 为 YaHei Consolas Hybrid，但是左侧的 Commits 提交历史和 Files 列表字体完全没有变，我的软件是未激活评估版，怎么彻底解决并生效？",
+      "expected_output": "准确指出未注册版 Sublime Merge 官方 License Gate 锁定 Packages/User/*.sublime-theme 的根因；跨机器动态定位安装目录，先备份 Theme - Merge.sublime-package 为 .original，解压替换内部 Merge.sublime-theme 中的 font_face 为 YaHei Consolas Hybrid、font_size 为 13 并补齐相关 label 规则，重新打包并提示重启生效",
+      "files": []
+    }
+  ]
+}
