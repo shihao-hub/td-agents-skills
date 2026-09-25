@@ -214,6 +214,8 @@ sh-agent-handoff: <绝对路径>
 当交接件未打标、标记存疑，或需要核实某份交接件是否已被某个 Agent 真实接管并消费时，**严禁凭空推断或后验猜测**。
 请参阅 [references/session-audit-trail.md](references/session-audit-trail.md) 调取真实会话证据：
 - **Zed**：复制查询 `%LOCALAPPDATA%\Zed\db\0-stable\db.sqlite` 的 `sidebar_threads` 表；
+- **Claude Code**：扫描 `~/.claude/projects/**/*.jsonl` 及 `~/.claude/history.jsonl`；
+- **Antigravity**：扫描 `~/.gemini/antigravity-*/brain/**/transcript.jsonl` 与 `conversation_summaries.db`；
 - **Codex**：扫描 `~/.codex/sessions/**/*.jsonl`；
 - **Pi**：扫描 `~/.pi/agent/sessions/**/*.jsonl`；
 - **OpenCode**：扫描 `~/.local/share/opencode`。

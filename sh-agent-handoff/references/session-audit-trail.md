@@ -10,6 +10,8 @@
 | Agent / 工具 | 存储类型 | 典型路径 | 检索关键字段 |
 |---|---|---|---|
 | **Zed Agent Panel** | SQLite (WAL 模式) | `%LOCALAPPDATA%\Zed\db\0-stable\db.sqlite` | 表 `sidebar_threads` 中的 `title`、`agent_id`、`session_id`、`updated_at` |
+| **Claude Code (CLI)** | JSONL 消息流 / 全局历史 | 会话明细：`~/.claude/projects/<encoded-cwd>/*.jsonl`<br>全局历史：`~/.claude/history.jsonl`<br>会话索引：`~/.claude/projects/<encoded-cwd>/sessions-index.json` | 搜索 `sh-agent-handoff`、交接文件名、`sessions-index.json` |
+| **Antigravity (ACP / CLI)** | JSONL 转录 / SQLite / 状态库 | **ACP 模式**：`~/.gemini/antigravity-acp/brain/<id>/.system_generated/logs/transcript.jsonl` 与 `conversations/<id>.db`<br>**CLI 模式**：`~/.gemini/antigravity-cli/brain/<id>/.../transcript.jsonl`、`conversation_summaries.db`（SQLite）、`history.jsonl` | 搜索 `transcript.jsonl` 中的用户输入与工具调用；查 `conversation_summaries.db` |
 | **Codex CLI / ACP** | JSONL 流式日志 | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` | 搜索 `sh-agent-handoff` 与交接文件名 |
 | **Pi Agent** | JSONL 消息流 | `~/.pi/agent/sessions/--<workspace>--/*.jsonl` | 搜索交接文件名、`sh-agent-handoff` |
 | **OpenCode** | JSON / 状态库 | `~/.local/share/opencode` 或 `%APPDATA%\opencode` | 搜索 session JSON 中的交接件路径 |
@@ -46,15 +48,72 @@ with tempfile.TemporaryDirectory() as td:
     )
     rows = cur.fetchall()
     for agent_id, title, updated_at, session_id in rows:
-        print(f'命中: Agent={agent_id}, 时间={updated_at}, Session={session_id}')
+        print(f'Zed 命中: Agent={agent_id}, 时间={updated_at}, Session={session_id}')
     conn.close()
 ```
 
-### 2.2 Codex 会话日志排查
+### 2.2 Claude Code 会话日志排查
+Claude Code 会在 `~/.claude/projects/` 目录下按工作区编码保存完整会话 JSONL，并在 `history.jsonl` 中保存全局输入历史：
+
+```python
+import os, glob
+
+claude_dir = os.path.expanduser('~/.claude')
+handoff_name = '20260925-120834-typeai-glm-cli-handoff'
+
+# 1. 查全局历史
+hist_file = os.path.join(claude_dir, 'history.jsonl')
+if os.path.exists(hist_file):
+    with open(hist_file, 'r', encoding='utf-8', errors='ignore') as f:
+        for idx, line in enumerate(f):
+            if handoff_name in line:
+                print(f'Claude Code 全局历史命中 (行 {idx+1}): {line.strip()[:150]}')
+
+# 2. 查项目会话明细
+for jsonl_path in glob.glob(f'{claude_dir}/projects/**/*.jsonl', recursive=True):
+    try:
+        with open(jsonl_path, 'r', encoding='utf-8', errors='ignore') as f:
+            if handoff_name in f.read():
+                print(f'Claude Code 会话文件命中: {jsonl_path}')
+    except Exception:
+        pass
+```
+
+### 2.3 Antigravity (ACP & CLI) 会话转录排查
+Antigravity 会将所有会话的执行日志存放在 `brain/<conversation-id>/.system_generated/logs/transcript.jsonl`：
+
+```python
+import os, glob, sqlite3
+
+handoff_name = '20260925-120834-typeai-glm-cli-handoff'
+
+# 1. 扫描 ACP 与 CLI 的 transcript.jsonl
+for base in [r'~/.gemini/antigravity-acp', r'~/.gemini/antigravity-cli']:
+    base_dir = os.path.expanduser(base)
+    for t_path in glob.glob(f'{base_dir}/brain/**/transcript.jsonl', recursive=True):
+        try:
+            with open(t_path, 'r', encoding='utf-8', errors='ignore') as f:
+                if handoff_name in f.read():
+                    print(f'Antigravity 转录命中 ({base}): {t_path}')
+        except Exception:
+            pass
+
+# 2. CLI 模式还可查摘要数据库
+cli_db = os.path.expanduser('~/.gemini/antigravity-cli/conversation_summaries.db')
+if os.path.exists(cli_db):
+    conn = sqlite3.connect(cli_db)
+    cur = conn.cursor()
+    cur.execute("SELECT conversation_id, summary FROM conversation_summaries WHERE summary LIKE ?", (f'%{handoff_name}%',))
+    for cid, summ in cur.fetchall():
+        print(f'Antigravity CLI 摘要命中: {cid} -> {summ[:100]}')
+    conn.close()
+```
+
+### 2.4 Codex 会话日志排查
 Codex 会将所有轮次保存在按日期归档的 JSONL 文件中：
 
 ```python
-import os, json, glob
+import os, glob
 
 sessions_dir = os.path.expanduser('~/.codex/sessions')
 handoff_name = '20260925-120834-typeai-glm-cli-handoff'
@@ -62,14 +121,13 @@ handoff_name = '20260925-120834-typeai-glm-cli-handoff'
 for jsonl_path in glob.glob(f'{sessions_dir}/**/*.jsonl', recursive=True):
     try:
         with open(jsonl_path, 'r', encoding='utf-8', errors='ignore') as f:
-            content = f.read()
-            if handoff_name in content:
+            if handoff_name in f.read():
                 print(f'Codex 会话命中: {jsonl_path}')
     except Exception:
         pass
 ```
 
-### 2.3 Pi 会话日志排查
+### 2.5 Pi 会话日志排查
 Pi 在 `~/.pi/agent/sessions/` 下按工作区路径编码存放 `.jsonl`：
 
 ```python
@@ -93,7 +151,8 @@ for jsonl_path in glob.glob(f'{pi_dir}/**/*.jsonl', recursive=True):
 
 1. **已接管证据**：
    - 某 Agent 接收到 `sh-agent-handoff: <path>` 并输出了对简报的复述、读取或后续命令执行；
-   - Zed 的 `sidebar_threads` 中记录了以该交接件为 title 的 thread，且 `updated_at` 晚于生成时间。
+   - Zed 的 `sidebar_threads` 中记录了以该交接件为 title 的 thread，且 `updated_at` 晚于生成时间；
+   - Antigravity / Claude Code / Codex 的 transcript.jsonl 中有明确针对该简报的 read 工具调用或复述文本。
 2. **生成自测完成证据**：
    - 某 Agent 在开发/测试该技能时自行运行 Eval 生成了交接件并在当前会话闭环校验。
 3. **未接管证据**：
