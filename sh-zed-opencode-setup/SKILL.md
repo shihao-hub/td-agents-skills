@@ -10,6 +10,7 @@ description: 配置：Zed 的 opencode agent 安装修复、思考档位、供�
 2026-09-21 增补 antigravity-acp（Google ACP registry agent）安装实战：**目标目录名可离线推算**（逆向 Zed 源码 `versioned_archive_cache_dir`，双实例验证），任务 A 适用所有 registry agent（含 dl.google.com 等非 GitHub 直链），不限 opencode。
 2026-09-21 增补（二）：**Zed「当前上下文」指示器**由 ACP `usage_update` 驱动，opencode 只在模型 `limit.context > 0` 时上报；**`limit` 与 variants 正相反、不按模型 ID 从 models.dev 合并**，自定义 provider 必须显式写（任务 B2，实战 zhipu-glm/deepseek-max 补 limit）。
 2026-09-21 增补（三）：antigravity 等 ACP agent 的**登录排障**（OAuth 成功页≠登录成功、代理/CA env 注入、旧进程复用、stdio 认证探针）已独立成 skill **sh-zed-acp-agent-env**——本 skill 任务 A 只管安装竞态，登录问题去那边。
+2026-09-25 增补（四）：**权限模型（任务 D）**——「YOLO/auto 模式」是 `--auto` 权限开关、与 Build/Plan agent 无关；按 agent 开 `external_directory` 放行项目外目录（实测 opencode 1.18.32，全局配置 `agent.build.permission` 生效）。
 涉及 opencode 内部行为的修复**依赖其源码实现**（详见 `references/opencode-internals.md`），版本升级后可能失效——所以每个任务都带**实证验证步骤**，改完必须验证，不要盲信配置。
 
 ## 总原则（每次使用先读）
@@ -215,6 +216,38 @@ node scripts/cc-switch-migrate.mjs --apply  # 用户确认后执行（自动备�
 
 ---
 
+## 任务 D：权限模型——auto 模式（"YOLO"）与外部目录访问（2026-09-25 实测 opencode 1.18.32）
+
+**概念纠偏**：社区说的「YOLO 模式」在 opencode 官方文档里叫 **Auto mode**，是**权限审批开关**，与 Build/Plan agent 无关（agent 是工具集/身份，auto 是"ask 时自动放行"）。两者正交：Build 里可以开 auto，Plan 里也可以。
+
+**三种审批结果**：每条 permission 规则解析为 `allow`（直接执行）/ `ask`（弹确认，选项 once=仅本次、always=本会话内匹配模式均放行、reject=拒绝）/ `deny`（拦截）。
+
+**auto 模式入口**：
+- CLI：`opencode --auto` 或 `opencode run --auto "..."`——自动批准**未被显式 deny** 的 ask 请求；显式 `deny` 仍然生效。
+- TUI：命令面板选 **Enable/Disable auto-approve permissions**，激活时当前 agent 名旁有 `auto` 灰标。
+
+**默认值矩阵**（不写任何 permission 配置时）：大多数权限键默认 `allow`；**`external_directory` 和 `doom_loop` 默认 `ask`**；`read` 默认 allow 但 `*.env`/`*.env.*` 默认 deny（`*.env.example` 例外）。权限键按工具名：`read`/`edit`（覆盖 edit+write+patch）/`glob`/`grep`/`bash`（按解析出的命令串匹配，如 `git *`）/`task`/`skill`/`lsp`/`question`/`webfetch`/`websearch`/`external_directory`/`doom_loop`。
+
+**外部目录（external_directory）**：凡工具调用触及启动工作目录之外的路径（read/edit/glob/grep 及部分 bash 命令）就命中该权限。`~/...` 只是写法展开，**不会**让外部路径变成工作区内，仍需显式放行。⚠️ 别指望 `--auto`：默认 ask → auto 会直接放行**任意**外部路径，等于敞开读写的还有 bash/edit。要"只放行某目录"用对象语法（模式匹配，**最后匹配的规则胜出**，catch-all `"*"` 放最前）：
+```json
+"external_directory": { "~/projects/personal/**": "allow" }
+```
+被放行的目录继承工作区默认值（read 默认 allow 即连带放开）；想"只读放行"再叠一条 `"edit": { "<同路径>": "deny" }`。只列信任目录，别整盘放开。
+
+**按 agent 覆盖（本次实战采用的方案）**：agent 级 permission 与全局合并、**agent 规则优先**。只给 Build 开外部目录、其余 agent 保持默认 ask——写入全局 `~/.config/opencode/opencode.json`：
+```json
+"agent": {
+  "build": {
+    "permission": { "external_directory": "allow" }
+  }
+},
+```
+（位置随意，与其他顶层键并列即可；改后需按总原则 3/4：完全退出 Zed 或杀掉旧 opencode 进程再验证。验证法：TUI/会话里让 Build 读一个项目外文件，不再弹权限询问即生效；Zed 面板里 Tab 切 Plan 读同一文件应仍询问。）
+
+**配置优先级速记**：全局 `permission` < `agent.<name>.permission`（agent 胜出）；`--auto` 只改变"本会 ask"的请求的结果，不改变 `deny`。
+
+---
+
 ## 常见坑速查
 
 | 症状 | 原因/处理 |
@@ -225,6 +258,7 @@ node scripts/cc-switch-migrate.mjs --apply  # 用户确认后执行（自动备�
 | 自定义 provider id 也出现下拉框/被顶回 low | 变体**按模型 ID** 生成（models.dev 已知模型就带），换 provider id 规避无效；模型级 `variants` 全档 disabled（2026-09-14 实测踩坑） |
 | 努力改成 max 但请求还是 low | 选了 low 变体（变体覆盖 options）；禁用变体后重选 plain 模型 |
 | Zed 里「当前上下文」指示器永不出现 | 模型 `limit.context=0`：自定义 provider 的 **limit 不从 models.dev 合并**（与 variants 相反）；模型级显式写 `limit` 并同步 cc-switch，完全重启 Zed，见任务 B2 |
+| Build 读项目外文件反复弹权限询问 | `external_directory` 默认 `ask`（见任务 D）；按 agent 放行写 `agent.build.permission.external_directory`，别用全局 `--auto`（会放开所有工具的所有外部路径） |
 | `subclaude-xxx/claude-opus-5 is not a valid value` 警告 | Zed 侧对自定义模型 ID 的校验提示，无害可无视 |
 | 装 antigravity 等 ACP registry agent 反复重下 / 卡 rename | 同任务 A 竞态，**适用所有 registry agent**（含非 GitHub 直链）；目录名可推算（见任务 A），`zed-agent-install` 照用 |
 | Zed 里 antigravity（或其它 ACP agent）登录：浏览器显示认证成功但 Zed 仍要求登录 / 日志反复 `onboarding_failed` | agent 进程没拿到代理/CA 环境变量 + 旧进程复用；`agent_servers.<id>.env` 注入并杀旧进程，见 **sh-zed-acp-agent-env** |
