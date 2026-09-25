@@ -39,20 +39,24 @@
 | apiFormat | 代理行为 | 适用 |
 |---|---|---|
 | `openai_responses` | 透传 `{base_url}/responses` | 上游原生支持 Responses API |
-| `openai_chat` | 翻译为 `{base_url}/chat/completions`，响应转回 Responses 格式 | 上游只有 chat completions（**智谱 GLM**） |
+| `openai_chat` | 翻译为 `{base_url}/chat/completions`，响应转回 Responses 格式 | 上游只有 chat completions（**智谱 GLM chat 端点**） |
 
-智谱 coding 端点（`https://open.bigmodel.cn/api/coding/paas/v4`）**没有 `/responses`（实测 404）**。GLM 渠道配成 `openai_responses` 时代理直接透传并报 `upstream_status: HTTP 404; path /v4/responses`；正确配置：
+智谱有两个协议分立的端点：chat 端点（`https://open.bigmodel.cn/api/coding/paas/v4`）**没有 `/responses`（实测 404）**，原生 Responses 端点是 `https://open.bigmodel.cn/api/v1`（cc-switch 官方预设走这条，`apiFormat=openai_responses`）；两套协议不互通（`/api/v1/chat/completions` 实测 403 model_access_denied）。GLM chat 渠道配成 `openai_responses` 时打的是 chat 端点，代理透传并报 `upstream_status: HTTP 404; path /v4/responses`；chat 翻译路径正确配置：
 
 ```json
 "apiFormat": "openai_chat",
 "codexChatReasoning": {
   "supportsThinking": true,           // 启用思考
-  "supportsEffort": false,            // 不向智谱发 reasoning_effort（GLM 不支持）
+  "supportsEffort": true,             // 向智谱发 reasoning_effort（GLM 支持 low/high/max）
   "thinkingParam": "thinking",        // 上游思考参数名
-  "effortParam": "none",
+  "effortParam": "reasoning_effort",  // 必须；只认 reasoning_effort / reasoning.effort，其他值不落 wire
   "outputFormat": "reasoning_content" // 从响应 reasoning_content 读思考内容
 }
 ```
+
+**GLM 思考语义**（docs.bigmodel.cn，2026-09-24 核对）：glm-5.3 / glm-5.3-flash 始终开启思考、`thinking.type` 仅支持 `enabled`（不能禁用），思考深度唯一参数是 `reasoning_effort = low|high|max`（默认 max）。实测经代理：low≈15-20 / medium≈94-138 / high≈1600-1900 / max≈1200-2500 reasoning tokens。`supportsEffort:false` 会让 Codex 的档位选择**静默失效**（只发 `thinking:{type:"enabled"}`）。注意 UI 从关闭切到打开「支持 effort」也不会自动补 `effortParam`（旧值 `"none"` 非 null 会被保留），必须显式改成 `reasoning_effort`。
+
+**公共配置覆盖默认档位**：`settings` 表 `common_config_codex` 会合并进每个 codex 供应商的 live config；其中若含 `model_reasoning_effort`，会覆盖 model catalog 的 `default_reasoning_level`（影响 CLI）。直接改 `~/.codex/config.toml` 会被 cc-switch 接管/异常退出恢复覆盖，要持久改得改 `common_config_codex`。
 
 ### modelCatalog 与图片支持
 
@@ -79,11 +83,25 @@ curl -s -X POST http://127.0.0.1:15721/v1/responses -H "Authorization: Bearer PR
   -H 'Content-Type: application/json' -d '{"model":"glm-5.3","input":"hi"}'
 # 3) 日志确认实际转发目标（应命中 /chat/completions）
 tail ~/.cc-switch/logs/cc-switch.log | grep '\[Codex\] >>> 请求目标'
-# 4) 端到端（图片：glm-5.3-flash + -i；提示走 stdin 传入）
+# 4) 档位端到端：经代理对比 low/max，reasoning_tokens 应明显不同（实测 low≈15-20、max≈1200-2500）
+curl -s -X POST http://127.0.0.1:15721/v1/responses -H "Authorization: Bearer PROXY_MANAGED" \
+  -H 'Content-Type: application/json' -d '{"model":"glm-5.3","input":"<推理题>","reasoning":{"effort":"low"},"max_output_tokens":2500}'
+# 把 reasoning.effort 改成 max 再跑一次，对比 usage.output_tokens_details.reasoning_tokens
+# 5) 端到端（图片：glm-5.3-flash + -i；提示走 stdin 传入）
 printf '%s' '描述图片' | codex exec --model glm-5.3-flash -i test.png
 ```
 
 图片在代理翻译中为 Responses `input_image` → chat `image_url`，已验证；流式 SSE（`response.reasoning_summary_text.delta` 等）亦正常。
+
+### 实战案例：DeepSeek 官方 Codex 原生透传与识图多模态（2026-09-24~25 实战）
+
+- **官方契约**：DeepSeek 原生支持 OpenAI Responses API（`https://api-docs.deepseek.com/zh-cn/quick_start/agent_integrations/codex`），基地址 `https://api.deepseek.com`，`wire_api = "responses"`。
+- **代理模式**：`meta.apiFormat = "openai_responses"`，本地代理直接透传，无协议翻译开销。
+- **识图多模态避坑**：
+  - 官方多模态模型为 `deepseek-flash`，必须在 catalog 中声明 `"inputModalities": ["text", "image"]`，Codex 才会开放客户端贴图功能。
+  - 第三方网关（如 OpenCode Go）中，`deepseek-v4-flash` 实测为纯文本模型（发图报 `[400] Model only supports text input`）；第三方网关要识图也必须请求 `deepseek-flash`。
+- **官方一键脚本冲突**：CC Switch 本地代理（15721）纳管下，严禁运行官方 `codex-deepseek-setup.ps1` 脚本直接覆写 `config.toml`；应直接通过 DB 纳管进 CC Switch。
+- 完整参数对比、配置模板与排查命令详见 `references/deepseek-codex-integration.md`。
 
 ## opencode 段（Additive）
 

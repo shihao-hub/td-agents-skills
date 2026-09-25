@@ -18,6 +18,12 @@
       "prompt": "给 codex 段的 GLM 渠道配上智谱 coding plan 的用量显示，顺便确认该渠道的 API 格式是能用的状态。",
       "expected_output": "用 cc-update-meta.mjs 更新 providers.meta（默认 dry-run 先展示，确认后备份+事务+回读）；usage_script 用 token_plan / codingPlanProvider=zhipu；apiFormat 为 openai_chat 且含 codexChatReasoning 翻译块；提醒重启 cc-switch 生效",
       "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "参考 DeepSeek 官方 Codex 文档（https://api-docs.deepseek.com/zh-cn/quick_start/agent_integrations/codex），帮我在 cc-switch 里把 codex 的 DeepSeek 渠道配好，要求支持识图发图片。",
+      "expected_output": "指出不能直接执行官方 ps1 脚本（避免破坏 cc-switch 本地代理）；使用 cc-update-provider-config.mjs 更新 codex 目标供应商的 settings_config；确保 wire_api 为 responses、base_url 为 https://api.deepseek.com、meta.apiFormat 为 openai_responses；modelCatalog 中 deepseek-flash 必须显式配置 inputModalities: [\"text\", \"image\"] 与 reasoningLevels；如果通过第三方网关（如 OpenCode Go）中转，必须将实际请求模型设为 deepseek-flash 而非纯文本的 deepseek-v4-flash；重启 cc-switch 与 Codex 验证",
+      "files": []
     }
   ]
 }

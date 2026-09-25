@@ -88,7 +88,7 @@ db.prepare('PRAGMA foreign_key_check').all(); // 必须返回 []
 
 | key | 内容 |
 |---|---|
-| common_config_claude / common_config_codex / common_config_opencode | 各应用"通用配置"（切供应商时合并写入） |
+| common_config_claude / common_config_codex / common_config_opencode | 各应用"通用配置"（切供应商时合并写入）。注意：`common_config_codex` 里的 `model_reasoning_effort` 会覆盖 model catalog 的 `default_reasoning_level`；直接改 live `~/.codex/config.toml` 会被接管/异常退出恢复覆盖，要持久改必须改这里（2026-09-24 实测） |
 | official_providers_seeded / *_legacy_migrated_v1 / default_skill_repos_initialized | 迁移标记位 |
 
 ## 同步模式：Switch vs Additive

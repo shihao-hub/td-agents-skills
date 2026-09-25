@@ -9,6 +9,8 @@ description: 直接读写 cc-switch SQLite，绕过 UI 配置各应用供应商�
 2026-09-14 增补：改既有条目/改 id 两脚本（cc-update-provider-config / cc-rename-provider-id）、**providers.id 外键坑**（见总原则 9）、DeepSeek→opencode 段默认 max 实战案例（app-config-shapes.md）。
 2026-09-21 增补：opencode 段模型级 `limit` 坑——自定义 provider 的 `limit.context=0` 会让 Zed 永不显示上下文指示器（limit 不从 models.dev 合并；机制、实测值与修法见 sh-zed-opencode-setup 任务 B2）。实战用 `cc-update-provider-config.mjs` 同步 zhipu-glm / deepseek-max 两条 settings_config。
 2026-09-23 增补：codex 段代理翻译坑——`meta.apiFormat` 决定本地代理透传还是翻译（GLM 无 `/responses`，必须 `openai_chat` + `codexChatReasoning`）；模型目录 `modelCatalog.inputModalities` 控制 Codex 应用贴图能力；新增 `cc-update-meta.mjs`（改 meta 通用脚本）。
+2026-09-24 增补：**codex 段思考深度坑**——GLM-5.3/flash 始终思考、`thinking.type` 仅 `enabled`，深度唯一参数是 `reasoning_effort`（low/high/max，默认 max）；chat 翻译路径**必须** `supportsEffort:true` + `effortParam:"reasoning_effort"`，否则档位静默失效（只发 thinking，从不发 effort；UI 开关从关闭切到打开也不会自动补 `effortParam`）。另：cc-switch **公共配置** `settings.common_config_codex` 里的 `model_reasoning_effort` 会合并进 live config.toml、覆盖 catalog 默认档位，CLI 默认档位要改这里（直接改 live 文件会被接管/异常退出恢复覆盖）。原生 Responses 端点是 `https://open.bigmodel.cn/api/v1`（官方预设路径），与 chat 端点 `/api/coding/paas/v4` 协议不互通。
+2026-09-25 增补：**DeepSeek 官方 Codex 原生透传与识图多模态避坑**——DeepSeek 官方规范（`wire_api="responses"` + `https://api.deepseek.com`）由 `meta.apiFormat="openai_responses"` 直通代理层，免 chat 翻译；多模态识图必须在 catalog 中显式声明 `"inputModalities": ["text", "image"]`（否则 Codex 禁用贴图）；第三方网关（如 OpenCode Go）中的 `deepseek-v4-flash` 实测为纯文本模型（发图 400），多模态模型名必须为 `deepseek-flash`；严禁在 CC Switch 环境中运行官方 `codex-deepseek-setup.ps1` 脚本覆写 `config.toml`。详见 `references/deepseek-codex-integration.md`。
 
 ## 总原则（每次先读）
 
@@ -87,16 +89,34 @@ Copy-Item "$env:USERPROFILE\.cc-switch\cc-switch.db" "$env:USERPROFILE\.cc-switc
 Copy-Item "<备份文件>" "$env:USERPROFILE\.cc-switch\cc-switch.db" -Force
 ```
 
-## 任务 E：Codex 段代理翻译与模型目录（2026-09-23 实战）
+## 任务 E：Codex 段代理翻译与模型目录（2026-09-23~24 实战）
 
 cc-switch 开本地代理（`enableLocalProxy`）后 codex live 配置被接管：`base_url=http://127.0.0.1:15721/v1` + `wire_api="responses"` + `experimental_bearer_token="PROXY_MANAGED"`，上游实际发什么由 provider `meta` 决定：
 
 - `meta.apiFormat="openai_responses"` → 代理透传 `{base_url}/responses`（上游须原生支持 Responses API）
 - `meta.apiFormat="openai_chat"` → 代理把 Responses 请求翻译成 `{base_url}/chat/completions`，响应转回；推理映射看 `meta.codexChatReasoning`
 
-**智谱 GLM coding 端点没有 `/responses`（实测 404）**，GLM 渠道必须 `openai_chat` + `codexChatReasoning`——配错 `openai_responses` 的症状是代理报 `upstream_status: HTTP 404; path /v4/responses`。排查：直连上游对比 `/responses` vs `/chat/completions` → `curl` 代理 `http://127.0.0.1:15721/v1/responses` → `tail ~/.cc-switch/logs/cc-switch.log | grep '\[Codex\] >>> 请求目标'` 看实际转发。
+**智谱 GLM 两个协议分立的端点**：chat 端点 `https://open.bigmodel.cn/api/coding/paas/v4`（只有 `/chat/completions`，打 `/responses` 实测 404）、原生 Responses 端点 `https://open.bigmodel.cn/api/v1`（cc-switch 官方预设走这条，`apiFormat=openai_responses`）。两套协议不互通（`/api/v1/chat/completions` 实测 403 model_access_denied）。`provider_endpoints` 混挂两个不同协议候选 + `endpointAutoSelect=true` 是坑：自动选到不匹配的端点就 404/403。
+
+走 chat 翻译（`apiFormat=openai_chat`）时 **`codexChatReasoning` 必须开 effort 转发**，否则 Codex 选任何档位都只发 `thinking:{type:"enabled"}`、`reasoning_effort` 一个都不发（源码 `transform_codex_chat.rs::apply_reasoning_options`：`!supports_effort` 直接 return）：
+
+```json
+"codexChatReasoning": {
+  "supportsThinking": true,
+  "supportsEffort": true,
+  "thinkingParam": "thinking",
+  "effortParam": "reasoning_effort",
+  "outputFormat": "reasoning_content"
+}
+```
+
+UI 上把「支持 effort」开关从关闭切到打开**不会**自动修好——handler 是 `effortParam: checked ? (effortParam ?? "reasoning_effort") : "none"`，旧值 `"none"` 非 null 会原样保留；必须显式改成 `"reasoning_effort"`（翻译层只认 `reasoning_effort` / `reasoning.effort`，其他值走 `_ => {}` 不写）。GLM 思考语义：始终开启、`thinking.type` 仅 `enabled`（不能禁用），深度 = `reasoning_effort`（low/high/max，默认 max）；实测经代理 low≈15-20 / medium≈94-138 / high≈1600-1900 / max≈1200-2500 reasoning tokens。chat 端点对非法值静默忽略，原生 `/api/v1/responses` 严格校验（非法值 400，合法枚举 none/minimal/low/medium/high/xhigh/max）。
+
+排查：直连上游对比 `/responses` vs `/chat/completions` → `curl` 代理 `http://127.0.0.1:15721/v1/responses` → `tail ~/.cc-switch/logs/cc-switch.log | grep '\[Codex\] >>> 请求目标'` 看实际转发。
 
 `modelCatalog.models[].inputModalities` 控制 Codex 应用贴图（`["text","image"]`；能力先直连 API 实测，智谱 glm-5.3-flash ✅ / glm-5.3 ❌ 报 1210）；改完 settings_config 重启 cc-switch 会重新生成 `~/.codex/cc-switch-model-catalog.json`，Codex 应用还需重启重载。改 meta 用 `cc-update-meta.mjs`（dry-run/备份/回读）。完整字段表与验证命令见 `references/app-config-shapes.md` codex 段。
+
+**公共配置会覆盖 catalog 默认档位**（2026-09-24 实测）：`settings` 表 `common_config_codex` 的 TOML 会合并进每个 codex 供应商的 live config。里面若有 `model_reasoning_effort`，它会覆盖 model catalog 的 `default_reasoning_level`（影响 CLI/读 config.toml 的客户端；Desktop 用自选档位、Zed 用自身设置）。直接改 `~/.codex/config.toml` 会在 cc-switch 接管或异常退出恢复时被覆盖——要持久改必须改 `common_config_codex`（settings 表）。
 
 ## 与 sh-zed-opencode-setup 的分工
 
@@ -107,3 +127,4 @@ cc-switch 开本地代理（`enableLocalProxy`）后 codex live 配置被接管�
 
 - `references/db-schema.md` —— 全部 18 张表清单、providers 表逐列详解、meta JSON 字段、settings 表已知键。
 - `references/app-config-shapes.md` —— 各 app_type 的 settings_config 形状、Switch vs Additive 同步模式、codex 代理翻译与模型目录（apiFormat/codexChatReasoning/inputModalities）、pi 深挖（models.json schema、thinking 级联）、完整实战案例。
+- `references/deepseek-codex-integration.md` —— DeepSeek 官方接入 Codex 规范全文对比、一键脚本与 CC Switch 冲突分析、原生 Responses 透传配置模板与端到端验证命令。
