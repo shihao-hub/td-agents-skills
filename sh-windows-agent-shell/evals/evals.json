@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-windows-agent-shell",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我电脑上用 OpenCode 执行命令老是调用 PowerShell，有些 bash 语法跑不通，帮我配置成 Git Bash。",
+      "expected_output": "探测本机 Git 安装路径并避开 System32 的 WSL bash.exe 陷阱；在 ~/.config/opencode/opencode.json 根级添加全路径 'shell': 'D:/Program Files/Git/bin/bash.exe'；运行 opencode debug config 验证解析生效。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "在 Windows 电脑上把 Codex、Claude Code、Pi 和 Antigravity 的终端都统一成 Git Bash，可以做到吗？怎么配置？",
+      "expected_output": "对照五大 Agent 矩阵准确说明：Pi 与 Claude Code 原生即是 Git Bash，无需修改；OpenCode 支持在 opencode.json 中配置 shell 路径；Codex 桌面终端支持在 config.toml 配置 integratedTerminalShell = 'gitBash'，但 Agent 沙箱在 Windows 上硬编码 PowerShell；Antigravity IDE 支持配置 VS Code 终端 Profile 为 Git Bash，底层 run_command 绑定 PowerShell 宿主但可通过 Rules 约束；提醒避开 WSL 启动器。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "在 Windows 命令行执行 bash 报 'WSL (11 - Relay) ERROR: CreateProcessCommon:798: execvpe(/bin/bash) failed: No such file or directory'，为什么会这样？怎么正确调用 Git Bash？",
+      "expected_output": "解释 PATH 环境变量中 C:\\Windows\\System32\\bash.exe（WSL 转发 stub）排在前面导致的劫持原因；给出使用绝对路径（如 D:/Program Files/Git/bin/bash.exe）或通过 git.exe 路径动态替换推导的正确调用方法。",
+      "files": []
+    }
+  ]
+}
