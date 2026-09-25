@@ -208,6 +208,16 @@ sh-agent-handoff: <绝对路径>
 
 然后处理用户的问题。简报里已经写明的信息不要再问一遍——那是交接失败最典型的表现。只有真正阻塞、且简报里没有的信息才问。
 
+
+## 历史会话审计与接管核查（进阶）
+
+当交接件未打标、标记存疑，或需要核实某份交接件是否已被某个 Agent 真实接管并消费时，**严禁凭空推断或后验猜测**。
+请参阅 [references/session-audit-trail.md](references/session-audit-trail.md) 调取真实会话证据：
+- **Zed**：复制查询 `%LOCALAPPDATA%\Zed\db\0-stable\db.sqlite` 的 `sidebar_threads` 表；
+- **Codex**：扫描 `~/.codex/sessions/**/*.jsonl`；
+- **Pi**：扫描 `~/.pi/agent/sessions/**/*.jsonl`；
+- **OpenCode**：扫描 `~/.local/share/opencode`。
+
 ## 常见错误
 
 - **自动定位后不确认就直接用交接件**。自动定位是猜测，即使只找到一个候选也可能不是他要的那个；只有用户显式确认才算他做了选择。
