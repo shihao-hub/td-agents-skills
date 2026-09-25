@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "sh-agent-handoff",
-      "expected_output": "空手输入且本会话已有实质工作历史，判定为导出侧，不得反问「交接给谁」「主题是什么」「输出到哪里」。先按平台解析用户级数据目录（优先 AGENT_HANDOFF_DIR，其次 APPDATA 下的 agent-handoff，不得写死用户名，不得放进当前项目目录），project 段取 git 仓库根目录名，topic 由本次会话内容自行概括成 3-5 个英文小写单词，文件名为 <YYYYMMDD-HHmmss>-<topic>.md。先创建完整目录链再写文件。正文严格包含顶部血缘头部（生成时间 / 来源 agent / 来源工作目录 / 仓库根目录）与 Goal、Constraints & Preferences、Progress(Done / In Progress / Blocked)、Key Decisions、Next Steps、Critical Context、Referenced Files；Referenced Files 每行标注 read / modified，仓库内文件给「相对路径 + 绝对路径」，仓库外文件给绝对路径并标注「仓库外」。全文 <=150 行，磁盘上已有的内容只写路径不复制正文。回复简短，最后单独输出一行 sh-agent-handoff: <绝对路径>，且不把简报正文再贴一遍。",
+      "expected_output": "空手输入且本会话已有实质工作历史，判定为导出侧，不得反问「交接给谁」「主题是什么」「输出到哪里」。先按平台解析用户级数据目录（优先 AGENT_HANDOFF_DIR，其次 APPDATA 下的 agent-handoff，不得写死用户名，不得放进当前项目目录），project 段取 git 仓库根目录名并转为 kebab-case 标准化小写短横线（如 language_projects -> language-projects），topic 由本次会话内容自行概括成 3-5 个英文小写单词，文件名名为 <YYYYMMDD-HHmmss>-<topic>.md。先创建完整目录链再写文件。正文严格包含顶部血统头部（生成时间 / 来源 agent / 接管状态：[ ] 待接管 / 来源工作目录 / 仓库根目录）与 Goal、Constraints & Preferences、Progress(Done / In Progress / Blocked)、Key Decisions、Next Steps、Critical Context、Referenced Files；Referenced Files 每行标注 read / modified，仓库内文件给「相对路径 + 绝对路径」，仓库外文件给绝对路径并标注「仓库外」。全文 <=150 行，磁盘上已有的内容只写路径不复制正文。回复简短，最后单独输出一行 sh-agent-handoff: <绝对路径>，且不把简报正文再贴一遍。",
       "files": []
     },
     {
@@ -16,7 +16,7 @@
     {
       "id": 3,
       "prompt": "sh-agent-handoff 把 taskmon 的进程树过滤也加到 GUI 的进程列表视图里",
-      "expected_output": "带任务描述、未给路径，判定为接管侧并自动定位。扫描交接根目录并按文件名内时间戳倒序（不得用 mtime），只读每个候选文件顶部的血缘头部而不全文读，把当前工作目录所属 project 的候选排在前面。自动定位必须先经用户确认；本例候选有多个，因此列出最近 5 个（主题 / 生成时间 / 来源 agent / 仓库），把同 project 里最新那个标为默认建议并请用户确认序号，不得未经确认直接开干。用户确认后再完整读取、校验 Referenced Files 可达性、用不超过 6 行复述接手状态，最后处理「GUI 进程列表视图加过滤」这个任务。",
+      "expected_output": "带任务描述、未给路径，判定为接管侧并自动定位。扫描交接根目录（归一化匹配目录名中 _ 与 -，同时检索 language-projects 与 language_projects）并按文件名内时间戳倒序（不得用 mtime），只读每个候选文件顶部的血统头部（约前 8 行，包含主题、生成时间、来源 agent、仓库与接管状态）而不全文读，把当前工作目录所属 project 的候选排在前面。同 project 内优先推荐最新的「待接管」交接件。自动定位必须先经用户确认；本例候选有多个，因此列出最近 5 个（带 [待接管] / [已接管] 状态标记），把同 project 里最新的待接管项标为默认建议并请用户确认序号，不得未经确认直接开干。用户确认后再完整读取、校验 Referenced Files 可达性、用不超过 6 行复述接手状态、将简报文件头部的接管状态回写更新为「[x] 已由 <agent> 于 <time> 接管」，最后处理任务。",
       "files": []
     },
     {
@@ -41,6 +41,12 @@
       "id": 7,
       "prompt": "sh-agent-handoff: D:/handoff/20260923-1200-docs-site-config.md\n\n接着把搜索索引那块弄完。",
       "expected_output": "接管侧读取成功后，发现简报中的 Referenced Files 绝对路径（如 D:/Users/language_projects/docs/...）在本机不存在——这是换了机器的典型信号。正确行为：明确报告哪些路径不可达、指出应改用简报里的仓库相对路径，并请用户提供本机上的仓库根目录；不得跳过这些文件继续执行，也不得凭文件名编造内容。用户给出仓库根目录后，用相对路径重新定位，再复述理解、开始工作。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "sh-agent-handoff: C:/Users/29580/AppData/Roaming/agent-handoff/language-projects/20260923-215509-docs-site-search-entry-page.md\n\n继续把搜索索引搞完",
+      "expected_output": "给了显式路径，读取该文件血统头部前 8 行，检测到接管状态已为「[x] 已接管」。不得直接开干，必须主动停下来向用户提示并询问确认：指出该交接件已被接管过，询问用户是确认要基于该历史节点重新接管/复盘，还是交接路径有误。等待用户明确确认后再继续；若用户取消或更换路径，则按新指令执行。",
       "files": []
     }
   ]
