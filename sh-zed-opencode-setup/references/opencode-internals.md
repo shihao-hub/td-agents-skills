@@ -1,6 +1,6 @@
-# opencode 内部机制全记录（版本锚点：opencode 1.18.25，@ai-sdk/anthropic 3.0.82）
+# opencode 内部机制全记录（版本锚点：opencode 1.18.25 / 1.18.32，@ai-sdk/anthropic 3.0.82）
 
-排障时实测得出的源码结论。**opencode 升级后若任务 B 验证失败，按本文对照新源码重新定位**（仓库 github.com/sst/opencode，稀疏克隆 `packages/opencode/src` 即可）。
+排障时实测得出的源码结论。**opencode 升级后若任务 B/B3 验证失败，按本文对照新源码重新定位**（仓库 github.com/anomalyco/opencode，raw 直链 `https://raw.githubusercontent.com/anomalyco/opencode/<tag>/packages/opencode/src/...` 也可）。
 
 ## 1. 请求选项合并链（effort 如何生效）
 
@@ -22,6 +22,7 @@ ACP 适配层 `acp/config-option.ts`：
   if (variants.includes("default")) return "default"
   return variants[0]        // ← 没选就是第一项；Claude 系变体顺序 [low,medium,high,xhigh,max] → 默认 low
   ```
+- **`default` 哨兵（1.18.32 复核仍在此处，`DEFAULT_VARIANT_VALUE`）**：effort 下拉选项 = `[...new Set([...variants, "default"])]`——**永远包含 Default 选项**；模型选择列表的变体条目会过滤 `default`（`variant !== DEFAULT_VARIANT_VALUE`），不会多出 `(Default)` 模型条目。这是任务 B3 的立足点，详见 §11。
 - 数据来源：`acp/service.ts:732` 调 **`/config/providers`** HTTP 端点。
 
 ## 3. 双端点差异（最大的坑）
@@ -38,8 +39,9 @@ ACP 适配层 `acp/config-option.ts`：
 - `variants()` 第一行 `if (!model.capabilities.reasoning) return {}`。
 - GLM 特判：**非 glm-5.2 的 GLM 模型直接返回空**（所以 GLM 天然无下拉框）。
 - Anthropic 路径（`anthropicAdaptiveEfforts`）：现代自适应模型（opus-5 等）→ `["low","medium","high","xhigh","max"]`，low 排第一。
-- models.dev 目录模型另有 `reasoningVariants()` 优先执行（读 `reasoning_options` 元数据）。
-- **变体匹配按模型 ID，不看 provider id**（2026-09-14 实测，opencode 1.18.30）：自定义 provider `deepseek-max`（非目录 id）下，`deepseek-flash` 仍生成 [low,medium,high]、`deepseek-v4-pro` 生成 [low,medium,high,max]。glm-5.3 无变体是因为其模型元数据没有 reasoning_options，**与 provider 是否自定义无关**。→ 结论：禁用变体一律在模型级写 `variants` 全档 disabled，改名 provider id 规避无效。
+- models.dev 目录模型另有 `reasoningVariants()` **优先执行**（读 `reasoning_options` 元数据）：`provider.ts` 的 `fromModelsDevModel` 里 `ProviderTransform.reasoningVariants(model, base) ?? ProviderTransform.variants(base)`——**只要目录元数据带 `reasoning_options`（含 `type:"effort"`），变体 key 就是其 `values` 数组本身，`variants()` 的全部特判（含 GLM/Qwen 早退）被整体绕过**；`reasoning_options` 为空数组时返回 `{}`（也压掉回退），仅 `undefined` 才让位给 `variants()`。
+- ⚠️ **1.18.32 更正**：2026-09-14 的"glm-5.3 无变体（GLM 天然无下拉）"已过时——那只是当时 models.dev 元数据缺 `reasoning_options`。实测 1.18.32：models.dev 给 GLM/Qwen 等补了元数据后，opencode-go（openai-compatible）下的 glm-5.3 / glm-5.3-flash / qwen3.8-flash 都生成 [low,high,max] / [low,medium,xhigh] 下拉；zhipu-glm 自定义段无变体是因为它的模型来自用户 config 而非目录。**结论不变：想要确定性就显式写模型级 variants（禁用或 default），别赌目录元数据。**
+- **变体匹配按模型 ID，不看 provider id**（2026-09-14 实测，opencode 1.18.30）：自定义 provider `deepseek-max`（非目录 id）下，`deepseek-flash` 仍生成 [low,medium,high]、`deepseek-v4-pro` 生成 [low,medium,high,max]。→ 结论：禁用变体一律在模型级写 `variants` 全档 disabled，改名 provider id 规避无效。
 
 ## 5. SDK 选项名（键名写错 = 静默无效）
 
@@ -94,3 +96,43 @@ DeepSeek V4 API（官方文档 2026-09 核实）：
 - **显示 0% 的根因**：被打断/异常的 turn 在 opencode 留下 tokens 全 0 的 assistant 消息行；`latestAssistantMessage` 取最后一条不过滤 0 → used=0。dev 分支同款。再正常跑一轮即自愈。
 - **opencode 1.18.x 数据探查**：storage 文件已迁 SQLite——`~/.local/share/opencode/opencode.db`（实测 1.8GB，WAL 活跃）。只读 `DatabaseSync(path,{readOnly:true})` 并发读安全；`message` 表 `data` JSON 含 per-message tokens（input/output/cache.read/cache.write/reasoning/cost），`session` 表有聚合列。opencode.log 只记 permission 评估，别指望它有 usage 线索。
 - 升级后复验入口：GitHub `anomalyco/opencode` 对应 tag 的 `packages/opencode/src/acp/usage.ts` + `/config/providers` handler；ACP 侧看 agentclientprotocol/agent-client-protocol 的 CHANGELOG（usage/session 相关行）。
+
+## 11. default 变体哨兵与插件边界（2026-09-26 实测，opencode 1.18.32，任务 B3 依据）
+
+**variant 在 session 层的解析与合并**（`session/llm/request.ts`）：
+```ts
+const variant =
+  !input.small && input.model.variants && input.user.model.variant
+    ? input.model.variants[input.user.model.variant]   // key 不存在 → undefined → mergeOptions 视为 {}
+    : {}
+const options = mergeOptions(mergeOptions(mergeOptions(base, input.model.options), input.agent.options), variant)
+```
+优先级不变：`variant > agent.options > model.options > base`；variant key 查不到**不报错**，只是无覆盖（落到 model.options——这就是 options 双写能兜底的原因）。
+
+**ACP 层 default 哨兵语义**（`acp/config-option.ts` + `acp/service.ts`）：
+- `DEFAULT_VARIANT_VALUE = "default"`；effort 下拉选项永远含 Default（`[...new Set([...variants, "default"])]`）；`selectVariant()`：模型 `variants.default` 存在 → 返回 `"default"`，否则回退 `Object.keys(variants)[0]`。
+- `hasVariant()`：`variant === "default" || Object.hasOwn(variants, variant)`——**"default" 永远可设置**（哨兵 = "无显式覆盖"的持久化表示），set_config_option(effort) 对它永不过滤。
+- `selectModelVariant()`（切模型时）优先级：URL 式条目自带 `selected.variant` > **同一模型**且当前 variant 合法则保持（手选档位只在同模型内保持）> `selectVariant()` → **跨模型切换单向回 Default**。
+- newSession / loadSession / resumeSession / prompt 全部经 `selectVariant` 或恢复持久化 variant → 配好 `variants.default` 后**所有入口默认都是 Default**。
+- `configOptions()` 把 `currentVariant === "default"` 原样广播给 Zed（下拉显示 "Default" 被选中）；模型列表条目过滤 default，不产生 `(Default)` 模型条目。
+
+**配置方法**：模型级同时写 `variants.default` 与 `options`（同一份载荷：default 载荷优先级最高、options 兜底）。载荷**必须从 `/config/providers` 实测复制**，键名不统一：
+
+| 模型（实测 1.18.32） | default 载荷 |
+|---|---|
+| 大多数 openai-compatible（glm/deepseek/kimi/longcat/hy3/hy4…） | `{"reasoningEffort":"<最高档>"}` |
+| qwen3.8-flash | `{"effort":"xhigh"}`（键名是 `effort`！） |
+| grok-4.6/4.7、gpt-5.6-luna、gpt-6-luna、muse-spark | `{"reasoningEffort":"<档>","reasoningSummary":"auto","include":["reasoning.encrypted_content"]}` |
+| minimax-m3（开关型，变体 [none,thinking]） | `{"thinking":{"type":"adaptive"}}` |
+
+最高档选取规则：`max > xhigh > high > medium > low`（`none` 不算档位）；开关型选 `thinking`。
+
+**Zed 侧**：`agent_servers.opencode.default_config_options.effort` 写 `"default"`（哨兵值对所有模型合法）；写具体档位（如 max）会在新会话对该模型下发 set_config_option，无此档的模型（grok 系）被 opencode 拒（InvalidEffortError）。
+
+**工具脚本**：`scripts/apply-default-variant.mjs`（dry-run 默认 / `--apply` 自动备份幂等写入 / `--verify` 复查），从临时 serve 的 `/config/providers` 逐模型取最高档载荷批量落配置。
+
+**插件边界（为什么不能靠插件做"全局默认档"）**：
+- plugin 的 `config` hook 只被"通知"（`(hook as any).config?.(cfg)`，返回值被丢弃），**不能改配置**。
+- `provider` hook（`models?: (provider, ctx) => Promise<Record<string, ModelV2>>`）理论可全量改写模型（含 variants），但设计语义是给 provider 补模型目录，覆盖既有模型的行为未验证，不建议依赖。
+- `chat.params` hook 可在请求层改 options（merge 链之后触发），能强制实际档位，但**改不了 Zed 的 effort 下拉显示**——治标不治本。
+- provider/transform 层**没有** provider 级或全局的 variants 开关；模型级合并点是 `configProvider?.models?.[modelID]?.variants` → `mergeDeep` 后 `pickBy(!v.disabled)` 剔除 + `omit(v, ["disabled"])`（任务 B 的 `disabled` 作用点，1.18.32 复核仍在）。

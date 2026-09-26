@@ -11,6 +11,7 @@ description: 配置：Zed 的 opencode agent 安装修复、思考档位、供�
 2026-09-21 增补（二）：**Zed「当前上下文」指示器**由 ACP `usage_update` 驱动，opencode 只在模型 `limit.context > 0` 时上报；**`limit` 与 variants 正相反、不按模型 ID 从 models.dev 合并**，自定义 provider 必须显式写（任务 B2，实战 zhipu-glm/deepseek-max 补 limit）。
 2026-09-21 增补（三）：antigravity 等 ACP agent 的**登录排障**（OAuth 成功页≠登录成功、代理/CA env 注入、旧进程复用、stdio 认证探针）已独立成 skill **sh-zed-acp-agent-env**——本 skill 任务 A 只管安装竞态，登录问题去那边。
 2026-09-25 增补（四）：**权限模型（任务 D）**——「YOLO/auto 模式」是 `--auto` 权限开关、与 Build/Plan agent 无关；按 agent 开 `external_directory` 放行项目外目录（实测 opencode 1.18.32，全局配置 `agent.build.permission` 生效）。
+2026-09-26 增补（五）：**任务 B3「default 变体」**——保住 effort 下拉、但默认落在该模型**最高思考档**且切模型不掉档（ACP 层的 `default` 哨兵机制，源码实证 + 26 模型批量实战，opencode 1.18.32）。任务 B（全禁锁 max）与 B3（可调、默认最高）按用户诉求二选一。
 涉及 opencode 内部行为的修复**依赖其源码实现**（详见 `references/opencode-internals.md`），版本升级后可能失效——所以每个任务都带**实证验证步骤**，改完必须验证，不要盲信配置。
 
 ## 总原则（每次使用先读）
@@ -71,7 +72,7 @@ v_{版本}_{sha256(版本字符串)前16hex}_{sha256(zip完整URL)前16hex}
 
 ## 任务 B：思考档位默认 max、不出现 effort 下拉框
 
-**用户诉求**：在 Zed 里选模型就是 max，不需要（也不要出现）思考深度选择器。
+**用户诉求**：在 Zed 里选模型就是 max，不需要（也不要出现）思考深度选择器。（若用户想**保留下拉、只把默认值调到最高档** → 改走任务 B3，两种诉求二选一。）
 
 **机制（依赖源码，升级需重验）**：opencode 给有"变体"的模型在 Zed 里暴露 effort 下拉框；没选变体时回退到**变体列表第一项**（Claude 系是 low），且变体参数会覆盖模型 options 里的 effort。变体表**按模型 ID 生成**（models.dev 已知模型就带），与 provider 是否内置目录无关——2026-09-14 实测：自定义 provider `deepseek-max`（非目录 id）下 `deepseek-flash` 照样生成 [low,medium,high]、`deepseek-v4-pro` 生成 [low,medium,high,max]；glm-5.3 无变体只是该模型元数据没有档位，**不是**"自定义 provider 天然无变体"。解法是把模型的 `variants` 全部 `disabled`，变体表清空 → 无下拉框 → 永远用 options 里的 max。GLM 走 `@ai-sdk/openai-compatible` + `reasoningEffort`；Claude 走 `@ai-sdk/anthropic` + `effort`（键名不同，写错会被静默忽略！）。
 
@@ -197,6 +198,50 @@ node scripts/verify-opencode-effort.mjs <opencode.exe路径> [端口] [--only �
 
 ---
 
+## 任务 B3：保住 effort 下拉、默认最高档、切模型不掉 low（2026-09-26 实测 opencode 1.18.32）
+
+**用户诉求**：与任务 B 相反——用户**想保留** effort 下拉随时手调，但每次切换供应商模型后默认值必须是该模型的**最高思考档**（max 优先），而不是掉回第一项 low。任务 B 的"全禁变体"会连下拉一起消灭，不满足此诉求。
+
+**机制（1.18.32 源码实证，升级需重验）**：opencode ACP 层有一个专为此设计的 **`default` 变体哨兵**：
+- `acp/config-option.ts`：`DEFAULT_VARIANT_VALUE = "default"`。effort 下拉的选项列表**永远包含 Default**（`[...new Set([...variants, "default"])]`）；`selectVariant()` 只要模型变体里存在 `default` 键就返回 `"default"`，否则才回退第一项（low）；模型选择列表会**过滤** `default`（不会多出 `(Default)` 模型条目）。
+- `acp/service.ts`：newSession、**切换模型**（`selectModelVariant`）都走 `selectVariant` → 模型有 `default` 键就选它；**同一模型内**手动选过的档位保持，**跨模型一律回 Default**；`hasVariant()` 对 `"default"` 特判放行（它永远是可以设置的合法值，哨兵语义 = "无显式覆盖"）。
+- `session/llm/request.ts`：`variant = model.variants[user.model.variant]`，变体载荷在 mergeDeep 链**最后**（优先级最高，覆盖 model.options）。
+- 结论：给模型配置 `variants.default = <最高档载荷>`，下拉保留、默认与切模型后都是 Default(=最高档)，手选其他档仍合法。
+
+**配置写法（关键：载荷从 `/config/providers` 实测复制，键名不统一）**：
+```json
+"opencode-go": {
+  "models": {
+    "deepseek-v4.1-flash": {
+      "options":  { "reasoningEffort": "max" },
+      "variants": { "default": { "reasoningEffort": "max" } }
+    }
+  }
+}
+```
+- `variants.default` 与 `options` **写同一份载荷**（双保险：default 载荷优先级最高，options 兜底）。
+- **档位选择规则**：取该模型变体里的最高档——`max > xhigh > high > medium > low`（`none` 不算档位）；无档位概念的开关型（如 minimax-m3 的 `[none,thinking]`）选 `thinking`。
+- **载荷键名不统一，必须实测复制**：大多为 `{"reasoningEffort": "<档>"}`；qwen3.8-flash 实测是 `{"effort": "xhigh"}`；OpenAI 系（gpt-5.6-luna/grok/muse-spark）额外带 `"reasoningSummary":"auto"` + `"include":["reasoning.encrypted_content"]`；minimax-m3 是 `{"thinking":{"type":"adaptive"}}`。手写猜键名会静默无效。
+
+**批量落地用脚本**（起临时 serve 读 `/config/providers`，逐模型选最高档、复制实测载荷，dry-run 默认）：
+```bash
+node scripts/apply-default-variant.mjs <opencode.exe>            # dry-run：打印每个模型 [现有变体] -> default=<档>
+node scripts/apply-default-variant.mjs <opencode.exe> --apply    # 写入 opencode.json（自动备份，幂等可重跑）
+node scripts/apply-default-variant.mjs <opencode.exe> --verify   # 复查 /config/providers 里 default 已生效
+```
+脚本顶部 `TARGETS` 数组按需改 provider 列表（2026-09-26 实战：opencode-go 21 个 + zhipuai-coding-plan 3 个 + deepseek 2 个 = 26 个模型）。cc-switch 管理的 provider（`liveConfigManaged`）要同步 settings_config，否则切换时被写回旧值。
+
+**Zed 侧配套（必改）**：`agent_servers.opencode.default_config_options.effort` 写 **`"default"`**，不要写具体档位——具体档位（如 max）不是每个模型都有（grok 系最高只到 xhigh），Zed 新会话下发不存在的档位值会被 opencode 拒（InvalidEffortError）。
+
+**验证**：
+1. 配置层：`--verify` 确认 `/config/providers` 中目标模型 `variants` 含 `default` 且载荷正确、原档位保留（任务 B 的 verify-opencode-effort.mjs 断言"无变体"，对 B3 方案会误报 FAIL，勿混用）。
+2. 体验层：完全退出 Zed 重开 → effort 下拉显示 `Default / Low / Medium / …` 且默认选中 **Default**；切 favorites 里任意模型不掉档；手选 Low 后同模型内保持，切走再回 Default。
+3. 2026-09-26 实战结果：26 个模型全部生效，用户重启后"一打开就是 Default"，切模型不再掉 low。
+
+**升级重验点**：`acp/config-option.ts` 的 `DEFAULT_VARIANT_VALUE`/`selectVariant`、`acp/service.ts` 的 `hasVariant`/`selectModelVariant`、`session/llm/request.ts` 的 variant 合并链（详见 `references/opencode-internals.md` §11）。
+
+---
+
 ## 任务 C：cc-switch 与 opencode 配置同步 / Claude Code → opencode 迁移
 
 **⚠️ 此任务动 cc-switch 的 SQLite 数据库，必须先 dry-run 展示计划、经用户确认后再 `--apply`。**
@@ -257,6 +302,8 @@ node scripts/cc-switch-migrate.mjs --apply  # 用户确认后执行（自动备�
 | Zed 模型下拉里出现 "(Low)…(Max)" 后缀条目 | 模型 variants 没禁用，走任务 B；验证用 /config/providers |
 | 自定义 provider id 也出现下拉框/被顶回 low | 变体**按模型 ID** 生成（models.dev 已知模型就带），换 provider id 规避无效；模型级 `variants` 全档 disabled（2026-09-14 实测踩坑） |
 | 努力改成 max 但请求还是 low | 选了 low 变体（变体覆盖 options）；禁用变体后重选 plain 模型 |
+| 每次切模型 effort 都掉回 low/第一档，但想要下拉可调 | 模型变体缺 `default` 哨兵：加 `variants.default`+`options`（任务 B3）；想彻底没下拉才用任务 B 全禁 |
+| Zed `default_config_options.effort` 写具体档位对部分模型无效/报错 | 档位值不是所有模型都有（grok 系最高 xhigh），opencode 端 InvalidEffortError；effort 写哨兵值 `"default"` |
 | Zed 里「当前上下文」指示器永不出现 | 模型 `limit.context=0`：自定义 provider 的 **limit 不从 models.dev 合并**（与 variants 相反）；模型级显式写 `limit` 并同步 cc-switch，完全重启 Zed，见任务 B2 |
 | Build 读项目外文件反复弹权限询问 | `external_directory` 默认 `ask`（见任务 D）；按 agent 放行写 `agent.build.permission.external_directory`，别用全局 `--auto`（会放开所有工具的所有外部路径） |
 | `subclaude-xxx/claude-opus-5 is not a valid value` 警告 | Zed 侧对自定义模型 ID 的校验提示，无害可无视 |
@@ -268,5 +315,5 @@ node scripts/cc-switch-migrate.mjs --apply  # 用户确认后执行（自动备�
 
 ## 深入资料
 
-- `references/opencode-internals.md` —— opencode 内部机制全记录（请求合并链、变体计算、双端点差异、SDK 选项名、用量上报链 usage_update/limit、版本锚点）。**opencode 升级后任务 B/B2 验证失败时必读**。
+- `references/opencode-internals.md` —— opencode 内部机制全记录（请求合并链、变体计算、双端点差异、SDK 选项名、default 变体哨兵 §11、用量上报链 usage_update/limit、版本锚点）。**opencode 升级后任务 B/B2/B3 验证失败时必读**。
 - `references/cc-switch-migration.md` —— cc-switch 数据库表结构、settings_config 形状、迁移脚本设计与回滚。
