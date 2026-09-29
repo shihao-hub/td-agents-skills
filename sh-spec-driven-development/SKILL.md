@@ -1,6 +1,6 @@
 ---
 name: sh-spec-driven-development
-description: spec 驱动开发工作流（Feature 新功能 / Bug Fix 修缺陷双类型）：Feature 走需求先行 / 设计先行 / 快速三条路径；Bug Fix 按规模分流——小 bug 单文件 bugfix.md（内含根因、修复方案、任务清单），中大 bug 走 bugfix.md + design.md + tasks.md 三件套，存于 specs/{NN}-{feature_name}/；每个文档先获用户批准再继续，全部批准后停下等待执行指令；执行默认连续完成全部任务、不写测试不跑测试。当用户要开发新功能/模块/服务/CLI 且工作量值得先规划，或要系统性修复缺陷（"修 bug"、"修复"、"报错了"、"崩溃"、"回归"、"行为不符合预期"），或说 "spec-driven development"、"feature spec"、"先写需求"、"需求文档"、"设计文档"、"任务拆解"、"帮我实现/开发 X 功能"、"修复 X 报错/回归" 时使用——即使没说 "spec" 这个词。用户要求从已有 spec 文件继续工作或执行任务清单时也应触发。轻量单文件计划流程改用 sh-plan-driven-development。
+description: Spec 驱动开发工作流：按 feature/bug 分流产出需求设计与任务清单，逐份获批后执行。点名使用
 version: 2.1.1
 created: 2026-09-21
 updated: 2026-09-26
