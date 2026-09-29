@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import base64
 import html
 import io
@@ -665,7 +666,7 @@ def main() -> None:
     ap.add_argument("--start-time",
                     help='区间起点时间，如 "2026-09-20 09:13"（取首个 >= 该时间的消息）')
     ap.add_argument("--thread-root", help="话题根消息 id（om_xxx），话题模式")
-    ap.add_argument("--out-dir", help="工作/输出目录（默认 %%TEMP%%\\opencode\\lark_archive\\<id尾8位>）")
+    ap.add_argument("--out-dir", help="工作/输出目录（默认 %%APPDATA%\\agent-skills\\sh-lark-chat-archive\\<id尾8位>）")
     ap.add_argument("--title", default="聊天存档", help="存档标题（默认：聊天存档）")
     ap.add_argument("--dek", help="页首导语（默认自动生成一句话统计）")
     ap.add_argument("--chat-name", help="侧栏会话名（默认用 chat id / 话题根 id）")
@@ -684,8 +685,13 @@ def main() -> None:
 
     key_id = args.thread_root if thread_mode else args.chat_id
     tail8 = re.sub(r"[^0-9a-zA-Z_]", "", str(key_id)[-8:]) or "default"
-    workdir = Path(args.out_dir) if args.out_dir else (
-        Path(tempfile.gettempdir()) / "opencode" / "lark_archive" / tail8)
+    appdata = os.environ.get("APPDATA")
+    default_base = (
+        Path(appdata) / "agent-skills" / "sh-lark-chat-archive"
+        if appdata
+        else Path.home() / ".config" / "agent-skills" / "sh-lark-chat-archive"
+    )
+    workdir = Path(args.out_dir) if args.out_dir else (default_base / tail8)
     workdir.mkdir(parents=True, exist_ok=True)
     img_dir = workdir / "img"
     img_dir.mkdir(parents=True, exist_ok=True)

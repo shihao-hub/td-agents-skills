@@ -80,7 +80,7 @@ uv run build_archive.py --chat-id oc_xxx --start-time "2026-09-20 09:13" --title
 # 话题模式（根消息 + mget 展开全部回复；与 --start-* 互斥）
 uv run build_archive.py --thread-root om_xxx --title "话题存档"
 
-# 可选：--out-dir <目录>（默认 %TEMP%\opencode\lark_archive\<chat尾8位>\）
+# 可选：--out-dir <目录>（默认 %APPDATA%\agent-skills\sh-lark-chat-archive\<chat尾8位>\）
 #        --dek "<一句话导语>"  --chat-name "<会话名>"
 #        --afterword afterword.json  --captions captions.json
 ```
@@ -118,7 +118,7 @@ uv run build_archive.py --thread-root om_xxx --title "话题存档"
 - **归档与撤回都是写操作**：分别需要用户确认；撤回还需要第二次确认（删除清单过目）。
 - **`delete --yes` 是高危**：只在用户明确批准后出现；一次只删清单内消息。
 - 发消息、转发、撤回完成后如实报告结果（成功/失败与原因）。
-- 浏览器测试页、临时服务等用后即清（AGENTS.md 约定）；`%TEMP%` 下的工作目录与图片缓存可保留复用。
+- 浏览器测试页、临时服务等用后即清（AGENTS.md 约定）；`%APPDATA%\agent-skills\sh-lark-chat-archive` 下的工作目录与图片缓存可保留复用。
 - 话题模式不做第 7 步（撤回）：话题本身就是沉淀，原消息永不撤回；产物回传（第 6 步）照常。
 
 ## 相关技能分工

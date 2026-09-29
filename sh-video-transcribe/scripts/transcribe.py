@@ -21,11 +21,21 @@ from faster_whisper import WhisperModel  # noqa: E402
 
 
 def pick_device() -> tuple[str, str]:
-    # 有 NVIDIA GPU 用 float16（快数倍），否则 CPU int8（兼容性最好）
+    # 有 NVIDIA GPU 且运行库齐全时用 float16（快数倍），否则 CPU int8（兼容性最好）；
+    # ctranslate2 的 CUDA 库是延迟加载的，构造模型不报错，必须预检 DLL 才能判断可用性
     try:
+        import ctypes
+
         import ctranslate2
 
         if ctranslate2.get_cuda_device_count() > 0:
+            libs = (
+                ("cublas64_12.dll", "cudnn64_9.dll")
+                if sys.platform == "win32"
+                else ("libcublas.so.12", "libcudnn.so.9")
+            )
+            for name in libs:
+                ctypes.CDLL(name)
             return "cuda", "float16"
     except Exception:
         pass

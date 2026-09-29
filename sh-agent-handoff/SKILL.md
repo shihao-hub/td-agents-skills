@@ -1,6 +1,6 @@
 ---
 name: sh-agent-handoff
-description: 跨 agent 会话交接：生成交接简报文件并给出路径，另一 agent 按路径接手继续。点名使用
+description: "跨 agent 会话交接：生成交接简报文件并给出路径，另一 agent 按路径接手继续。点名使用；用户贴出「sh-agent-handoff: <路径>」或提到接管交接简报时即接管侧点名，必须走本 skill 完成状态检查与回写打标"
 ---
 
 # 跨 Agent 会话交接
@@ -93,7 +93,7 @@ sh-agent-handoff: <绝对路径>
 
 - 生成时间：<YYYY-MM-DD HH:mm>
 - 来源 agent：<产品名与模型，能确认才写>
-- 接管状态：[ ] 待接管
+- 接管状态：[ ] 待接管（接管侧接手后必须把本行回写为：`[x] 已由 <agent/model> 于 <YYYY-MM-DD HH:mm> 接管`，再开始干活）
 - 来源工作目录：<绝对路径>
 - 仓库根目录：<绝对路径；不在 git 仓库则写"无">
 
