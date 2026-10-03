@@ -1,0 +1,17 @@
+{
+  "skill_name": "sh-oop-refactor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "用 sh-oop-refactor 帮我把项目中包含一个 800 行处理各种订单类型的大函数 order_processor.py 重构一下。当前在新机器上，没有安装任何额外技能。",
+      "expected_output": "AI 执行阶段零检查，主动向用户提示缺少 clean-code / improve-codebase-architecture 等技能并提供结构化安装选项；在用户确认后，先写回归测试保护网，再输出 plans/ 实施方案获批后小步执行。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "调用 sh-oop-refactor 把通知推送服务重构为面向对象结构，当前本地已有 sh-plan-driven-development。",
+      "expected_output": "AI 自动绑定并调用 sh-plan-driven-development 规范，进行坏味道诊断，绘制策略/观察者模式 Mermaid 图，生成 plans/01-refactor-notification.md 计划落盘，并在硬性审批门处停止等待批准，批准前不修改业务代码。",
+      "files": []
+    }
+  ]
+}
