@@ -1,0 +1,35 @@
+{
+  "skill_name": "sh-office-extract-media",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "导师发的这个课件 word 里有几张实验装置图，我想存下来放进我的论文，但右键另存为出来的图特别糊",
+      "expected_output": "识别出 docx 是 ZIP 容器，用 scripts/extract_media.py 从 word/media 提取内嵌原图（或在副本上改后缀为 zip 解压），报告每张图的原始像素尺寸与体积，说明取到的是未经二次压缩的原图；不缩放、不重编码，源文档只读",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "把 D:\\课程\\机器学习\\slides 这个文件夹里所有 pptx 的插图都提出来，放到 D:\\课程\\素材 下面，同一张图重复出现的话只留一份",
+      "expected_output": "对目录批量处理（python extract_media.py <目录> -o D:\\课程\\素材 --dedupe），图片按 ppt/media 条目落到每份 pptx 对应的子目录，重复内容按哈希去重并报告跳过数，输出 _manifest.tsv 汇总（尺寸、字节、来源条目）；提醒 PPT 内复用图片在包里只存一份",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "这个 .ppt 文件我改成 .zip 以后解压，压缩软件说格式不对，是不是我操作错了",
+      "expected_output": "判定为旧版二进制格式（OLE 复合文档，非 ZIP），不是操作失误；给出正确路径——先用 Office/WPS 另存为 .pptx 再拆包；同时提到 docx/pptx 解压失败也可能是文件损坏或被加密（加密后外层是 OLE 容器）",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "帮我把这个 pptx 里所有配图导出来，我要挑几张清晰的印出来当展板，需要能直接用的位图格式",
+      "expected_output": "提取后逐张报告尺寸与格式，指出 EMF/WMF 是矢量图、浏览器与多数看图软件不认，按需用 --convert-vector 另存 PNG（保留原矢量文件不删），并说明转 PNG 会丢矢量信息；不默认缩放或重编码位图",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "为什么我把 docx 改后缀成 zip 解压出来，word/media 里面一张图都没有？文档里明明有好几张照片",
+      "expected_output": "给出两种真实可能：图片是链接进来的（word/_rels/document.xml.rels 里 TargetMode=\"External\"/绝对路径，包里确实没有位图），或文档里的\"图\"是形状/SmartArt/图表（XML 绘制，无位图）；顺着链接找到外部原图或确认对象类型，而不是反复重试解压",
+      "files": []
+    }
+  ]
+}
