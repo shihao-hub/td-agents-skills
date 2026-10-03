@@ -39,7 +39,7 @@
 ```json
 {
   "auth": {
-    "OPENAI_API_KEY": "sk-1574d0cdb52c411d9426b50d635116b2"
+    "OPENAI_API_KEY": "<your-deepseek-api-key>"
   },
   "config": "model_provider = \"custom\"\nmodel = \"deepseek-flash\"\nmodel_reasoning_effort = \"high\"\n\n[model_providers.custom]\nname = \"deepseek\"\nbase_url = \"https://api.deepseek.com\"\nwire_api = \"responses\"\nrequires_openai_auth = true\n",
   "modelCatalog": {
