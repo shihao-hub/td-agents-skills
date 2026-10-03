@@ -1,0 +1,17 @@
+{
+  "skill_name": "sh-lark-session-doc",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "把我们刚刚聊的关于 Redis 性能优化的全部对话原封不动导出成飞书文档，放到我的个人文档库里。",
+      "expected_output": "识别归档意图，将全部轮次的 user 和 assistant 原样整理为 Markdown，通过两阶段（先 docs +create --parent-position my_library，再落盘临时文件执行 docs +update overwrite）写入飞书云文档，完成后删除临时文件并返回文档飞书直达链接。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我把当前会话记录完整归档到飞书云文档，不要总结，要原始的问答，存到我的文档库。",
+      "expected_output": "严格原汁原味提取每轮 Q&A 文本、代码块与表格，使用 --as user 与 --parent-position my_library 创建并全量更新文档，不夹带二次概括，输出云文档链接。",
+      "files": []
+    }
+  ]
+}
