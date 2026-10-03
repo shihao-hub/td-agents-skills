@@ -1,4 +1,5 @@
 # Python bytecode / caches
+.venv/
 __pycache__/
 *.py[cod]
 
