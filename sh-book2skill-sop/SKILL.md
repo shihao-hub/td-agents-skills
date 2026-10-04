@@ -35,11 +35,12 @@ description: 把书/文档转成 agent skill：book-to-skill 全流程 SOP、扫
 2. 跑 `book-to-skill` skill 的 Step 2 抽取（`scripts/extract.py`，text 模式秒级完成）。
 3. **立刻验货**：看 `Words`/`Tokens` 是否与页数匹配（健康：中文书每页 ~300-500 字）。字数接近 0 → 走第 2 节 OCR 兜底。
 4. 按官方 skill Step 2.6：>50k token 的书**不要整读**，用 grep 定位章节边界 + sed/read offset 分段取。
-5. 章节摘要生成可并行委派子代理（每代理 2 章，读自己的行号区间，写 `chapters/chNN-*.md`），主会话汇总写 SKILL.md/glossary/patterns/cheatsheet。
-6. 官方 Step 9.5 安全扫描必跑：
+5. **命名强制 `book-` 前缀**：`book-<作者-概念>`，如 `book-thomas-pragmatic`。理由：`~/.agents/skills` 平铺命名空间里，前缀一眼区分"书衍生只读知识库"与 `sh-*` 操作类 skill，且便于按前缀批量识别不入公开仓库的版权衍生库。frontmatter `name` 必须与目录名一致。
+6. 章节摘要生成可并行委派子代理（每代理 2 章，读自己的行号区间，写 `chapters/chNN-*.md`），主会话汇总写 SKILL.md/glossary/patterns/cheatsheet。
+7. 官方 Step 9.5 安全扫描必跑：
    `& $env:PYTHON_BIN ...\book-to-skill\tools\scan_generated_skill.py <输出目录>`
-7. 收尾：跑 `& $env:PYTHON_BIN "C:\Users\29580\.agents\skills\sync_skills.py"` 让 codex per-skill junction 同步（claude/opencode/gemini/pi 是整体 junction 或原生读取，自动生效）。
-8. 清理抽取 workdir（`Workdir ->` 路径）与临时脚本。
+8. 收尾：跑 `& $env:PYTHON_BIN "C:\Users\29580\.agents\skills\sync_skills.py"` 让 codex per-skill junction 同步（claude/opencode/gemini/pi 是整体 junction 或原生读取，自动生效；改名后旧 junction 会被自动 REMOVE）。
+9. 清理抽取 workdir（`Workdir ->` 路径）与临时脚本。
 
 ## 2. 扫描版 PDF（无文字层）OCR 兜底
 
@@ -104,4 +105,4 @@ Add-Content ~/.agents/skills/book-to-skill/.git/info/exclude "/.venv/"
 
 ## 6. 版权门槛
 
-受版权保护书籍的衍生 skill **只能保持 private**，不得公开推送（生成 skill 的 Step 11 发布环节自带此问询，勿选 public）。
+受版权保护书籍的衍生 skill **只能保持 private**，不得公开推送到任何仓库（含 `~/.agents/skills` 背后的 public 仓库——即**不入库**，仅本地+junction 使用）。命名上以 `book-` 前缀标记这类"不入库"成员。生成 skill 的 Step 11 发布环节自带此问询，勿选 public。
