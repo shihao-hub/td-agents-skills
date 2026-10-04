@@ -24,19 +24,21 @@ description: 本机抖音/B 站视频下载 + 知乎文章提取：用本机打�
 
 ## 用法（照抄，替换引号内文案）
 
+> ⚠️ **2025-07 实测教训：知乎风控会把无头访问的浏览器 cookie 标记为异常（错误码 40362），连带用户自己浏览器打不开知乎，换 IP/退账号都无效，只能清 cookie 或等 1~3 天。因此执行本 skill 时一律显式加 `--headed`，不要用默认无头模式。**
+
 ```powershell
-# 抖音分享文案
-& "D:\Users\language_projects\python_projects\douyin_downloader\dist\douyin_dl.exe" "8.74 复制打开抖音 https://v.douyin.com/xxxxx/ 复制此链接，打开Dou音搜索，直接观看视频！"
+# 抖音分享文案（$EXE = D:\Users\language_projects\python_projects\douyin_downloader\dist\douyin_dl.exe，下同）
+& $EXE --headed "8.74 复制打开抖音 https://v.douyin.com/xxxxx/ 复制此链接，打开Dou音搜索，直接观看视频！"
 
 # B 站：主站链接 / 短链 / 裸 BV 号等效
-& "D:\Users\language_projects\python_projects\douyin_downloader\dist\douyin_dl.exe" "https://b23.tv/xxxxxxx"
-& "D:\Users\language_projects\python_projects\douyin_downloader\dist\douyin_dl.exe" "BV1B6YR6gEyd"
+& $EXE --headed "https://b23.tv/xxxxxxx"
+& $EXE --headed "BV1B6YR6gEyd"
 
 # 知乎：回答（/question/<qid>/answer/<aid>）与专栏文章（/p/<pid>）
-& "D:\Users\language_projects\python_projects\douyin_downloader\dist\douyin_dl.exe" "https://zhuanlan.zhihu.com/p/96956163"
+& $EXE --headed "https://zhuanlan.zhihu.com/p/96956163"
 
 # 混合：一条命令三类链接都处理
-& "D:\Users\language_projects\python_projects\douyin_downloader\dist\douyin_dl.exe" "<抖音文案> https://b23.tv/xxxxxxx https://www.zhihu.com/question/xxx/answer/yyy"
+& $EXE --headed "<抖音文案> https://b23.tv/xxxxxxx https://www.zhihu.com/question/xxx/answer/yyy"
 ```
 
 - 文案中**所有**链接都会被检查：抖音与 B 站链接逐个下载、知乎链接逐篇提取（串行，复用同一个 Chrome）；不支持的链接跳过并在 `skipped` 里如实列出（不会静默丢弃）。
@@ -85,18 +87,20 @@ Get-Content 文案.txt -Raw | & "D:\Users\language_projects\python_projects\douy
 - 提取失败（知乎改版/链接失效）按 `zhihu_extract_failed` 失败，`error.detail` 里带页面标题与正文候选区统计——汇报时把 detail 一并给出，便于判断是改版还是链接问题。
 - 不提取：问题页整页多回答、评论与赞同数、公式 LaTeX 还原（公式以渲染图片保存）。
 
-## 启动模式（不会打扰用户）
+## 启动模式
+
+> **2025-07 起实际默认为 `headed`**：执行本 skill 时始终显式传 `--headed`（exe 内置默认仍是无头，但无头已被知乎风控标记过一次，见用法一节警告）。弹出前台窗口属预期行为，提前告知用户"会弹出浏览器窗口"即可。
 
 | 模式 | 触发 | 屏幕表现 |
 |---|---|---|
-| `headless-new`（**默认**） | 不带参数 | Chrome 新版无头，**无窗口、无任务栏图标** |
-| `background`（自动回退） | 默认模式被抖音拦时自动切换，或 `--headless=background` | 真 Chrome，窗口移到屏幕外（`-32000,-32000`）+ 静音 |
-| `headed` | `--headed` | 前台可见窗口，供人工过验证滑块 / 登录 B 站与知乎 |
+| `headed`（**实际默认**） | 每次执行都显式加 `--headed` | 前台可见窗口；顺带可人工过验证滑块/登录 |
+| `headless-new`（exe 内置默认，**勿用**） | 不带参数 | Chrome 新版无头；知乎风控会标记并限流（40362） |
+| `background`（仅抖音自动回退） | 抖音场景需要时 `--headless=background` | 真 Chrome，窗口移到屏幕外（`-32000,-32000`）+ 静音 |
 
-- 默认模式屏幕上零痕迹，不影响用户正常用电脑；被抖音拦截时会**自动回退 `background` 重试一遍**。
 - `--headless=old` 是旧无头，**已被抖音风控识别**（必然 `stream_not_found`），保留仅为对照，别用。
 - 注意：`background` 模式**不要**改成「把窗口压到最底层 / `WS_EX_NOACTIVATE`」——实测那样窗口会被判定为不可见，抖音播放器直接不加载视频流；必须用移出屏幕的做法。
-- 知乎与 B 站的登录态都是**持久化**的：登录一次后默认无头模式也能用，不需要每次 `--headed`。
+- 知乎与 B 站的登录态都是**持久化**的：登录一次后有头模式直接可用。
+- **知乎频率红线**：一次提取一篇、多篇之间间隔几分钟；短时间连续多篇即使有头也可能触发 40362 限流（实测仅几次无头访问就被标记过）。
 
 ## 行为与判定
 
@@ -111,7 +115,12 @@ Get-Content 文案.txt -Raw | & "D:\Users\language_projects\python_projects\douy
 
 ## 注意
 
-- Chrome 实例运行结束后**常驻不退出**（复用登录态，二次运行秒连），这是设计行为，不是资源泄漏。收尾用 `--close-browser`（优雅关停并确认退出），不要去任务管理器乱杀。
+- **用完必关（2025-07 用户要求）**：本 skill 每次执行结束、结果汇报完之后，**必须补跑一次** `& $EXE --close-browser` 优雅关停常驻 Chrome，不要留着常驻实例占用内存/弹窗。登录态存在磁盘 profile 里，关掉不丢。
+- **并发防护（关之前必查）**：`--close-browser` 关的是 9222 端口上唯一的共享实例，若此时**还有另一个任务/会话正在用本 skill**，关闭会直接打断它。因此关之前先确认：
+  1. 本会话内没有其他正在运行的本 skill 任务（后台 job、子代理）；
+  2. 无法确认时（例如不确定是否有其他 agent 窗口在跑下载），**宁可先问用户**"现在有别的下载任务在跑吗？"，得到否定答复后再关。
+  - 多任务需要下载时，正确做法是**串行排队共用同一次 Chrome 会话**（一条命令给多个链接，或逐条执行完再统一关），不要并行起两个实例。
+- Chrome 实例运行结束后**常驻不退出**（复用登录态，二次运行秒连）——这是 exe 设计行为；skill 层面的收尾约定见上一条「用完必关」。不要去任务管理器乱杀，一律走 `--close-browser`。
 - 触发滑块时该条失败（`stream_not_found`）：默认模式已自动回退 `background` 试过一遍；仍失败就提示用户 `--headed` 重跑，在弹出的窗口里人工完成后再重跑。
 - **ffmpeg 只有视频链路需要**（抖音/B 站 DASH 合并用 `-c copy`，无重编码，秒级完成）；纯知乎提取不需要 ffmpeg。
 - 单条失败不中断整批；exe 无签名可能被杀软误报，属已知现象。
