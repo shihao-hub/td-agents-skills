@@ -2,18 +2,22 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""skills 同步器：以 .agents/skills 为唯一源，同步到 Claude Code / Codex / opencode / Gemini。
+"""skills 同步器：以 .agents/skills 为唯一源，同步到 Claude Code / Codex / opencode / Gemini / Cursor。
 
 默认 link 模式（junction，无需管理员权限）：
-- claude / opencode / gemini：整个 skills 目录建成指向源的 junction，源即真身，改源即时生效
+- claude / opencode / gemini / cursor：整个 skills 目录建成指向源的 junction，源即真身，改源即时生效
 - codex：skills 本体保持真实目录（保留内置 .system），其下每个 skill 建 per-skill junction
 copy 模式（--mode copy）：镜像复制实体文件，并淘汰目标中源没有的内容（codex 的 .system 保留）。
+
+cursor 说明：Cursor 用户级 skills 目录为 ~/.cursor/skills（内置 skills 位于同级的
+~/.cursor/skills-cursor，Cursor 自行管理，不受本脚本影响）；链接后与 ~/.agents/skills
+按真实路径去重，不会重复加载。
 
 pi 例外：pi 原生就把 ~/.agents/skills（即本源目录）当全局 skills 加载，并按其真实路径去重，
 因此无需任何链接或复制；本脚本仅登记其路径，--agent pi / --agent all 时给出说明而不做改动。
 
 用法：
-    uv run sync_skills.py [--mode link|copy] [--agent claude|codex|opencode|gemini|pi|all] [--check]
+    uv run sync_skills.py [--mode link|copy] [--agent claude|codex|opencode|gemini|cursor|pi|all] [--check]
     sync_skills.bat            # 等价于 uv run sync_skills.py（默认 link + all）
 """
 
@@ -36,6 +40,7 @@ AGENTS = {
     "codex": Path.home() / ".codex" / "skills",
     "opencode": Path.home() / ".config" / "opencode" / "skills",
     "gemini": Path.home() / ".gemini" / "config" / "skills",
+    "cursor": Path.home() / ".cursor" / "skills",
 }
 
 # 原生读取源目录、无需同步的 agent；仅登记其 skills 路径用于说明
@@ -111,7 +116,7 @@ class Sync:
     # ---------- link 模式 ----------
 
     def sync_link_whole(self, agent: str) -> None:
-        """claude / opencode / antigravity：整个 skills 目录替换为指向 SRC 的 junction"""
+        """claude / opencode / gemini / cursor：整个 skills 目录替换为指向 SRC 的 junction"""
         dst = AGENTS[agent]
         if not dst.exists():
             self.do(agent, "LINK", dst, "->", SRC,
@@ -163,7 +168,7 @@ class Sync:
     # ---------- copy 模式 ----------
 
     def sync_copy_whole(self, agent: str) -> None:
-        """claude / opencode / antigravity：删除整个目标目录后镜像复制"""
+        """claude / opencode / gemini / cursor：删除整个目标目录后镜像复制"""
         dst = AGENTS[agent]
 
         def copy() -> None:
