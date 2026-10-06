@@ -102,6 +102,7 @@ integratedTerminalShell = "gitBash"
   }
   ```
 * **维护结论**：**保持现状即可**，它原生只跑 Git Bash，遇到 WSL stub 会自动跳过。
+* 相关：pi 的快捷键改键，以及 Shift+Alt 等组合键「按了没反应」的终端键盘协议排查，见 `sh-pi-keybindings`。
 
 ---
 
