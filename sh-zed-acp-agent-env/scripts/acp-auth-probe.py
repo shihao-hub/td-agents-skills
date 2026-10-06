@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""ACP agent 认证探针（Zed registry 外部 agent，stdio JSON-RPC）。
+"""ACP agent 认证探针（通用版：支持 Zed 与 IntelliJ IDEA/JetBrains，stdio JSON-RPC）。
 
-不进 Zed UI，用 settings.json 里 agent_servers.<agent>.env 的环境直接启动官方
-agent exe，走 initialize → authenticate(oauth-personal) → session/new，
-拿到登录链路的真实结果（含被 Zed 界面隐藏的底层异常）。
+不进 IDE UI，用配置环境或系统用户环境直接启动官方 agent exe，
+走 initialize -> authenticate(oauth-personal) -> session/new，
+拿到登录链路的真实结果（含被 IDE 界面隐蔽的底层异常）。
 
 用法:
-  python acp-auth-probe.py [agent名] [--cached] [--cwd 路径] [--timeout 秒]
+  python acp-auth-probe.py [agent名] [--cached] [--ide zed|idea] [--cwd 路径] [--timeout 秒]
 
 模式:
-  默认     initialize → authenticate（自动开浏览器，需人工完成授权）→ session/new
-  --cached initialize → session/new（不登录，验证已存凭据跨进程可用）
+  默认     initialize -> authenticate（自动开浏览器，需人工完成授权）-> session/new
+  --cached initialize -> session/new（不登录，验证已存凭据跨进程可用）
+  --ide    指定读取的宿主 IDE 配置及对应安装目录（默认 zed，可选 idea）
 
 判读:
   POST /token 200 + AUTHENTICATE_OK / SESSION_CREATED_OK + AVAILABLE_MODEL_COUNT>0
@@ -28,7 +29,8 @@ import threading
 import time
 
 ZED_SETTINGS = pathlib.Path(os.environ.get('APPDATA', '')) / 'Zed' / 'settings.json'
-REGISTRY = pathlib.Path(os.environ.get('LOCALAPPDATA', '')) / 'Zed' / 'external_agents' / 'registry'
+ZED_REGISTRY = pathlib.Path(os.environ.get('LOCALAPPDATA', '')) / 'Zed' / 'external_agents' / 'registry'
+IDEA_ACP_AGENTS = pathlib.Path(os.environ.get('LOCALAPPDATA', '')) / 'JetBrains'
 
 INTERESTING = re.compile(
     r'Starting|Shutting down|SSL|CERTIFICATE|Traceback|ConnectionError|onboard'
@@ -100,40 +102,57 @@ def _agent_object_text(text, agent):
     return None
 
 
-def load_env(agent):
-    try:
-        text = ZED_SETTINGS.read_text(encoding='utf-8')
-    except Exception as e:
-        print(f'WARN: 无法读取 {ZED_SETTINGS}: {e}', flush=True)
+def load_env(agent, ide='zed'):
+    if ide == 'zed':
+        try:
+            text = ZED_SETTINGS.read_text(encoding='utf-8')
+        except Exception as e:
+            print(f'WARN: 无法读取 {ZED_SETTINGS}: {e}', flush=True)
+            return {}
+        cfg = None
+        try:
+            settings = json.loads(_strip_jsonc(text))
+            cfg = settings.get('agent_servers', {}).get(agent, {})
+        except Exception:
+            obj = _agent_object_text(text, agent)
+            if obj:
+                try:
+                    cfg = json.loads(_strip_jsonc(obj))
+                except Exception:
+                    cfg = None
+        if not isinstance(cfg, dict):
+            print(f'WARN: 无法从 {ZED_SETTINGS} 解析 agent_servers.{agent}（JSONC 兜底也失败）', flush=True)
+            return {}
+        env = dict(cfg.get('env', {}))
+        if not env:
+            print(f'NOTE: agent_servers.{agent}.env 为空/缺失，agent 将回落系统环境变量或注册表代理。', flush=True)
+        return env
+    else:
+        # IntelliJ IDEA 没有单独暴露 agent env，直接回落系统环境
         return {}
-    cfg = None
-    try:
-        settings = json.loads(_strip_jsonc(text))
-        cfg = settings.get('agent_servers', {}).get(agent, {})
-    except Exception:
-        obj = _agent_object_text(text, agent)
-        if obj:
-            try:
-                cfg = json.loads(_strip_jsonc(obj))
-            except Exception:
-                cfg = None
-    if not isinstance(cfg, dict):
-        print(f'WARN: 无法从 {ZED_SETTINGS} 解析 agent_servers.{agent}（JSONC 兜底也失败）', flush=True)
-        return {}
-    env = dict(cfg.get('env', {}))
-    if not env:
-        print(f'NOTE: agent_servers.{agent}.env 为空/缺失，agent 将走 urllib 注册表回落代理'
-              f'（Windows 系统代理）；若需显式注入代理/CA，按 SKILL.md 任务 B 配置。', flush=True)
-    return env
 
 
-def find_exe(agent):
-    root = REGISTRY / agent
+def find_exe(agent, ide='zed'):
+    if ide == 'idea':
+        # 在 LocalAppData/JetBrains/IntelliJIdea*/acp-agents/<agent> 中查找
+        cands = list(IDEA_ACP_AGENTS.glob(f'*Idea*/acp-agents/{agent}/*/*.exe'))
+        if not cands:
+            cands = list(IDEA_ACP_AGENTS.glob(f'acp-agents/{agent}/*/*.exe'))
+        if not cands:
+            cands = list(IDEA_ACP_AGENTS.glob(f'*Idea*/acp-agents/*/*/*.exe'))
+        valid = [p for p in cands if 'localharness' not in p.name.lower() and 'crash' not in p.name.lower()]
+        if valid:
+            return max(valid, key=lambda p: p.stat().st_size)
+
+    root = ZED_REGISTRY / agent
     if not root.is_dir():
+        if ide != 'idea':
+            # 兜底试探 idea 目录
+            return find_exe(agent, ide='idea')
         sys.exit(f'未找到 registry agent 目录: {root}')
     exe = None
     try:
-        reg = json.loads((REGISTRY / 'registry.json').read_text(encoding='utf-8'))
+        reg = json.loads((ZED_REGISTRY / 'registry.json').read_text(encoding='utf-8'))
         agents = reg.get('agents', reg if isinstance(reg, list) else [])
         info = next((a for a in agents
                      if a.get('name') == agent or a.get('id') == agent), None)
@@ -168,15 +187,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('agent', nargs='?', default='antigravity-acp')
     ap.add_argument('--cached', action='store_true', help='跳过 authenticate，验证已存凭据')
+    ap.add_argument('--ide', choices=['zed', 'idea'], default='zed', help='指定宿主 IDE 环境')
     ap.add_argument('--cwd', default=os.getcwd())
     ap.add_argument('--timeout', type=float, default=240)
     args = ap.parse_args()
 
-    exe = find_exe(args.agent)
+    exe = find_exe(args.agent, ide=args.ide)
     env = os.environ.copy()
-    env.update(load_env(args.agent))
+    env.update(load_env(args.agent, ide=args.ide))
     extra = ['--debug'] if 'agy' in exe.name.lower() else []
 
+    print(f'Host IDE: {args.ide}', flush=True)
     print(f'Agent exe: {exe}', flush=True)
     injected = sorted(k for k in env if k.upper() in ENV_KEYS)
     print(f'Injected env keys: {injected}', flush=True)
