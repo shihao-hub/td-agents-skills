@@ -1,6 +1,59 @@
 ---
 name: sh-user-skills
-description: 个人技能总目录与意图分流器：汇总全部 sh-* 技能，按意图引导推荐或列出全量清单供选择。点名使用
+description: |
+  个人技能总目录与意图分流器。按用户意图分流或点名加载子模块。涵盖技能清单：
+  - sh-agy-skills: antigravity 斜杠命令族（goal/schedule/browser/grill-me/teamwork/learn/boost/plan）
+  - sh-lark-skills: 飞书全域 28 域原生能力族
+  - sh-redis-skills: Redis 与 Iris 8 域能力族
+  - sh-pwsh7-install: PowerShell 7 绿色版 ZIP 安装
+  - sh-uv-python-env: uv 统一管理 Python 环境
+  - sh-atuin-pwsh-history: Windows atuin 命令历史配置与 profile 修复
+  - sh-windows-agent-shell: Windows 多 Agent 终端机制与 Git Bash 切换
+  - sh-windows-memory-guard: Windows 内存过载防死机与虚拟内存调优
+  - sh-pi-keybindings: pi 快捷键改键与滚轮变输入历史修复
+  - sh-github-coexist: 个人 GitHub 与公司 GitLab 账号共存
+  - sh-chrome-devtools-mcp-setup: opencode 配置 chrome-devtools-mcp 浏览器控制
+  - sh-sublime-font: YaHei Consolas Hybrid 字体下载安装与配置
+  - sh-sublime-menu: Sublime 右键菜单添加/删除/检查
+  - sh-vscode-gitlg-panel: VS Code 底部面板 Git 提交图调优
+  - sh-vscode-fork-ext-port: VS Code 插件跨分支 IDE 手工搬运与注册
+  - sh-zed-lsp-config: Zed .zed/settings.json LSP 白名单配置
+  - sh-zed-opencode-setup: Zed opencode agent 安装修复与思考档位配置
+  - sh-disk-space-cleanup: C 盘空间不足排查与安全清理重定向
+  - sh-windows-audio-diagnose: Windows 喇叭无声/爆音与默认声卡修复
+  - sh-uwp-proxy-loopback: Windows 代理下 UWP 与微软商店回环豁免
+  - sh-opencode-glm-auth: opencode 连 GLM 报 401 身份验证排查
+  - sh-zed-lsp-install: Zed 语言服务器下载失败/rename 错误修复
+  - sh-zed-acp-agent-env: IDE ACP 外部 agent 登录与代理排障
+  - sh-zed-agent-triage: Zed Agent Panel 报错定位与归因排障
+  - sh-zed-session-db: Zed 会话丢失恢复与 SQLite sidebar_threads 查询
+  - sh-troubleshooting-recap: 排障过程四段精炼复盘
+  - sh-backend-design: 后端系统设计全流程规范
+  - sh-plan-driven-development: 轻量单文件实施计划工作流
+  - sh-spec-driven-development: Spec 驱动开发需求设计与任务清单
+  - sh-claude-plan-mode: 非平凡任务计划模式只读探索与方案获批
+  - sh-oop-refactor: OOP 思想与设计模式项目重构
+  - sh-sql-query-builder: SQLAlchemy 嵌套查询转文本 SQL 模板与 builder
+  - sh-cluacpp-build: C/C++/Lua 工具链与构建报错速查手册
+  - sh-localhost-pwa: 本地 Web/CLI 服务改造为 Chrome/Edge 独立应用窗口与 PWA 规范面板
+  - sh-frontend-deai: 前端去 AI 味与场景化界面设计
+  - sh-bruno-collection: 为 HTTP 接口生成 Bruno API 测试集合
+  - sh-codex-plugin-creator: Codex 插件目录与市场条目脚手架
+  - sh-pystand-pack: PyStand 打包免安装绿色应用
+  - sh-monorepo-commit-push: Monorepo 与 submodule 逐项审查提交推送
+  - sh-github-repo-cleanup: GitHub 仓库大扫除与备份清理
+  - sh-book2skill-sop: 书/文档转 agent skill 全流程 SOP
+  - sh-tech-doc-writing: 读者视角技术方案与 PRD 撰写
+  - sh-agent-handoff: 跨 agent 会话交接简报生成与接管
+  - sh-cc-switch-db: 直接读写 cc-switch SQLite 配置供应商
+  - sh-everything-search: Everything 全盘/跨盘文件秒搜
+  - sh-zhangshihao-douyin-dl: 抖音/B站无水印下载与知乎专栏文章提取
+  - sh-video-transcribe: 视频音轨提取转写字幕与 AI 总结
+  - sh-image-watermark-removal: PIL+numpy 局部修补去水印角标
+  - sh-office-extract-media: Office 文档解压提取内嵌原图
+  - sh-web-archive: 公开网页存档为离线三 tab 页面
+  - sh-lark-chat-archive: 飞书聊天记录单文件 HTML 归档
+  - sh-lark-session-doc: 当前会话/对话归档为飞书云文档
 version: 1.0.0
 created: 2026-10-07
 updated: 2026-10-07
