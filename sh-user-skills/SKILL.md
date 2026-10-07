@@ -1,59 +1,13 @@
 ---
 name: sh-user-skills
 description: |
-  个人技能总目录与意图分流器。按用户意图分流或点名加载子模块。涵盖技能清单：
-  - sh-agy-skills: antigravity 斜杠命令族（goal/schedule/browser/grill-me/teamwork/learn/boost/plan）
-  - sh-lark-skills: 飞书全域 28 域原生能力族
-  - sh-redis-skills: Redis 与 Iris 8 域能力族
-  - sh-pwsh7-install: PowerShell 7 绿色版 ZIP 安装
-  - sh-uv-python-env: uv 统一管理 Python 环境
-  - sh-atuin-pwsh-history: Windows atuin 命令历史配置与 profile 修复
-  - sh-windows-agent-shell: Windows 多 Agent 终端机制与 Git Bash 切换
-  - sh-windows-memory-guard: Windows 内存过载防死机与虚拟内存调优
-  - sh-pi-keybindings: pi 快捷键改键与滚轮变输入历史修复
-  - sh-github-coexist: 个人 GitHub 与公司 GitLab 账号共存
-  - sh-chrome-devtools-mcp-setup: opencode 配置 chrome-devtools-mcp 浏览器控制
-  - sh-sublime-font: YaHei Consolas Hybrid 字体下载安装与配置
-  - sh-sublime-menu: Sublime 右键菜单添加/删除/检查
-  - sh-vscode-gitlg-panel: VS Code 底部面板 Git 提交图调优
-  - sh-vscode-fork-ext-port: VS Code 插件跨分支 IDE 手工搬运与注册
-  - sh-zed-lsp-config: Zed .zed/settings.json LSP 白名单配置
-  - sh-zed-opencode-setup: Zed opencode agent 安装修复与思考档位配置
-  - sh-disk-space-cleanup: C 盘空间不足排查与安全清理重定向
-  - sh-windows-audio-diagnose: Windows 喇叭无声/爆音与默认声卡修复
-  - sh-uwp-proxy-loopback: Windows 代理下 UWP 与微软商店回环豁免
-  - sh-opencode-glm-auth: opencode 连 GLM 报 401 身份验证排查
-  - sh-zed-lsp-install: Zed 语言服务器下载失败/rename 错误修复
-  - sh-zed-acp-agent-env: IDE ACP 外部 agent 登录与代理排障
-  - sh-zed-agent-triage: Zed Agent Panel 报错定位与归因排障
-  - sh-zed-session-db: Zed 会话丢失恢复与 SQLite sidebar_threads 查询
-  - sh-troubleshooting-recap: 排障过程四段精炼复盘
-  - sh-backend-design: 后端系统设计全流程规范
-  - sh-plan-driven-development: 轻量单文件实施计划工作流
-  - sh-spec-driven-development: Spec 驱动开发需求设计与任务清单
-  - sh-claude-plan-mode: 非平凡任务计划模式只读探索与方案获批
-  - sh-oop-refactor: OOP 思想与设计模式项目重构
-  - sh-sql-query-builder: SQLAlchemy 嵌套查询转文本 SQL 模板与 builder
-  - sh-cluacpp-build: C/C++/Lua 工具链与构建报错速查手册
-  - sh-localhost-pwa: 本地 Web/CLI 服务改造为 Chrome/Edge 独立应用窗口与 PWA 规范面板
-  - sh-frontend-deai: 前端去 AI 味与场景化界面设计
-  - sh-bruno-collection: 为 HTTP 接口生成 Bruno API 测试集合
-  - sh-codex-plugin-creator: Codex 插件目录与市场条目脚手架
-  - sh-pystand-pack: PyStand 打包免安装绿色应用
-  - sh-monorepo-commit-push: Monorepo 与 submodule 逐项审查提交推送
-  - sh-github-repo-cleanup: GitHub 仓库大扫除与备份清理
-  - sh-book2skill-sop: 书/文档转 agent skill 全流程 SOP
-  - sh-tech-doc-writing: 读者视角技术方案与 PRD 撰写
-  - sh-agent-handoff: 跨 agent 会话交接简报生成与接管
-  - sh-cc-switch-db: 直接读写 cc-switch SQLite 配置供应商
-  - sh-everything-search: Everything 全盘/跨盘文件秒搜
-  - sh-zhangshihao-douyin-dl: 抖音/B站无水印下载与知乎专栏文章提取
-  - sh-video-transcribe: 视频音轨提取转写字幕与 AI 总结
-  - sh-image-watermark-removal: PIL+numpy 局部修补去水印角标
-  - sh-office-extract-media: Office 文档解压提取内嵌原图
-  - sh-web-archive: 公开网页存档为离线三 tab 页面
-  - sh-lark-chat-archive: 飞书聊天记录单文件 HTML 归档
-  - sh-lark-session-doc: 当前会话/对话归档为飞书云文档
+  个人技能库总入口与分流器：用户只有一句模糊需求、或忘记技能名时，在此按关键词匹配并加载对应子技能 SOP。覆盖五域：
+  装机与环境（PowerShell7 绿色安装、uv/Python 环境统一、atuin 命令历史、多 Agent 终端与 Git Bash、内存防死机/虚拟内存、pi 快捷键与滚轮、终端字体、Sublime 右键菜单、VS Code 提交图与插件搬运、Zed LSP 白名单与 opencode 配置、chrome-devtools-mcp）；
+  排障（C 盘空间不足、声卡无声/爆音、代理下 UWP 与商店、Zed 语言服务器下载失败、ACP 登录与代理、Agent Panel 报错、Zed 会话丢失、GLM 401）；
+  开发与重构（后端系统设计、计划模式与计划/规格驱动、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、monorepo 提交推送、GitHub 仓库大扫除、GitHub/GitLab 共存、cc-switch 供应商读写）；
+  文档与交接（PRD/技术方案、书转 skill、跨 agent 交接、排障复盘）；
+  检索与媒资归档（Everything 秒搜、抖音/B站/知乎下载、视频转写字幕、去水印、Office 提图、网页存档、飞书聊天与会话归档）；
+  另有飞书、Redis/Iris、antigravity 三个族路由器；用户直接点名 `sh-*` 子技能（含拼写近似）时也由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
 version: 1.0.0
 created: 2026-10-07
 updated: 2026-10-07
@@ -75,6 +29,50 @@ updated: 2026-10-07
 3. **文件寻址与加载规则**：
    - **独立族路由器**（`sh-agy-skills`、`sh-lark-skills`、`sh-redis-skills`）：位于父级同级目录，按对应 `SKILL.md` 协议二次分流；
    - **收敛子技能**（其他全部 49 个技能）：均已收敛存放在本技能子目录中，且核心指导文件已统一改别名为 `README.md`（避免被 Agent 全局递归探测）。执行时，AI 使用 `view_file` 直接读取 `sh-user-skills/<skill-name>/README.md` 全文并严格按其 SOP 步骤执行。
+   - **名字兜底**：用户点名的 `sh-*` 名不在下方表格、或只有拼写近似时，**不要放弃**——直接列出 `sh-user-skills/` 子目录做模糊匹配（`ls sh-user-skills/` 或 `rg --files sh-user-skills -g 'README.md'`），按语义最接近的目录读其 `README.md`。
+
+### 🗣️ 口语说法 → 技能速查（优先命中）
+
+用户往往只会说症状或任务，不会说技能名；先查本表，命中即直接读对应 `README.md` 执行。
+
+| 用户口语说法（示例） | 技能 |
+| :--- | :--- |
+| 喇叭没声音／嗡嗡爆音／默认声卡被抢 | `sh-windows-audio-diagnose` |
+| C 盘满了／空间不够／想清理 C 盘 | `sh-disk-space-cleanup` |
+| 开着代理时商店打不开／UWP 不能联网 | `sh-uwp-proxy-loopback` |
+| Zed 装不上语言服务器／rename os error 5 | `sh-zed-lsp-install` |
+| Zed 里 agent 登录失败／改了 env 不生效 | `sh-zed-acp-agent-env` |
+| Agent Panel 报 Internal error／Session is closing | `sh-zed-agent-triage` |
+| Zed 的会话/对话找不到了 | `sh-zed-session-db` |
+| opencode 连 GLM 报 401 | `sh-opencode-glm-auth` |
+| 电脑卡死／内存爆了／加虚拟内存 | `sh-windows-memory-guard` |
+| 装个 PowerShell 7／pwsh | `sh-pwsh7-install` |
+| Python 环境太乱／卸 anaconda／用 uv 装包 | `sh-uv-python-env` |
+| 命令历史丢了／Ctrl+r 搜不了历史 | `sh-atuin-pwsh-history` |
+| 终端里乱码／让 agent 走 Git Bash | `sh-windows-agent-shell` |
+| pi 里改快捷键／滚轮翻历史 | `sh-pi-keybindings` |
+| 个人 GitHub 和公司 GitLab 打架 | `sh-github-coexist` |
+| 给某个项目单独开 Zed 的 LSP | `sh-zed-lsp-config` |
+| 把视频/音频转成字幕 | `sh-video-transcribe` |
+| 抖音/B站无水印下载、知乎文章存 Markdown | `sh-zhangshihao-douyin-dl` |
+| 图片去水印／去角标 | `sh-image-watermark-removal` |
+| 从 PPT/Word 里抠出原图 | `sh-office-extract-media` |
+| 网页存档／离线保存网页 | `sh-web-archive` |
+| 飞书群聊记录导成 HTML | `sh-lark-chat-archive` |
+| 把这轮对话归档到飞书文档 | `sh-lark-session-doc` |
+| 全盘找某个文件／找大文件 | `sh-everything-search` |
+| 写 PRD／技术方案／排期 | `sh-tech-doc-writing` |
+| 复盘一下你刚才是怎么定位的 | `sh-troubleshooting-recap` |
+| 换一个 agent 接着做／交接 | `sh-agent-handoff` |
+| 提交并推送这个 monorepo／submodule | `sh-monorepo-commit-push` |
+| GitHub 仓库太多要清理/备份 | `sh-github-repo-cleanup` |
+| 换个供应商／读 cc-switch 配置 | `sh-cc-switch-db` |
+| 把本地服务改成独立窗口应用/PWA | `sh-localhost-pwa` |
+| 页面一股 AI 味／重新设计界面 | `sh-frontend-deai` |
+| 给接口生成 Bruno 测试集合 | `sh-bruno-collection` |
+| Python 项目打包成免安装绿色版 | `sh-pystand-pack` |
+| C++ 编译报错／CMake 集成 Lua | `sh-cluacpp-build` |
+| 把这个能力沉淀成 skill／书转 skill | `sh-book2skill-sop`（书/文档）或 `skill-creator` |
 
 ### ⚡ 领域技能族路由器（二级分流）
 涉及特定垂直生态（Antigravity、飞书、Redis）时，由族路由器进一步按 8~28 个子领域精准下发：
