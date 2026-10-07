@@ -22,21 +22,21 @@ updated: 2026-09-25
    - **唯一高置信匹配** → 加载对应子 skill → 向用户宣告"已分流到 sh-agy-xxx" → 严格按其 SKILL.md 执行，本文件使命结束。
    - **多候选或拿不准** → 列出候选子 skill（各附一句理由，给推荐），向用户确认后再分流。
    - **零匹配** → 用路由表的一句话职责清单向用户汇报 8 个子 skill，请用户指认。
-4. **加载方式**：若当前环境已把某子 skill 注册为可调用技能，直接用 skill 工具加载；否则用 read 工具读取 `<本目录>/sh-agy-xxx/SKILL.md` 全文并严格遵循。两条路等价，后者是常态。
+4. **加载方式**：若当前环境已把某子 skill 注册为可调用技能，直接用 skill 工具加载；否则用 read 工具读取 `<本目录>/sh-agy-xxx/README.md` 全文并严格遵循。两条路等价，后者是常态。
 5. **组合分流**：内容明确要求叠加时支持组合（如 boost+goal = 深度强化并跑到完全交付），按依赖顺序执行；拿不准是否要组合时，问用户。
 
 ## 路由表
 
 | 子 skill | 路径 | 一句话职责 | 典型触发信号 |
 |---|---|---|---|
-| sh-agy-goal | `sh-agy-goal/SKILL.md` | 长任务自治托管：执行→验证→修复循环，交付物证据审计直到完全达成 | "跑到达成为止""通宵跑""托管""全自动做完再停" |
-| sh-agy-schedule | `sh-agy-schedule/SKILL.md` | 定时与调度：延时提醒、周期性任务（Windows schtasks 适配） | "10 分钟后""每小时""每天早上""定时""周期性监控" |
-| sh-agy-browser | `sh-agy-browser/SKILL.md` | 浏览器智能体：真实浏览器交互、动态页抓取、UI/E2E 测试 | "打开网页操作""模拟点击/填表""看实际渲染效果""E2E" |
-| sh-agy-grill-me | `sh-agy-grill-me/SKILL.md` | 拷问访谈：AI 逐题提问（每题附推荐答案）对齐需求 | "我有个想法还没想透""先问我问题理清" |
-| sh-agy-teamwork | `sh-agy-teamwork/SKILL.md` | 多智能体协同：9 步打磨任务书后委派子代理团队分工 | "超大工程""多模块并行""团队式分工开发" |
-| sh-agy-learn | `sh-agy-learn/SKILL.md` | 经验沉淀：把纠正与成功经验固化为 rule/skill 提案 | "记住这个教训""沉淀下来""以后别再犯" |
-| sh-agy-boost | `sh-agy-boost/SKILL.md` | 深度思考增强：方案权衡+对抗审查+独立验证多遍强化 | "这道难题不容有失""并发/死锁""核心算法""要对抗审查" |
-| sh-agy-plan | `sh-agy-plan/SKILL.md` | 慎密规划：先出实施计划获批再动代码（含 walkthrough 收尾） | "先出方案确认再动手""先规划再改" |
+| sh-agy-goal | `sh-agy-goal/README.md` | 长任务自治托管：执行→验证→修复循环，交付物证据审计直到完全达成 | "跑到达成为止""通宵跑""托管""全自动做完再停" |
+| sh-agy-schedule | `sh-agy-schedule/README.md` | 定时与调度：延时提醒、周期性任务（Windows schtasks 适配） | "10 分钟后""每小时""每天早上""定时""周期性监控" |
+| sh-agy-browser | `sh-agy-browser/README.md` | 浏览器智能体：真实浏览器交互、动态页抓取、UI/E2E 测试 | "打开网页操作""模拟点击/填表""看实际渲染效果""E2E" |
+| sh-agy-grill-me | `sh-agy-grill-me/README.md` | 拷问访谈：AI 逐题提问（每题附推荐答案）对齐需求 | "我有个想法还没想透""先问我问题理清" |
+| sh-agy-teamwork | `sh-agy-teamwork/README.md` | 多智能体协同：9 步打磨任务书后委派子代理团队分工 | "超大工程""多模块并行""团队式分工开发" |
+| sh-agy-learn | `sh-agy-learn/README.md` | 经验沉淀：把纠正与成功经验固化为 rule/skill 提案 | "记住这个教训""沉淀下来""以后别再犯" |
+| sh-agy-boost | `sh-agy-boost/README.md` | 深度思考增强：方案权衡+对抗审查+独立验证多遍强化 | "这道难题不容有失""并发/死锁""核心算法""要对抗审查" |
+| sh-agy-plan | `sh-agy-plan/README.md` | 慎密规划：先出实施计划获批再动代码（含 walkthrough 收尾） | "先出方案确认再动手""先规划再改" |
 
 ## 消歧规则
 
@@ -57,4 +57,4 @@ updated: 2026-09-25
 
 - 本文件只分流，不执行；分流宣告后一切以子 skill 的 SKILL.md 为准。
 - 子 skill 均为完整独立单元：frontmatter 与正文原样保留，可单独拆出目录使用。
-- 新增子 skill 时：建子目录放 SKILL.md，并在上方路由表加一行、必要时补消歧规则。
+- 新增子 skill 时：建子目录放 README.md，并在上方路由表加一行、必要时补消歧规则。
