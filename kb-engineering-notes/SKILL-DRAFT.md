@@ -1,6 +1,6 @@
 ---
 name: kb-engineering-notes
-description: 开发者通用工程实战手记与硬核排障知识库。收录在实际开发中沉淀的工具高阶交互、系统底层机制（Windows 文件锁、进程冲突、异常调度）以及经过严格验证的标准排障 SOP。当遇到复杂 Git 跨提交整理、Sublime Merge 操作困惑、Windows 下 Permission Denied 变基卡死或 Rescheduled 队列异常时查阅本指南。
+description: 开发者通用工程实战手记与硬核排障知识库。收录在实际开发中沉淀的工具高阶交互、系统底层机制（Windows 文件锁、进程冲突、异常调度）以及经过严格验证的标准排障 SOP。当遇到复杂 Git 跨提交整理、Sublime Merge 操作困惑、Windows 下 Permission Denied 变基卡死、Rescheduled 队列异常或 Cursor/VS Code Markdown 预览模式切换时查阅本指南。
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -22,6 +22,7 @@ kb-engineering-notes/
 ├── 01-SublimeMerge非相邻提交Squash合并与移动重排操作指南.md # [Stage 2: 专项实战] 针对 GUI 提交合并
 ├── 02-Windows下Git变基PermissionDenied文件锁排障与Abort安全恢复.md # [Stage 2: 专项排障] 针对权限锁与抢救
 ├── 03-Git变基Rescheduled队列挂起与暂存区冲突深度解析.md # [Stage 2: 专项机制] 针对队列重调度与避坑
+├── 04-CursorMarkdown预览独立标签页与侧边栏切换指南.md # [Stage 2: 专项技巧] 针对编辑器 Markdown 预览模式
 └── ...（后续顺次扩充）
 ```
 
@@ -39,6 +40,7 @@ kb-engineering-notes/
 | Windows 下变基失败，提示 `Permission denied` 无法写日志 | [`02-Windows下Git变基PermissionDenied文件锁排障与Abort安全恢复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/02-Windows下Git变基PermissionDenied文件锁排障与Abort安全恢复.md) | `unable to append to logs/HEAD`, Permission denied, 文件锁占用, abort 回滚 |
 | 变基失败后停留在 `(onto <hash>)` 状态，暂存区有残留文件 | [`02-Windows下Git变基PermissionDenied文件锁排障与Abort安全恢复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/02-Windows下Git变基PermissionDenied文件锁排障与Abort安全恢复.md) | rebase in progress, Staged Files, git rebase --abort, 抢救工作区 |
 | 变基提示 `It has been rescheduled`，todo 列表混乱 | [`03-Git变基Rescheduled队列挂起与暂存区冲突深度解析.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/03-Git变基Rescheduled队列挂起与暂存区冲突深度解析.md) | rescheduled, git-rebase-todo 重复 pick, 交互变基挂起 |
+| Cursor / VS Code 预览 Markdown 默认在侧边栏，想用独立标签页全屏查看 | [`04-CursorMarkdown预览独立标签页与侧边栏切换指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/04-CursorMarkdown预览独立标签页与侧边栏切换指南.md) | Markdown 预览, Ctrl+Shift+V, 侧边栏, 独立标签页, Open Preview |
 
 ---
 

@@ -34,6 +34,7 @@
 | **[`01-SublimeMerge非相邻提交Squash合并与移动重排操作指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/01-SublimeMerge非相邻提交Squash合并与移动重排操作指南.md)** | 非相邻提交合并、拖拽不可用破局、Ctrl多选合并、Move Down重排、后台无感变基生效判定 | Sublime Merge, 跨提交合并, squash, fixup, 拖拽没反应 |
 | **[`02-Windows下Git变基PermissionDenied文件锁排障与Abort安全恢复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/02-Windows下Git变基PermissionDenied文件锁排障与Abort安全恢复.md)** | `logs/HEAD: Permission denied`、Windows 独占句柄锁根因、进程占用排查、`git rebase --abort` 安全回滚 | Permission denied, logs/HEAD, 变基文件锁, rebase abort, 暂存区抢救 |
 | **[`03-Git变基Rescheduled队列挂起与暂存区冲突深度解析.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/03-Git变基Rescheduled队列挂起与暂存区冲突深度解析.md)** | `It has been rescheduled` 重调度机制、todo 队列混乱、变基暂停在中间 commit、避免重复 pick | rescheduled, git-rebase-todo, rebase挂起, onto commit |
+| **[`04-CursorMarkdown预览独立标签页与侧边栏切换指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/04-CursorMarkdown预览独立标签页与侧边栏切换指南.md)** | Cursor/VS Code Markdown 预览默认侧边栏、想用独立标签页全屏查看、快捷键与 Alt 修饰键 | Markdown 预览, Ctrl+Shift+V, 侧边栏, 独立标签页, Open Preview |
 
 ---
 
