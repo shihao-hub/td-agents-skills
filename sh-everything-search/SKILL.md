@@ -13,25 +13,32 @@ description: 全盘/跨盘文件秒搜（Everything es.exe 一次性查询，查
 - 用（本 skill 的价值场景）：跨盘/全盘按 文件名、扩展名、大小、修改时间、正则 找文件；找磁盘上的大文件/最近改动文件（清理、排障、找回）；全盘计数与总量统计；导出文件清单交给脚本聚合。
 - 不用：仓内/单目录找文件（glob/rg 更快更准）；按内容搜文件（rg）；读取或展示文件内容。
 
-## 前置检查（查询前）
+## 生命周期与前置检查
 
-1. es 路径：本机在 `D:\Program Files\Everything\es.exe`；找不到时依序尝试 `where.exe es` → `C:\Program Files\Everything\es.exe`。
-2. 索引后端（按需启动）：先直接查询；若 `es` 报 `Error 8: Everything IPC not found`，说明索引进程没在运行——由你拉起并等就绪：
+1. 路径：`D:\Program Files\Everything\`（es.exe / Everything.exe）；找不到时依序尝试 `where.exe es` → `C:\Program Files\Everything\es.exe`。
+2. 生命周期（按需启动 + 闲置自动退出）：本机已禁用 Everything 开机自启，默认不常驻，由本 skill 自动管理：
+   - **统一用包装器** `scripts/es_query.ps1` 执行查询：索引进程不在时自动 `-startup` 拉起并等待就绪（实测 ~2.5s、无窗口），已在运行则直接查询；
+   - 每次查询刷新活动时间 `%APPDATA%\language_projects\sh-everything-search\last_use.txt`；
+   - 计划任务 `sh-everything-idle-exit`（隐藏、每 5 分钟）在"15 分钟无查询 + 无可见窗口 + 无查询进行中"时自动 `es -exit` 释放 ~430MB；用户手动打开的实例不会被退掉；
+   - 查询任务结束**不需要**手动退出；要立即释放可 `& "D:\Program Files\Everything\es.exe" -exit`；调试可绕过包装器直调 es（不刷新活动时间）。
 
    ```powershell
-   # 启动前先看：Get-Process Everything 有主进程则记为"用户已开着"，后面不要退出它
-   Start-Process "D:\Program Files\Everything\Everything.exe" -ArgumentList "-startup"
-   for ($i = 0; $i -lt 40; $i++) { & $ES -timeout 1000 -get-result-count 2>$null; if ($LASTEXITCODE -eq 0) { break }; Start-Sleep -Milliseconds 300 }
+   # 统一入口（参数与 es 原样透传；git-bash 同样以 powershell -File 调用）
+   powershell -NoProfile -ExecutionPolicy Bypass -File "D:/Users/language_projects/.agents/skills/sh-everything-search/scripts/es_query.ps1" -n 30 "report*.xlsx"
+
+   # 自动退任务查看 / 移除；闲置时长改 scripts/idle_exit.ps1 的 $idleMinutes（默认 15）
+   Get-ScheduledTask -TaskName sh-everything-idle-exit | Select-Object State
+   # Unregister-ScheduledTask -TaskName sh-everything-idle-exit -Confirm:$false
    ```
 
-   实测：启动到可查询约 2.2s、无窗口（仅托盘图标出现）；Everything Service（~3MB）常驻，非管理员即可启动，无需 UAC。
-3. 收尾释放内存：本次任务查询全部结束后，若索引进程是**你本次拉起的**（启动前不在运行），执行 `& $ES -exit` 释放 ~430MB（实测 2.3s，退出时自动存索引库）；若启动前它已在运行（用户自己开的），不要动它。
-4. 编码：优先 `-export-json` 落盘再读（UTF-8）；PS 5.1 直接抓 stdout 中文可能乱码。
+3. 编码：优先 `-export-json` 落盘再读（UTF-8）；PS 5.1 直接抓 stdout 中文可能乱码。
 
 ## 命令速查（本机实测）
 
+下列速查用原始 es 写法（便于阅读语法）；**日常执行请走包装器**（见上节），参数完全相同——Everything 闲置退出后，直连 es 会报 `Error 8: IPC not found`。
+
 ```powershell
-$ES = "D:\Program Files\Everything\es.exe"          # git bash: "/d/Program Files/Everything/es.exe"
+$ES = "D:\Program Files\Everything\es.exe"          # 仅调试直连用；git bash: "/d/Program Files/Everything/es.exe"
 
 # 基础：-n 封顶结果数；-path 限定目录；盘根必须写 'D:\'（带引号）
 & $ES -n 30 report*.xlsx
@@ -102,3 +109,5 @@ $ES = "D:\Program Files\Everything\es.exe"          # git bash: "/d/Program File
 - 按需模式实测：`-startup` 冷启动→可查询 2.2s（无窗口）；`es -exit` 退出释放内存并自动存索引库，耗时 2.3s。
 - es 1.1.0.37：典型查询 0.3~0.8s；`dm:thisweek` 全盘约 64 万条（宽查询务必先 count）；不加 `-n` 默认输出全部结果（无内置上限）。
 - `-export-json` 输出为 JSON 数组（`filename` 字段），中文路径正常。
+- 包装器 `scripts/es_query.ps1`：冷启动+查询整体 ~2.9s（含 Everything 就绪 ~2.2s）；已在运行时无额外开销。
+- 自动退：计划任务 `sh-everything-idle-exit` 隐藏运行、每 5 分钟检查、闲置 15 分钟退出（实例启动时间晚于活动记录 → 视为用户手动启动，不退出）。
