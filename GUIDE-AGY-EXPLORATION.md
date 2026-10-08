@@ -1,4 +1,4 @@
-# SKILL-AGY-EXPLORATION：Antigravity 斜杠命令逆向探索记录
+# GUIDE-AGY-EXPLORATION：Antigravity 斜杠命令逆向探索记录
 
 > 版本 v1.0.0 ｜ 2026-09-25 ｜ 探索产物：`D:\Users\zeddefault\agy-extracted-prompts.md`（约 19KB 原始提示词）｜ 衍生：8 个 sh-agy-* skill
 
