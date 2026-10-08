@@ -1,3 +1,8 @@
+---
+name: kb-cursor-yolo-sandbox
+description: Cursor Agent 免审批（YOLO / Run Everything）三档 Run Mode 的差异、`permissions.json` 与 `sandbox.json` 的分工（"跑不跑" vs "能碰什么"）、开了自动仍弹窗的硬保护根因，以及沙箱网络白名单写法。当想减少批准弹窗、限制 YOLO 下的网络访问、或疑惑"为什么开了免审批还弹"时查阅本条目。
+---
+
 # 05-Cursor免审批YOLO模式与沙箱网络配置指南
 
 ## 一、现象与诉求直击

@@ -1,3 +1,8 @@
+---
+name: kb-git-worktree-deps
+description: Git Worktree 隔离开发时的依赖复用权衡：第三方依赖可共享，而项目自身状态（editable `.pth` 映射、`.bin` 脚本、增量编译锁）严禁共享；含 WinError 32 排他锁、环境漂移与 Python/TS/Go/Rust 跨生态规避策略。当纠结 Worktree 要不要软链接 `.venv`/`node_modules`/`target`、或遇到两端环境互相踩踏时查阅本条目。
+---
+
 # 06-GitWorktree依赖复用与跨语言(Python/TS/Go/Rust)环境隔离权衡指南
 
 > **归档位置**：`kb-engineering-notes/06-GitWorktree依赖复用与跨语言(Python/TS/Go/Rust)环境隔离权衡指南.md`  

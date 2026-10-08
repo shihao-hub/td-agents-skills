@@ -1,3 +1,8 @@
+---
+name: kb-cursor-markdown-preview-tab
+description: 在 Cursor / VS Code 里把 Markdown 预览从侧边栏改为独立标签页全屏查看：`Ctrl+Shift+V` 与「Alt + 点击预览按钮」两条路径、命令面板入口，以及它与 `Ctrl+K V` 侧边预览的取舍。当预览被挤在侧栏、宽表格被截断、或只想纯阅读渲染结果时查阅本条目。
+---
+
 # 04-CursorMarkdown预览独立标签页与侧边栏切换指南
 
 ## 一、核心痛点与现象

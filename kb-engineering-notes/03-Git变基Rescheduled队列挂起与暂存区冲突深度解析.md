@@ -1,3 +1,8 @@
+---
+name: kb-git-rebase-rescheduled
+description: 解析 Git 变基 `It has been rescheduled` 的重调度机制：todo 队列为何被塞回、重复 pick 与空提交怎么产生、`git-rebase-todo`/`done`/`onto` 状态文件语义，以及正确的恢复次序。当变基提示 rescheduled、todo 列表混乱、或 `--continue` 报暂存区冲突/空提交时查阅本条目。
+---
+
 # 03-Git变基Rescheduled队列挂起与暂存区冲突深度解析
 
 ## 一、什么是 Rescheduled（重调度）？

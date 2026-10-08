@@ -1,3 +1,8 @@
+---
+name: kb-uv-python-unified-env
+description: 把全机 Python 统一到 uv：多来源并存治理、`uv_shim` 全局 `python`/`pip` 转发架构、`UV_PYTHON` 锁版语义、PEP 668 与 venv 无 pip 排坑，以及在只装了 uv 的新电脑上一键复现整套配置。当出现 `externally-managed-environment`、`No module named pip`、`python` 命令被 stub 抢占，或要做新机环境复现时查阅本条目。
+---
+
 # 07-uv统一全机Python环境与新电脑一键引导复现指南
 
 > **归档位置**：`kb-engineering-notes/07-uv统一全机Python环境与新电脑一键引导复现指南.md`  
