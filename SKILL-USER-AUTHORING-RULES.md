@@ -1,8 +1,8 @@
 ---
 name: skill-user-authoring-rules
 description: |
-  创建、改造或维护个人沉淀类技能（收敛于 sh-user-skills 体系的 sh-* 子技能）时的强制规范与 SOP：存放路径、README.md 防探测命名、sh-* 命名正则、顶层分流器登记闭环，以及分流器 description 的 1024 字符硬上限与实测校验法。当用户说"把某能力沉淀成 skill""新建一个个人 skill"、要维护 sh-user-skills 子技能，或要校验分流器 description 是否超限时使用。仅适用于个人沉淀类；公共根级技能与族路由器走 skill-authoring-rules，不要套用本规范。
-version: 1.0.0
+  创建、改造或维护个人沉淀类技能与隐形技能（知识库条目）时的强制规范与 SOP：sh-user-skills 子技能的存放路径、README.md 防探测命名、sh-* 命名正则、分流器登记闭环与 1024 字符 description 校验，以及"条目即技能但不得被注册"的 skill-creator 元数据写法与转正清单。当用户说"把某能力沉淀成 skill""新建一个个人 skill"、要维护 sh-user-skills 子技能或知识库条目、要校验 description 是否超限时使用。仅适用于个人沉淀类；公共根级技能与族路由器走 skill-authoring-rules，不要套用本规范。
+version: 1.1.0
 created: 2026-10-07
 updated: 2026-10-09
 ---
@@ -20,8 +20,9 @@ updated: 2026-10-09
 |---|---|---|
 | 个人日常沉淀（装机、配置、排障、工具 SOP、个人工作流） | `sh-user-skills/<name>/`，指导文件 `README.md` | 本文件 |
 | 公共 / 族群级技能与族路由器（如 `sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`） | `~/.agents/skills/<name>/SKILL.md` | [SKILL-AUTHORING-RULES.md](file:///D:/Users/language_projects/.agents/skills/SKILL-AUTHORING-RULES.md) |
+| 知识库式沉淀（成组的手记/避坑条目，如 `kb-engineering-notes/`） | `<kb-dir>/0N-主题.md`（条目自带 skill frontmatter，但不命名 `SKILL.md`） | 本文件第五节 + `skill-creator` |
 
-判断依据：这个能力是不是只服务于你自己这台机器与环境？是否需要一个"每次会话都常驻、能被模糊需求自动匹配"的入口？是则属于上一层。
+判断依据：这个能力是不是只服务于你自己这台机器与环境？是否需要一个"每次会话都常驻、能被模糊需求自动匹配"的入口？是则属于上一层；若它是一组同族条目、靠路由表检索而不需要常驻触发，则走第三行的隐形技能形态。
 
 ## 一、硬约束（收敛与防探测机制）
 
@@ -30,7 +31,7 @@ updated: 2026-10-09
 | 约束项 | 内容与要求 | 为什么 |
 |---|---|---|
 | **存放路径** | `~/.agents/skills/sh-user-skills/<name>/`，一律禁止散落在 `~/.agents/skills/` 根目录 | 根目录的 `<name>/SKILL.md` 会被全局注册，散落即污染每个会话 |
-| **指导文件名** | **必须为 `README.md`，严禁命名为 `SKILL.md`** | Agent 只扫描 `<name>/SKILL.md`；用 `README.md` 即可实现"人可读、Agent 不自动注册" |
+| **指导文件名** | **必须为 `README.md`，严禁命名为 `SKILL.md`** | Agent 只把 `<name>/SKILL.md` 与根目录带 frontmatter 的 `SKILL-*.md` 注册为技能；用 `README.md` 即可实现"人可读、Agent 不自动注册" |
 | **目录命名** | 目录名即技能名，正则 `^sh-[a-z0-9]+(-[a-z0-9]+)*$`（必须以 `sh-` 开头，纯小写字母数字 + 单连字符） | 与引擎的 name 校验规则保持一致，避免加载失败 |
 | **顶层路由器登记** | **强制同步**：新建技能后，必须在 `sh-user-skills/SKILL.md` 的对应场景分类表格中追加登记一行 | 分流器是唯一入口，漏登记 = 该技能永久失联 |
 | **加载模式** | 仅供用户点名或经 `sh-user-skills` 意图匹配后，由 AI 通过 `view_file` 按需读取执行，无需也无法全局常驻 | 按需加载不占常驻预算，这是"50+ 技能仍可用"的前提 |
@@ -113,7 +114,40 @@ updated: 2026-10-07
    - 在 `D:\Users\language_projects\.agents\skills` 执行 `git add sh-user-skills/`；
    - 提交符合规范的 commit 并 push 到远程仓库（description 超限属规范违反，提交前必须已校验 <= 1024）。
 
-## 五、与 `skill-creator` 的分工
+## 五、隐形技能：知识库条目形态（2026-10-09 实测确立）
+
+个人沉淀不只有"一个能力一个 SOP"这一种形态，还会长成**知识库**：一组同族条目（如 `kb-engineering-notes/` 下的 7 篇手记），每条只解决一个具体坑位。这类条目在元数据上**就是一个 skill**，但**当前不允许 Agent 检测到**——否则几十条 description 会瞬间吃光全局 prompt 预算。
+
+### 1. 注册边界（实测）
+
+| 形态 | 是否被注册 | 定位 |
+|---|---|---|
+| `~/.agents/skills/<name>/SKILL.md` | ✅ | 常规技能、族路由器 |
+| `~/.agents/skills/SKILL-<NAME>.md`（根目录散装单文件 + 合规 frontmatter） | ✅ | 单文件技能（本目录的三份规范即此形态） |
+| `~/.agents/skills/<kb-dir>/0N-主题.md` | ❌ | **隐形技能**：哪怕带完整 frontmatter 也不注册 |
+| `<kb-dir>/SKILL-DRAFT.md` | ❌ | 知识库总控/母版，转正时改名即可 |
+| 不带 frontmatter 的任意 `.md`（`GUIDE-*`、`plans-*`） | ❌ | 纯文档 |
+
+实测依据：`kb-engineering-notes/SKILL-DRAFT.md` 一直带 `name`/`description`，却从未出现在技能目录里；本轮给同级 7 个条目批量补 frontmatter 后，技能目录同样零新增。
+
+结论——**隐形靠文件位置与文件名，不靠省略 frontmatter**：所以条目可以（也应该）写全 skill-creator 元数据，只是永远不要命名为 `SKILL.md`、也不要放进 `~/.agents/skills/` 根目录。
+
+### 2. 条目即技能的元数据规范
+
+1. **必带 frontmatter**：`name` + `description`（skill-creator 的硬要求），正文单文件 ≤500 行、以 SOP 体为主；
+2. **`name` 命名**：`<域前缀>-<英文主题短横线>`，知识库统一用 `kb-`（如 `kb-git-worktree-deps`），**不带编号**——编号只是排序外壳，`name` 才是将来独立成 skill 时沿用的稳定标识，定了就别改；
+3. **`description` 写法**：按 skill-creator 的"功能语义 + 何时使用"，关键词用你真会说的症状词与报错串（`Permission denied`、`WinError 32`、`rescheduled`），实践控在 200 字符内更好读；
+4. **路由表仍是唯一入口**：知识库总控（`SKILL-DRAFT.md`）维护"问题 → 条目"索引；description 服务于检索与将来转正，不替代路由表。
+
+### 3. 转正清单（条目要变成可被自动调用的技能时）
+
+1. 建目录 `<name>/`，把条目改名为该目录下的 `SKILL.md`（按需再开 `references/`、`scripts/`）；
+2. 按 [SKILL-AUTHORING-RULES.md](file:///D:/Users/language_projects/.agents/skills/SKILL-AUTHORING-RULES.md) 重写 description：≤70 字符、点名触发式、结尾 `点名使用`——知识库式 description 是为检索写的，不能直接当触发语用；
+3. 从知识库路由表摘掉该条目，避免同一知识两处维护。
+
+参考实现：`kb-engineering-notes/`（`SKILL-DRAFT.md` 总控 + `01-`~`07-` 条目）。
+
+## 六、与 `skill-creator` 的分工
 
 本文件规定的是**形状与约束**（放哪、叫什么、登记到哪、多长），不负责正文质量。正文表述与评测用例的实际打磨建议交给 `skill-creator`：它提供"草稿 → 用例 → 评审 → 迭代"的闭环。
 
@@ -121,8 +155,9 @@ updated: 2026-10-07
 
 - 子技能用 `README.md`，**不注册**为全局技能，所以 description 不需要写触发语或"何时使用"的对抗性描述，保持 ≤70 字符的一句话索引即可；
 - 子技能的评测以 `evals/evals.json` 的**任务式用例**为主（prompt = 用户视角任务描述，expected_output = 正确执行结果），不做触发率优化——因为触发不走 description。
+- 隐形技能（知识库条目）同样不注册，但它的 description 要按 skill-creator 的"功能语义 + 何时使用"写（供检索、也供将来转正），与子技能那种 ≤70 字符的索引式写法不同。
 
 ---
 
 **最后更新：** 2026-10-09
-**来源：** plans-01、plans-04 与 sh-user-skills 收敛演进实践
+**来源：** plans-01、plans-04、sh-user-skills 收敛演进实践，以及 2026-10-09 的根级 SKILL 规范与 kb 条目隐形技能改造
