@@ -57,7 +57,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <skill目录>\scripts\memory
 | dwm.exe 独占 1GB+ | 长期不重启，且开着数十个浏览器/Electron/WebView2 窗口 | 桌面合成器累积（正常 150~400MB） | **只能注销或重启回收**；它不是可关软件，杀它等于桌面没了 |
 | msedgewebview2.exe 数十个进程 | 单个 Electron/GUI 应用即拉起 5~6 个子进程 | WebView2 群效应 | 按**父进程**分组归属到对应 GUI（cc-switch / glmquotawatch-gui / GameViewer / clash-verge 等），关掉不用的 GUI |
 | IDE 本体不大，LSP 卫星进程很大 | Zed 本体 1.28GB + Eclipse JDT LS 453MB + basedpyright 165MB ≈ 1.9GB | IDE 的 LSP 卫星进程 | 按 `sh-zed-lsp-config` 用项目级白名单关掉用不上的语言服务器 |
-| ACP agent 进程池线性叠加 | `localharness_external.exe` × 12 = 0.68GB 物理 / 1.53GB 私有 | 外部 agent（Antigravity ACP） | 属 Zed external agent，常被误认为独立应用；每多开一个 agent 就多叠一份 |
+| ACP agent 子进程池随使用累积 | 单个 `agy_acp_server` 下挂 N 个 `localharness_external.exe`（每个 ~65MB 物理 / ~130MB 私有 / **300+ 线程**），实测 14 个且 20s 内 CPU 增量全为 0（全闲置） | Antigravity ACP 的常驻子进程池 | **与“多开 Zed 会话”无关**：Zed 侧只有一条 ACP 链（Zed → powershell → agy_acp_server），是 agent 服务自身按需 spawn、几乎不回收 → 重启 Zed / 结束 agy_acp_server 进程树可清空 |
 | Chrome 重启即飙升 5GB+，多开视频/长连接 | Chrome 独占 5G~8G，多进程且内存不释放 | 浏览器会话与流媒体霸占 | **按 Step 3.2 治理**：关闭预加载，配置 Auto Tab Discard 强制休眠 |
 | 单个开发工具/服务异常庞大 | 单 PID 独占 6GB+ 且持续膨胀 | 进程内存泄漏 | 检查是否为后台 LSP/调试器/前端构建工具泄漏，重启该服务 |
 | 刚开机软件齐开，风扇狂转 | CPU 瞬时 30%~50%，磁盘 I/O 平稳 | 启动期密集计算 | Zed 正在建代码索引、杀毒全盘扫描、AMD 睿频温升；静候 5 分钟自动平息 |
@@ -203,6 +203,8 @@ Chrome 原生机制对“正在播放音频/视频、含长连接（如大模型
 - **杀进程时当心关键词自匹配**：用 `CommandLine -match '<关键词>'` 捞进程时，**若本次执行的脚本自身路径含该关键词，会把工具调用自己的 shell 链一起匹配掉**（实测：`kill-comfy.ps1` 因路径含 `comfy` 而自杀，导致脚本没输出 AFTER 数据）。防御写法：① 关键词用**服务专有标识**（如 `main.py --listen 8188`）而非项目名；② 或先打印命中清单，人工确认后再终止。
 - **不要用启动项数量推算内存占用**：必须按进程名实测（本机 21 个启动项在跑的合计仅 ~1.47GB）。
 - **SODIMM 插槽满了只能成对换**：严禁加装单条凑容量，双通道被破坏在核显机型上代价更大。
+
+- **不要把 ACP agent 的子进程数误读为“多开会话”**：Zed 侧只有一条 ACP 会话链（`Zed.exe` → `powershell.exe` → `agy_acp_server.exe`），底下那十几个 `localharness_external.exe` 是 **Antigravity ACP 服务自己按需 spawn 的常驻子进程池**，随使用时长累积、几乎不回收。实测 14 个进程在 20 秒采样内 CPU 增量全为 0（占着内存不干活），且存在进出 churn。**判据是进程的父子关系，不是进程数量。**
 
 ## 汇报模板
 
