@@ -43,6 +43,7 @@ updated: 2026-10-07
 | Zed 装不上语言服务器／rename os error 5 | `sh-zed-lsp-install` |
 | Zed 里 agent 登录失败／改了 env 不生效 | `sh-zed-acp-agent-env` |
 | Agent Panel 报 Internal error／Session is closing | `sh-zed-agent-triage` |
+| Zed 越用越占内存／agent 进程攒了十几个 | `sh-zed-acp-agent-env` |
 | Zed 的会话/对话找不到了 | `sh-zed-session-db` |
 | opencode 连 GLM 报 401 | `sh-opencode-glm-auth` |
 | 电脑卡死／内存爆了／加虚拟内存／没开什么软件但内存很高／该不该加内存条 | `sh-windows-memory-guard` |
@@ -113,8 +114,8 @@ updated: 2026-10-07
 | `sh-uwp-proxy-loopback` | 排障：Windows 代理下微软商店与 UWP 初始化失败/无法联网，CheckNetIsolation 回环豁免。点名使用 |
 | `sh-opencode-glm-auth` | 排障：opencode 连 GLM 报 401/身份验证失败；apiKey 优先级、双端点 key 矩阵。点名使用 |
 | `sh-zed-lsp-install` | 排障：Zed 语言服务器下载失败/rename os error 5；杀毒竞态根因+手工安装。点名使用 |
-| `sh-zed-acp-agent-env` | 排障：IDE（Zed/IntelliJ IDEA）ACP 外部 agent（antigravity/codex/claude）登录失败、代理/CA 不生效、旧进程复用；附 stdio 认证探针。点名使用 |
-| `sh-zed-agent-triage` | 排障：Zed Agent Panel 报 Internal error/Invalid request/Session is closing 等 agent 侧错误的定位归因：telemetry.log 事件定位 agent 与线程、Zed.log 拿绝对时间、进程 StartTime 与锁文件时间线对齐；含 codex-acp thread-writer-lock 竞态速查。点名使用 |
+| `sh-zed-acp-agent-env` | 排障：IDE（Zed/IntelliJ IDEA）ACP 外部 agent（antigravity/codex/claude）登录失败、代理/CA 不生效、旧进程复用、子进程池累积吃内存；附 stdio 认证探针。点名使用 |
+| `sh-zed-agent-triage` | 排障：Zed Agent Panel 报 Internal error/Invalid request/Session is closing 等 agent 侧错误的定位归因：telemetry.log 事件定位 agent 与线程、Zed.log 拿绝对时间、进程 StartTime 与锁文件时间线对齐；含 codex-acp thread-writer-lock 竞态速查与 agent 子进程池膨胀排查。点名使用 |
 | `sh-zed-session-db` | 排障：Zed 会话丢失/恢复/归档，直接查 SQLite sidebar_threads 表。点名使用 |
 | `sh-troubleshooting-recap` | 排障复盘：把一次排障/解题过程按「做了什么 → 怎么想的 → 在哪碰壁 → 怎么解决」四段精炼呈现。当用户要求复盘、想听定位过程，或问"你怎么思考、怎么碰壁、怎么解决的"时使用。点名使用 |
 

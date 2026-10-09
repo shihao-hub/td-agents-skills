@@ -1,6 +1,6 @@
 ---
 name: sh-zed-agent-triage
-description: 排障：Zed Agent Panel 报 Internal error/Invalid request/Session is closing 等 agent 侧错误的定位归因：telemetry.log 事件定位 agent 与线程、Zed.log 拿绝对时间、进程 StartTime 与锁文件时间线对齐；含 codex-acp thread-writer-lock 竞态速查。点名使用
+description: 排障：Zed Agent Panel 报 Internal error/Invalid request/Session is closing 等 agent 侧错误的定位归因：telemetry.log 事件定位 agent 与线程、Zed.log 拿绝对时间、进程 StartTime 与锁文件时间线对齐；含 codex-acp thread-writer-lock 竞态速查与 agent 子进程池膨胀排查。点名使用
 version: 1.0.0
 ---
 
@@ -18,11 +18,13 @@ version: 1.0.0
 | Zed 主日志 | `%LOCALAPPDATA%\Zed\logs\Zed.log` | `WARN [agent_servers::acp] agent stderr: ...` 行 = agent 进程 stderr 原文，带绝对时间戳（时间锚点） |
 | Zed 线程库 | `%LOCALAPPDATA%\Zed\threads\threads.db` | Zed 侧线程元数据（详见 sh-zed-session-db） |
 | 外部 agent 注册表 | `%LOCALAPPDATA%\Zed\external_agents\registry\<agent>\v_*\` | 进程路径归属判断（只处置这棵树下的进程，防误杀） |
+| agent 进程池规模 | 同上目录下进程的**父子链** | 按父进程统计 `localharness_external.exe` 等子进程的数量与累计占用，判断是报错还是**累积膨胀**（详见 sh-zed-acp-agent-env 任务 D） |
 | codex 侧 | `~/.codex/` | `session_index.jsonl`（thread id ↔ 名称/时间）、`sessions/YYYY/MM/DD/rollout-<ts>-<thread>.jsonl`、`thread-writer-locks/`（每 thread 单写者锁）、`logs_2.sqlite` |
 | opencode 侧 | `~/.local/share/opencode/log/opencode.log` | opencode agent 行为日志 |
 
 ## 定位流程
 
+0. **无报错但面板变慢 / 机器内存吃紧**：先查 agent 子进程池规模（按父子链统计 `localharness_external.exe` 等），可能只是**累积膨胀**而非错误，详见 sh-zed-acp-agent-env 任务 D。
 1. **排除自产代码**：错误原文先在当前仓库/项目源码里 grep，命中不了再进入宿主工具排查。
 2. **telemetry 定位主体**：在 telemetry.log 里搜错误串关键字 → 拿 agent 名、session/thread uuid、前后事件链（Thread Started / Message Sent / Turn Completed status）。
 3. **Zed.log 拿绝对时间**：用 thread id 或错误串搜 Zed.log；`agent stderr:` 行给出精确时间戳与底层错误原文（如 `RequestError: Invalid request`）。
@@ -52,4 +54,5 @@ version: 1.0.0
 
 - **opencode.log 会回显自己的 grep 命令**（权限评估记录含命令原文）→ 搜错误串时排除 `message=evaluated` 行，别把自己的搜索当命中。
 - **telemetry.log 无绝对时间**（`milliseconds_since_first_event` 相对值且会归零重计）→ 时间锚点一律用 Zed.log。
+- **agent 子进程数量 ≠ agent 会话数**：Zed 侧只有一条 ACP 链，但 `agy_acp_server` 会按需 spawn 十几个 `localharness_external` 工作子进程且不回收；**判据是父子关系，不是进程数量**，别把进程池误读成“多开了会话”。
 - Zed 复用后台 agent 进程，同种 agent 可多进程共存；**StartTime 与配置/锁文件 mtime 对齐**才能锁定嫌疑进程；结束进程按 registry 路径过滤防误杀。
