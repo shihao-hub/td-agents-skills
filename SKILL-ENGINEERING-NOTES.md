@@ -1,7 +1,7 @@
 ---
 name: skill-engineering-notes
 description: |
-  工程实战手记与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与条目扩充规范，并列出当前 01–07 条覆盖的坑位与关键词。当用户点名本文件、提到"工程手记/避坑知识库"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境这类问题时，先读本文件定位条目。
+  工程实战手记与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与条目扩充规范，并列出当前 01–08 条覆盖的坑位与关键词。当用户点名本文件、提到"工程手记/避坑知识库"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境这类问题时，先读本文件定位条目。
 version: 1.0.0
 created: 2026-10-08
 updated: 2026-10-09
@@ -41,6 +41,7 @@ updated: 2026-10-09
 | **[`05-Cursor免审批YOLO模式与沙箱网络配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/05-Cursor免审批YOLO模式与沙箱网络配置指南.md)** | Cursor Agent 免审批 YOLO 三档模式、总是弹窗根因、sandbox.json 网络管控 | Run Everything, YOLO, Auto-review, sandbox.json, networkPolicy, 批准 |
 | **[`06-GitWorktree依赖复用与跨语言环境隔离权衡指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/06-GitWorktree依赖复用与跨语言环境隔离权衡指南.md)** | Git Worktree 隔离开发、依赖软链接可行性、两端冲突规避（Editable 源码倒挂/排他锁）与跨生态工程实践 | git worktree, 软链接, .venv, node_modules, target, editable 倒挂, WinError 32, sccache, pnpm, GOMODCACHE |
 | **[`07-uv统一全机Python环境与新电脑一键引导复现指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/07-uv统一全机Python环境与新电脑一键引导复现指南.md)** | 多 Python 来源治理、uv_shim 全局转发架构、`UV_PYTHON` 锁版语义、PEP 668 / venv 无 pip 排坑、新电脑一键复现 SOP | uv, python, pip, uv_shim, UV_PYTHON, externally-managed, No module named pip, anaconda 卸载 |
+| **[`08-Windows下Java与Maven便携子目录配置及Zed任务调试集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/08-Windows下Java与Maven便携子目录配置及Zed任务调试集成指南.md)** | Windows 下安装 Java/Maven 导致 C 盘膨胀、Zed 编辑器硬编码 JDK 路径或缺乏调试能力 | Java, Maven, C 盘空间, settings.xml, localRepository, Corretto, jdtls, tasks.json, JDWP, 远程调试 |
 
 ## 四、AI 使用指引（当用户指定本文件或命中上述关键词时）
 
@@ -48,7 +49,7 @@ updated: 2026-10-09
 2. **场景分流**：
    - Git / Sublime Merge 提交整理与权限报错 → 直接读 `01-` ~ `03-`；
    - Cursor / VS Code 预览与 Agent 免审批、沙箱网络 → 读 `04-`、`05-`；
-   - Git Worktree 依赖隔离、多 Python 环境统一 → 读 `06-`、`07-`；
+   - Git Worktree 依赖隔离、多 Python 环境统一、Java/Maven/Zed 便携集成 → 读 `06-`、`07-`、`08-`；
    - 命中不明确时，先看 `SKILL-DRAFT.md` 的路由表再定；
 3. **扩充新知识**：按 `SKILL-DRAFT.md` 第 3 节的规范，以 `0N-中文描述.md` 顺次新增条目，并更新那里的路由表；
 4. **要求转正为自动技能时**：执行 `git mv kb-engineering-notes/SKILL-DRAFT.md kb-engineering-notes/SKILL.md`。
