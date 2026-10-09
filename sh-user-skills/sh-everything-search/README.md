@@ -20,15 +20,17 @@ description: 全盘/跨盘文件秒搜（Everything es.exe 一次性查询，查
    - **统一用包装器** `scripts/es_query.ps1` 执行查询：索引进程不在时自动 `-startup` 拉起并等待就绪（实测 ~2.5s、无窗口），已在运行则直接查询；
    - 每次查询刷新活动时间 `%APPDATA%\language_projects\sh-everything-search\last_use.txt`；
    - 计划任务 `sh-everything-idle-exit`（隐藏、每 5 分钟）在"15 分钟无查询 + 无可见窗口 + 无查询进行中"时自动 `es -exit` 释放 ~430MB；用户手动打开的实例不会被退掉；
+   - **任务注册/重注册一律走 `scripts/register_task.ps1`（幂等；存在即先注销再注册）**：任务动作必须经 `conhost.exe --headless` 包装——直接用 `powershell.exe` 注册（即使加 `-WindowStyle Hidden`）会触发 Windows 11 控制台委托（handoff），在已运行的 Windows Terminal 内每 5 分钟闪出一个空白 PowerShell 标签页（2026-10-10 实证根因）；
    - 查询任务结束**不需要**手动退出；要立即释放可 `& "D:\Program Files\Everything\es.exe" -exit`；调试可绕过包装器直调 es（不刷新活动时间）。
 
    ```powershell
    # 统一入口（参数与 es 原样透传；git-bash 同样以 powershell -File 调用）
-   powershell -NoProfile -ExecutionPolicy Bypass -File "D:/Users/language_projects/.agents/skills/sh-everything-search/scripts/es_query.ps1" -n 30 "report*.xlsx"
+   powershell -NoProfile -ExecutionPolicy Bypass -File "D:/Users/language_projects/.agents/skills/sh-user-skills/sh-everything-search/scripts/es_query.ps1" -n 30 "report*.xlsx"
 
-   # 自动退任务查看 / 移除；闲置时长改 scripts/idle_exit.ps1 的 $idleMinutes（默认 15）
+   # 自动退任务：查看状态 / 重注册 / 注销；闲置时长改 scripts/idle_exit.ps1 的 $idleMinutes（默认 15）
    Get-ScheduledTask -TaskName sh-everything-idle-exit | Select-Object State
-   # Unregister-ScheduledTask -TaskName sh-everything-idle-exit -Confirm:$false
+   powershell -NoProfile -ExecutionPolicy Bypass -File "D:/Users/language_projects/.agents/skills/sh-user-skills/sh-everything-search/scripts/register_task.ps1"
+   powershell -NoProfile -ExecutionPolicy Bypass -File "D:/Users/language_projects/.agents/skills/sh-user-skills/sh-everything-search/scripts/register_task.ps1" -Unregister
    ```
 
 3. 编码：优先 `-export-json` 落盘再读（UTF-8）；PS 5.1 直接抓 stdout 中文可能乱码。
@@ -111,3 +113,4 @@ $ES = "D:\Program Files\Everything\es.exe"          # 仅调试直连用；git b
 - `-export-json` 输出为 JSON 数组（`filename` 字段），中文路径正常。
 - 包装器 `scripts/es_query.ps1`：冷启动+查询整体 ~2.9s（含 Everything 就绪 ~2.2s）；已在运行时无额外开销。
 - 自动退：计划任务 `sh-everything-idle-exit` 隐藏运行、每 5 分钟检查、闲置 15 分钟退出（实例启动时间晚于活动记录 → 视为用户手动启动，不退出）。
+- 2026-10-10 闪窗根因与验证：任务以 `powershell.exe` 直注册时，Windows 11 控制台委托（handoff，「让 Windows 决定」→ Windows Terminal，`windowingBehavior=useExisting`）会在现有 WT 窗口内每 5 分钟新开并激活一个空白 PowerShell 标签页（约 1.5s；不产生任何窗口事件——WinEvent 钩子不可见，`-WindowStyle Hidden` 与任务"隐藏"属性均无效）；修法＝任务动作经 `conhost.exe --headless` 包装（实测不触发委托）。回归验证组合：`scripts/verify_wt_tab_flash.ps1`（40ms 轮询 WT 窗口标题，触发时刻应零翻转）+ `scripts/verify_task_window.ps1`（窗口事件钩子，应零可见窗口）。

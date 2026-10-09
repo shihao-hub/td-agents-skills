@@ -1,5 +1,8 @@
 # idle_exit.ps1 - Exit Everything after a period without wrapper activity.
-# Run by scheduled task "sh-everything-idle-exit" every 5 minutes (hidden).
+# Run by scheduled task "sh-everything-idle-exit" every 5 minutes (no window).
+# Register/re-register via scripts/register_task.ps1 (conhost.exe --headless wrapper;
+# do NOT register powershell.exe directly - Windows console handoff would flash a
+# PowerShell tab inside the running Windows Terminal on every run).
 #
 # Exits only when ALL of these hold:
 #   - a main Everything instance is running
