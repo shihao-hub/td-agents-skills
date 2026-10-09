@@ -2,7 +2,7 @@
 name: sh-user-skills
 description: |
   个人技能库总入口与分流器：用户只有一句模糊需求、或忘记技能名时，在此按关键词匹配并加载对应子技能 SOP。覆盖五域：
-  装机与环境（PowerShell7 绿色安装、uv/Python 环境统一、atuin 命令历史、多 Agent 终端与 Git Bash、内存防死机/虚拟内存、pi 快捷键与滚轮、终端字体、Sublime 右键菜单、VS Code 提交图与插件搬运、Zed LSP 白名单与 opencode 配置、chrome-devtools-mcp）；
+  装机与环境（PowerShell7 绿色安装、uv/Python 环境统一、atuin 命令历史、多 Agent 终端与 Git Bash、内存防死机/虚拟内存/提交内存归因/内存条扩容判断、pi 快捷键与滚轮、终端字体、Sublime 右键菜单、VS Code 提交图与插件搬运、Zed LSP 白名单与 opencode 配置、chrome-devtools-mcp）；
   排障（C 盘空间不足、声卡无声/爆音、代理下 UWP 与商店、Zed 语言服务器下载失败、ACP 登录与代理、Agent Panel 报错、Zed 会话丢失、GLM 401）；
   开发与重构（后端系统设计、计划模式与计划/规格驱动、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、monorepo 提交推送、GitHub 仓库大扫除、GitHub/GitLab 共存、cc-switch 供应商读写）；
   文档与交接（PRD/技术方案、书转 skill、跨 agent 交接、排障复盘）；
@@ -45,7 +45,7 @@ updated: 2026-10-07
 | Agent Panel 报 Internal error／Session is closing | `sh-zed-agent-triage` |
 | Zed 的会话/对话找不到了 | `sh-zed-session-db` |
 | opencode 连 GLM 报 401 | `sh-opencode-glm-auth` |
-| 电脑卡死／内存爆了／加虚拟内存 | `sh-windows-memory-guard` |
+| 电脑卡死／内存爆了／加虚拟内存／没开什么软件但内存很高／该不该加内存条 | `sh-windows-memory-guard` |
 | 装个 PowerShell 7／pwsh | `sh-pwsh7-install` |
 | Python 环境太乱／卸 anaconda／用 uv 装包 | `sh-uv-python-env` |
 | 命令历史丢了／Ctrl+r 搜不了历史 | `sh-atuin-pwsh-history` |
@@ -92,7 +92,7 @@ updated: 2026-10-07
 | `sh-uv-python-env` | uv 统一管理 Python 环境——全局 python/pip 走专用 venv，uv 默认锁 3.12.5，卸载 anaconda/多 python。点名使用 |
 | `sh-atuin-pwsh-history` | 装机/排障：Windows atuin 命令历史配置与 profile 修复（hh、Ctrl+r、上下键召回）。点名使用 |
 | `sh-windows-agent-shell` | 配置：Windows 多 Agent（Codex/Claude/OpenCode/Pi/AGY）终端机制与 Git Bash 切换。点名使用 |
-| `sh-windows-memory-guard` | 配置：Windows 内存过载防死机与虚拟内存(Pagefile)扩容调优。点名使用 |
+| `sh-windows-memory-guard` | 配置/排障：Windows 内存过载防死机、虚拟内存(Pagefile)扩容调优、提交内存归因（揪出只占提交不占物理的换出冷数据）与内存条扩容判断。点名使用 |
 | `sh-pi-keybindings` | 配置：pi 快捷键改键、终端按键协议排障与滚轮变输入历史修复。点名使用 |
 | `sh-github-coexist` | 装机：个人 GitHub 与公司 GitLab 共存，SSH key+includeIf 身份自动切换+批量推仓库。点名使用 |
 | `sh-chrome-devtools-mcp-setup` | 装机：opencode 配置 chrome-devtools-mcp 浏览器控制。点名使用 |
