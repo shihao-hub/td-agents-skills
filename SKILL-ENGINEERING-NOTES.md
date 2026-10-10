@@ -1,8 +1,8 @@
 ---
 name: skill-engineering-notes
 description: |
-  工程实战手记、自动化流水线与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与双轨条目扩充规范（Type A 疑难排障 + Type B 工程实现/生成流水线），并列出当前 01–15 条覆盖的坑位、方案与关键词。当用户点名本文件、提到"工程手记/知识库/避坑指南"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境、Antigravity 粘图快捷键与 Kitty 协议透传、计划任务触发终端闪标签页（控制台委托 handoff）与 conhost 无窗口注册、降噪耳机人声掩蔽与音频下载、AutoHotkey 窗口单手盲切、python-docx 试卷变式题生成与东亚字体排版等问题时，先读本文件定位条目。
-version: 1.1.0
+  工程实战手记、自动化流水线与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与双轨条目扩充规范（Type A 疑难排障 + Type B 工程实现/生成流水线），并列出当前 01–16 条覆盖的坑位、方案与关键词。当用户点名本文件、提到"工程手记/知识库/避坑指南"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境、Antigravity 粘图快捷键与 Kitty 协议透传、计划任务触发终端闪标签页（控制台委托 handoff）与 conhost 无窗口注册、降噪耳机人声掩蔽与音频下载、AutoHotkey 窗口单手盲切、python-docx 试卷变式题生成与东亚字体排版、Sublime Text Terminus 中文退格失效与侧边栏 PowerShell 扩展等问题时，先读本文件定位条目。
+version: 1.2.0
 created: 2026-10-08
 updated: 2026-10-10
 ---
@@ -52,6 +52,7 @@ updated: 2026-10-10
 | **[`13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md)** | 主动降噪耳机无法消除突发人声交谈、轻音乐休止符漏音痛点，利用听觉掩蔽（Auditory Masking）构建抗干扰声床；含 Wikimedia Commons API 免鉴权检索下载公有领域名曲与纯 Python 无依赖合成立体声褐噪音/雨声完整 SOP | 降噪耳机, 隔绝人声, 听觉掩蔽, 褐噪音, Brown Noise, 白噪音, 雨声, Wikimedia Commons, 公有领域轻音乐, 萨蒂, 肖邦, 卡农, 巴赫 |
 | **[`14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md)** | Windows 常驻应用多（IDE/终端/浏览器/IM）、鼠标跨屏甩动疲劳、Alt+Tab 轮转顺序不稳定、PowerToys 快捷键误触冷启动 | AutoHotkey, AHK v2, 窗口切换, 盲切, 单手快捷键, Toggle, 前台置顶, 任务栏, PowerToys 缺陷 |
 | **[`15-python-docx自动化生成举一反三试卷与格式精细排版指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/15-python-docx自动化生成举一反三试卷与格式精细排版指南.md)** | 基于 python-docx 的试卷与教辅「举一反三」变式题自动化生成与精细排版 SOP：原题考点映射、中西文字体分离(w:eastAsia)、行距间距设置、化学式上下标排版与批量生成流水线 | python-docx, 试卷生成, 举一反三, eastAsia, 宋体回退, 行距, 上下标, 批量生成流水线, Word 排版 |
+| **[`16-SublimeTextTerminus中文退格失效与原生PowerShell侧边栏集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/16-SublimeTextTerminus中文退格失效与原生PowerShell侧边栏集成指南.md)** | Sublime Text 终端插件 Terminus 中文输入吞字/光标错位、Backspace 无法退格删除、右键侧边栏默认启动 CMD 假借 PowerShell 外壳的底层根因剖析，以及内置终端轻量化治愈与原生英文侧边栏一键拉起 Windows Terminal/PowerShell 的双轨集成实战 SOP | Sublime Text, Terminus, Backspace删不掉, 中文输入法, PSReadLine, Open Terminus here, Open PowerShell here, wt.exe |
 
 ## 四、AI 使用指引（当用户指定本文件或命中上述关键词时）
 
@@ -66,6 +67,7 @@ updated: 2026-10-10
    - 降噪耳机人声掩蔽与专注音乐/环境声下载合成 → 读 `13-`；
    - Windows 窗口单手盲切与 AHK v2 Toggle 自动化 → 读 `14-`；
    - python-docx 试卷与文档批量生成流水线、排版中文字体设置 → 读 `15-`；
+   - Sublime Text Terminus 中文退格失效、侧边栏集成原生 PowerShell / WT → 读 `16-`；
    - 命中不明确时，先看 `SKILL-DRAFT.md` 的路由表再定；
 3. **扩充新知识**：按 `SKILL-DRAFT.md` 第 3 节的规范，以 `0N-中文描述.md` 顺次新增条目（支持 Type A 排障型与 Type B 方案流水线型），并更新那里的路由表；
 4. **要求转正为自动技能时**：执行 `git mv kb-engineering-notes/SKILL-DRAFT.md kb-engineering-notes/SKILL.md`。

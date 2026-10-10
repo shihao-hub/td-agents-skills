@@ -34,6 +34,7 @@ kb-engineering-notes/
 ├── 13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md # [Stage 2: 专项实战] 针对降噪耳机人声泄露掩蔽、Commons API 下载与纯 Python 音频合成
 ├── 14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md # [Stage 2: 专项效率] 针对 Windows 多常驻窗口盲切、左手单手 Toggle 与 AutoHotkey v2 自动化
 ├── 15-python-docx自动化生成举一反三试卷与格式精细排版指南.md # [Stage 2: 专项实现] 针对教辅试卷生成、东亚字体分离(w:eastAsia)与 python-docx 精细排版流水线
+├── 16-SublimeTextTerminus中文退格失效与原生PowerShell侧边栏集成指南.md # [Stage 2: 专项排障] 针对 Sublime 内置终端退格失效/中文吞字根因与原生侧边栏 PowerShell 扩展
 └── ...（后续顺次扩充）
 ```
 
@@ -82,6 +83,7 @@ kb-engineering-notes/
 | 佩戴降噪耳机仍能听到人声谈话、轻音乐休止符间隙漏音打断心流，需要构建抗干扰声床、免鉴权下载公有领域名曲或合成立体声褐噪音/自然雨声 | [`13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md) | 降噪耳机, 隔绝人声, 听觉掩蔽, 褐噪音, Brown Noise, 白噪音, 雨声, Wikimedia Commons, 公有领域轻音乐, 萨蒂, 肖邦, 卡农, 巴赫 |
 | Windows 常驻应用多（IDE/终端/浏览器/IM）、鼠标跨屏甩动疲劳、Alt+Tab 轮转顺序不稳定、PowerToys 快捷键误触冷启动 | [`14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md) | AutoHotkey, AHK v2, 窗口切换, 盲切, 单手快捷键, Toggle, 前台置顶, 任务栏, PowerToys 缺陷 |
 | 需要基于 python-docx 批量生成 Word 试卷或教辅练习题，处理东亚中文字体分离(w:eastAsia)、页边距、行间距微调、化学式上下标排版或自动化装配流水线 | [`15-python-docx自动化生成举一反三试卷与格式精细排版指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/15-python-docx自动化生成举一反三试卷与格式精细排版指南.md) | python-docx, 试卷生成, 举一反三, eastAsia, 宋体回退, 行距, 上下标, 批量生成流水线, Word 排版 |
+| Sublime Text 终端插件 Terminus 中文吞字、按 Backspace 无法删除字符、侧边栏右键打开终端看似 PowerShell 实际是 CMD | [`16-SublimeTextTerminus中文退格失效与原生PowerShell侧边栏集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/16-SublimeTextTerminus中文退格失效与原生PowerShell侧边栏集成指南.md) | Sublime Text, Terminus, Backspace删不掉, 中文输入法, PSReadLine, Open Terminus here, Open PowerShell here, wt.exe |
 
 ---
 
