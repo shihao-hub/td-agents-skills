@@ -35,6 +35,28 @@ kb-engineering-notes/
 ├── 14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md # [Stage 2: 专项效率] 针对 Windows 多常驻窗口盲切、左手单手 Toggle 与 AutoHotkey v2 自动化
 ├── 15-python-docx自动化生成举一反三试卷与格式精细排版指南.md # [Stage 2: 专项实现] 针对教辅试卷生成、东亚字体分离(w:eastAsia)与 python-docx 精细排版流水线
 ├── 16-SublimeTextTerminus中文退格失效与原生PowerShell侧边栏集成指南.md # [Stage 2: 专项排障] 针对 Sublime 内置终端退格失效/中文吞字根因与原生侧边栏 PowerShell 扩展
+├── 17-Windows声卡爆音无声与虚拟音频抢占排查指南.md # [Stage 2: 专项排障] 针对设备占用、默认输出抢占与修复
+├── 18-Windows代理下微软商店与UWP回环网络豁免排障指南.md # [Stage 2: 专项排障] 针对 CheckNetIsolation 回环豁免
+├── 19-Windows内存防死机与Pagefile提交内存归因优化指南.md # [Stage 2: 专项排障] 针对 Pagefile 调优与 Commit 归因
+├── 20-Windows系统C盘空间不足排查与安全清理软链接重定向指南.md # [Stage 2: 专项排障] 针对 C 盘清理与环境变量重定向
+├── 21-opencode连接GLM模型401鉴权失败与端点排障指南.md # [Stage 2: 专项排障] 针对 GLM 401 报错与 key 映射
+├── 22-Zed语言服务器下载失败文件重命名占用与杀毒竞态排障指南.md # [Stage 2: 专项排障] 针对 LSP 下载失败与文件独占锁
+├── 23-Zed与IDEA外接ACP代理环境失效与子进程池累积排查指南.md # [Stage 2: 专项排障] 针对 ACP 子进程池堆积与代理失效
+├── 24-Zed面板InternalError会话中断与ACP线程锁竞态归因指南.md # [Stage 2: 专项排障] 针对 Panel 报错与锁竞态归因
+├── 25-Zed会话丢失提取与SQLite数据库表解析抢救指南.md # [Stage 2: 专项抢救] 针对 SQLite 历史会话恢复
+├── 26-Zed项目级LSP白名单配置与内存占用规避指南.md # [Stage 2: 专项配置] 针对 LSP 项目白名单与内存优化
+├── 27-多Git账号GitHub与GitLab共存及SSHIncludeIf配置指南.md # [Stage 2: 专项配置] 针对多账号 SSH 与 includeIf 切换
+├── 28-Windows终端Atuin命令历史同步与PwshProfile排障指南.md # [Stage 2: 专项排障] 针对 Atuin 历史丢失与 profile 修复
+├── 29-cc-switch配置SQLite直接读写与跨应用模型迁移指南.md # [Stage 2: 专项配置] 针对 cc-switch 数据库直接读写
+├── 30-VSCode扩展跨分支IDE手动搬运与注册生效指南.md # [Stage 2: 专项配置] 针对扩展跨 IDE 搬运生效
+├── 31-VSCode底部面板Git提交图与分支配色调优配置指南.md # [Stage 2: 专项配置] 针对 GitLG 面板与分支配色
+├── 32-Windows便携免安装PowerShell7绿色部署与环境初始化指南.md # [Stage 2: 专项配置] 针对 Pwsh7 绿色部署与环境变量
+├── 33-YaHeiConsolasHybrid字体安装与Sublime界面高清字体渲染配置指南.md # [Stage 2: 专项配置] 针对字体安装与渲染调优
+├── 34-Windows11右键菜单注册Sublime与注册表快捷管理指南.md # [Stage 2: 专项配置] 针对 Win11 右键菜单注册表项
+├── 35-Pi终端快捷键映射改键与滚轮协议冲突修复指南.md # [Stage 2: 专项排障] 针对按键映射与滚轮误触修复
+├── 36-Windows各Agent客户端终端机制与GitBash环境切换指南.md # [Stage 2: 专项配置] 针对各 Agent 终端机制与 Git Bash
+├── 37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md # [Stage 2: 专项配置] 针对浏览器控制与 MCP 调试
+├── 38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md # [Stage 2: 专项配置] 针对 opencode 思考档位与供应商迁移
 └── ...（后续顺次扩充）
 ```
 
@@ -84,6 +106,28 @@ kb-engineering-notes/
 | Windows 常驻应用多（IDE/终端/浏览器/IM）、鼠标跨屏甩动疲劳、Alt+Tab 轮转顺序不稳定、PowerToys 快捷键误触冷启动 | [`14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md) | AutoHotkey, AHK v2, 窗口切换, 盲切, 单手快捷键, Toggle, 前台置顶, 任务栏, PowerToys 缺陷 |
 | 需要基于 python-docx 批量生成 Word 试卷或教辅练习题，处理东亚中文字体分离(w:eastAsia)、页边距、行间距微调、化学式上下标排版或自动化装配流水线 | [`15-python-docx自动化生成举一反三试卷与格式精细排版指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/15-python-docx自动化生成举一反三试卷与格式精细排版指南.md) | python-docx, 试卷生成, 举一反三, eastAsia, 宋体回退, 行距, 上下标, 批量生成流水线, Word 排版 |
 | Sublime Text 终端插件 Terminus 中文吞字、按 Backspace 无法删除字符、侧边栏右键打开终端看似 PowerShell 实际是 CMD | [`16-SublimeTextTerminus中文退格失效与原生PowerShell侧边栏集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/16-SublimeTextTerminus中文退格失效与原生PowerShell侧边栏集成指南.md) | Sublime Text, Terminus, Backspace删不掉, 中文输入法, PSReadLine, Open Terminus here, Open PowerShell here, wt.exe |
+| Windows 扬声器/耳机无声、高频或周期性噼啪爆音、默认音频输出设备被虚拟声卡（如 Voicemeeter）静默抢占 | [`17-Windows声卡爆音无声与虚拟音频抢占排查指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/17-Windows声卡爆音无声与虚拟音频抢占排查指南.md) | 声卡爆音, 无声, 默认设备抢占, 虚拟声卡, Voicemeeter, 音频端点, 独占模式 |
+| 开启系统/梯子代理时，微软应用商店无法打开、UWP 应用无网络连接或无法初始化 | [`18-Windows代理下微软商店与UWP回环网络豁免排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/18-Windows代理下微软商店与UWP回环网络豁免排障指南.md) | 微软商店打不开, UWP 代理, 回环豁免, CheckNetIsolation, AppContainer, LoopbackExempt |
+| 电脑频繁卡死或假死、没开大软件但物理内存使用率居高不下、不确定该不该加物理内存条 | [`19-Windows内存防死机与Pagefile提交内存归因优化指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/19-Windows内存防死机与Pagefile提交内存归因优化指南.md) | 内存防死机, 内存爆满, Commit Charge, 提交大小, Pagefile, 虚拟内存扩容, 内存条判断 |
+| C 盘空间告急、红色预警、Temp/缓存/WSL 虚拟硬盘膨胀，需要无损安全腾挪空间 | [`20-Windows系统C盘空间不足排查与安全清理软链接重定向指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/20-Windows系统C盘空间不足排查与安全清理软链接重定向指南.md) | C 盘清理, 空间不足, 软链接重定向, mklink, 环境变量重定向, WSL 迁移, 清理缓存 |
+| opencode 等工具调用智谱 GLM 模型接口报 401 身份验证失败、API Key 怎么配都不生效 | [`21-opencode连接GLM模型401鉴权失败与端点排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/21-opencode连接GLM模型401鉴权失败与端点排障指南.md) | GLM 401, opencode 鉴权失败, bigmodel, API Key 优先级, 编码端点冲突 |
+| Zed 下载或更新语言服务器时报 `rename os error 5`、下载解压中断或由于杀毒软件占用卡死 | [`22-Zed语言服务器下载失败文件重命名占用与杀毒竞态排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/22-Zed语言服务器下载失败文件重命名占用与杀毒竞态排障指南.md) | Zed LSP 下载失败, rename os error 5, 杀毒竞态, 手工安装 LSP, 文件独占锁 |
+| Zed 或 IntelliJ IDEA 外接 ACP agent（如 codex/antigravity）登录失败、代理/CA 证书失效或子进程池堆积吃满内存 | [`23-Zed与IDEA外接ACP代理环境失效与子进程池累积排查指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/23-Zed与IDEA外接ACP代理环境失效与子进程池累积排查指南.md) | ACP agent 登录失败, 代理不生效, 子进程池膨胀, 孤儿进程堆积, stdio 认证 |
+| Zed Agent Panel 界面报 `Internal error`、`Invalid request` 或 `Session is closing`，不知从何定位 | [`24-Zed面板InternalError会话中断与ACP线程锁竞态归因指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/24-Zed面板InternalError会话中断与ACP线程锁竞态归因指南.md) | Agent Panel Internal error, Session is closing, telemetry.log, Zed.log 对齐, thread-writer-lock |
+| Zed 崩溃或误操作导致历史对话列表空白、重要上下文找不回，需要底层数据恢复 | [`25-Zed会话丢失提取与SQLite数据库表解析抢救指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/25-Zed会话丢失提取与SQLite数据库表解析抢救指南.md) | Zed 会话丢失, sidebar_threads, SQLite 对话恢复, 会话归档抢救 |
+| Zed 同时打开多个项目导致各个语言服务器全量拉起吃满内存，需要针对特定项目精细管控 LSP | [`26-Zed项目级LSP白名单配置与内存占用规避指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/26-Zed项目级LSP白名单配置与内存占用规避指南.md) | Zed LSP 白名单, .zed/settings.json, 按项目开 LSP, 内存优化 |
+| 既有个人 GitHub 账号又有公司 GitLab 账号，SSH 密钥冲突或提交邮箱身份串号 | [`27-多Git账号GitHub与GitLab共存及SSHIncludeIf配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/27-多Git账号GitHub与GitLab共存及SSHIncludeIf配置指南.md) | GitHub GitLab 共存, 多 SSH Key, includeIf, 身份自动切换, .gitconfig 隔离 |
+| Windows 下 Atuin 历史命令不同步、Ctrl+R 无法呼出或 PowerShell Profile 报错打架 | [`28-Windows终端Atuin命令历史同步与PwshProfile排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/28-Windows终端Atuin命令历史同步与PwshProfile排障指南.md) | Atuin 历史丢失, Ctrl+R 搜索历史, PSReadLine 冲突, profile.ps1 修复 |
+| cc-switch 界面操作卡顿或需要直接通过脚本批量迁移/读写应用模型配置 | [`29-cc-switch配置SQLite直接读写与跨应用模型迁移指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/29-cc-switch配置SQLite直接读写与跨应用模型迁移指南.md) | cc-switch SQLite, 直接修改供应商, 跨应用模型迁移, 绕过 UI 配置 |
+| 在 Cursor、Antigravity IDE 或 Trae 中需要用到某个只有 VS Code 插件市场才有的扩展 | [`30-VSCode扩展跨分支IDE手动搬运与注册生效指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/30-VSCode扩展跨分支IDE手动搬运与注册生效指南.md) | VS Code 插件搬运, Cursor 安装离线扩展, Trae 扩展移植, extensions.json 注册 |
+| VS Code 缺乏像 IntelliJ IDEA 那样直观清晰的 Git 提交树图谱，希望在底部面板集成 | [`31-VSCode底部面板Git提交图与分支配色调优配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/31-VSCode底部面板Git提交图与分支配色调优配置指南.md) | VS Code 提交图, GitLG, 分支配色, 底部面板终端, IDEA 视图复刻 |
+| 新电脑没有管理员权限或不想污染系统，需要免安装绿色便携部署 PowerShell 7 | [`32-Windows便携免安装PowerShell7绿色部署与环境初始化指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/32-Windows便携免安装PowerShell7绿色部署与环境初始化指南.md) | PowerShell 7 绿色安装, Pwsh 便携部署, 零系统残留, 用户级环境变量 |
+| Sublime Text 或 Sublime Merge 代码中文乱码、字体发虚或想使用清晰的等宽混合字体 | [`33-YaHeiConsolasHybrid字体安装与Sublime界面高清字体渲染配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/33-YaHeiConsolasHybrid字体安装与Sublime界面高清字体渲染配置指南.md) | YaHei Consolas Hybrid, Sublime 字体设置, 字体发虚, UI 字体补丁 |
+| Windows 11 下希望为文件和文件夹添加“Open with Sublime Text”经典与新型右键菜单 | [`34-Windows11右键菜单注册Sublime与注册表快捷管理指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/34-Windows11右键菜单注册Sublime与注册表快捷管理指南.md) | Sublime 右键菜单, Win11 注册表右键, 经典右键菜单, Open with Sublime |
+| 使用 Pi 终端时快捷键冲突、滚轮误触发历史命令或需要自定义按键动作 | [`35-Pi终端快捷键映射改键与滚轮协议冲突修复指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/35-Pi终端快捷键映射改键与滚轮协议冲突修复指南.md) | Pi 终端改键, 按键映射, 滚轮翻历史, 终端按键协议, keybindings |
+| Windows 各 AI Agent 终端默认是 CMD 或 PowerShell，经常乱码或脚本语法报错，希望统一走 Git Bash | [`36-Windows各Agent客户端终端机制与GitBash环境切换指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/36-Windows各Agent客户端终端机制与GitBash环境切换指南.md) | Agent 终端乱码, 切换 Git Bash, Codex 终端设置, OpenCode 终端 |
+| opencode 需要通过 chrome-devtools-mcp 控制本机浏览器，遇到远程端口连不上或握手失败 | [`37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md) | chrome-devtools-mcp, 浏览器自动化控制, opencode 浏览器插件, 调试端口 |
+| Zed 的 opencode 插件思考档位失灵、服务进程断连或无法成功读取自定义 API 配置 | [`38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md) | Zed opencode, 思考档位, 供应商配置迁移, opencode 启动脚本 |
 
 ---
 

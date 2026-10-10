@@ -1,0 +1,132 @@
+---
+name: kb-cc-switch-db
+description: 直接读写 cc-switch 的 SQLite 数据库，绕过 UI 批量配置与跨应用模型供应商迁移指南。
+---
+
+# cc-switch配置SQLite直接读写与跨应用模型迁移指南
+
+# Skill: sh-cc-switch-db（cc-switch 数据库直改手册）
+
+沉淀自 2026-09-06 实操（cc-switch v3.20.0，Windows，SQLite 版），关键结论经源码交叉验证（farion1231/cc-switch）。cc-switch 升级后表结构可能变化——用 `cc-db.mjs tables` 先核对再动手。
+2026-09-14 增补：改既有条目/改 id 两脚本（cc-update-provider-config / cc-rename-provider-id）、**providers.id 外键坑**（见总原则 9）、DeepSeek→opencode 段默认 max 实战案例（app-config-shapes.md）。
+2026-09-21 增补：opencode 段模型级 `limit` 坑——自定义 provider 的 `limit.context=0` 会让 Zed 永不显示上下文指示器（limit 不从 models.dev 合并；机制、实测值与修法见 sh-zed-opencode-setup 任务 B2）。实战用 `cc-update-provider-config.mjs` 同步 zhipu-glm / deepseek-max 两条 settings_config。
+2026-09-23 增补：codex 段代理翻译坑——`meta.apiFormat` 决定本地代理透传还是翻译（GLM 无 `/responses`，必须 `openai_chat` + `codexChatReasoning`）；模型目录 `modelCatalog.inputModalities` 控制 Codex 应用贴图能力；新增 `cc-update-meta.mjs`（改 meta 通用脚本）。
+2026-09-24 增补：**codex 段思考深度坑**——GLM-5.3/flash 始终思考、`thinking.type` 仅 `enabled`，深度唯一参数是 `reasoning_effort`（low/high/max，默认 max）；chat 翻译路径**必须** `supportsEffort:true` + `effortParam:"reasoning_effort"`，否则档位静默失效（只发 thinking，从不发 effort；UI 开关从关闭切到打开也不会自动补 `effortParam`）。另：cc-switch **公共配置** `settings.common_config_codex` 里的 `model_reasoning_effort` 会合并进 live config.toml、覆盖 catalog 默认档位，CLI 默认档位要改这里（直接改 live 文件会被接管/异常退出恢复覆盖）。原生 Responses 端点是 `https://open.bigmodel.cn/api/v1`（官方预设路径），与 chat 端点 `/api/coding/paas/v4` 协议不互通。
+2026-09-25 增补：**DeepSeek 官方 Codex 原生透传与识图多模态避坑**——DeepSeek 官方规范（`wire_api="responses"` + `https://api.deepseek.com`）由 `meta.apiFormat="openai_responses"` 直通代理层，免 chat 翻译；多模态识图必须在 catalog 中显式声明 `"inputModalities": ["text", "image"]`（否则 Codex 禁用贴图）；第三方网关（如 OpenCode Go）中的 `deepseek-v4-flash` 实测为纯文本模型（发图 400），多模态模型名必须为 `deepseek-flash`；严禁在 CC Switch 环境中运行官方 `codex-deepseek-setup.ps1` 脚本覆写 `config.toml`。详见 `references/deepseek-codex-integration.md`。
+
+## 总原则（每次先读）
+
+1. **探查一律只读**：`new DatabaseSync(path, { readOnly: true })`，绝不无备份写库。
+2. **写库前必备份**：整库复制到 `~/.cc-switch/backups/`（脚本自动做，也要会手工做）。
+3. **写真实库前退出 cc-switch**：运行中的实例持有配置内存态且不热加载，写库会冲突或被覆盖。`Get-Process cc-switch` 检查，`Stop-Process -Name cc-switch -Force` 结束。
+4. **默认 dry-run，用户确认后 --apply**：先打印将要写入的完整行，确认与预期一致再写。事务包裹，失败 ROLLBACK，写后回读验证。
+5. **写完提醒用户重启 cc-switch**；涉及 opencode 段的还要注意 opencode.json 双向同步（见 sh-zed-opencode-setup）。
+6. **用 node 不用 python**：PATH 里的 python 可能是 Windows 商店 stub（静默失败）；node v22+ 自带 `node:sqlite`（DatabaseSync）。
+7. **PowerShell 内联转义坑**：`node -e "..."` 里的单引号 SQL 常被吃掉。复杂查询写成临时 .mjs 脚本执行，或用 `String.fromCharCode(39)` 代替引号。另：PowerShell 5.1 `Set-Content -Encoding UTF8` 写出的 JSON **带 BOM**，`JSON.parse` 会挂——读 JSON 文件先 `replace(/^\uFEFF/, '')`（本 skill 脚本已处理）。
+8. **测试写操作用沙箱**：复制一份 db 到临时目录，脚本传 `--db <沙箱路径>`，验证通过再对真实库执行。
+9. **改 providers.id 会触发外键**（2026-09-14 实测）：`provider_endpoints` 和 `provider_health` 都引用 `providers(id, app_type)`，事务内无论先改主表还是先改子表都会立即违规。解法：`BEGIN` 前执行 `PRAGMA defer_foreign_keys = ON`（提交时统一校验），主表+两张子表一起改，COMMIT 后跑 `PRAGMA foreign_key_check` 核验——`cc-rename-provider-id.mjs` 已内置此流程。
+
+## 环境路径（按机器解析）
+
+| 项 | 路径 |
+|---|---|
+| cc-switch 数据库 | `~/.cc-switch/cc-switch.db`（SQLite，表 `providers` 主键 `(id, app_type)`） |
+| 备份目录 | `~/.cc-switch/backups/` |
+| cc-switch 程序 | 每用户安装，可能在非 C 盘（实测 `D:\Users\<user>\AppData\Local\Programs\CC Switch\cc-switch.exe`），用 `Get-Process cc-switch | select Path` 定位 |
+| opencode 配置 | `~/.config/opencode/opencode.json`（Additive 联动，见 sh-zed-opencode-setup） |
+| pi 配置 | `~/.pi/agent/`：`models.json`（cc-switch 唯一管理的文件）、`settings.json`、`auth.json`（cc-switch 绝不碰） |
+
+## 快速上手：脚本
+
+```bash
+# 只读探查 + 备份（默认连真实库，--db 可指向沙箱副本）
+node scripts/cc-db.mjs tables                    # 全部表 + 行数 + 列名
+node scripts/cc-db.mjs list [app_type]           # 供应商列表
+node scripts/cc-db.mjs show <app_type> <id>      # 单条完整行（settings_config/meta 已解析）
+node scripts/cc-db.mjs settings                  # settings 表全量
+node scripts/cc-db.mjs endpoints [app_type]      # provider_endpoints 表
+node scripts/cc-db.mjs backup                    # 备份到 ~/.cc-switch/backups/
+
+# 通用新增供应商（任意 app 段；默认 dry-run，--apply 写库）
+node scripts/cc-add-provider.mjs --app pi --id zhipu-glm --config cfg.json \
+  --name "Zhipu GLM" --endpoint https://... [--icon zhipu --icon-color '#0F62FE' \
+  --category cn_official --meta meta.json --db 沙箱.db --apply]
+
+# 改既有条目的 settings_config（任意 app 段；默认 dry-run）
+node scripts/cc-update-provider-config.mjs --app opencode --id deepseek-max --config cfg.json [--db 沙箱.db --apply]
+
+# 改既有条目的 meta（任意 app 段；默认 dry-run）
+node scripts/cc-update-meta.mjs --app codex --id <id> --meta meta.json [--db 沙箱.db --apply]
+
+# 改供应商 id（providers 主键 + provider_endpoints/provider_health 外键一起迁移；内置 defer FK）
+node scripts/cc-rename-provider-id.mjs --app opencode --from deepseek-official --to deepseek-max [--db 沙箱.db --apply]
+```
+
+## 任务 A：只读探查
+
+先 `cc-db.mjs tables` 核对表结构（防版本变化），再 `list`/`show` 定位目标条目。各表用途与列语义见 `references/db-schema.md`。改任何东西前，把目标行的 `show` 输出留存作为参照。
+
+## 任务 B：新增供应商到任意 app 段
+
+1. `cc-db.mjs backup` 备份。
+2. 按目标段的 `settings_config` 形状准备 JSON（**各段形状完全不同**，速查 `references/app-config-shapes.md`：claude 段是 env 块、codex 段是 auth+TOML、opencode 段是完整 provider JSON、pi 段是 models.json provider 节点）。
+3. 沙箱自测：复制 db 到临时目录，`cc-add-provider.mjs ... --db 沙箱.db --apply`，`cc-db.mjs show ... --db 沙箱.db` 回读验证。
+4. 退出 cc-switch，对真实库 `--apply`，回读一致性确认。
+5. 提醒用户重开 cc-switch 验证 UI 显示。
+
+## 任务 C：Pi 段专属机制（重点坑）
+
+- **cc-switch 对 pi 只管 `~/.pi/agent/models.json`**（Additive 模式：多个 provider 共存于该文件，按存在性即成员）。DB 的 `settings_config` = 写入该文件的 provider 节点（`name/baseUrl/apiKey/api/models[]/modelOverrides`）。
+- **cc-switch 绝不碰 pi 的 `settings.json` / `auth.json`**（源码测试明确保证）。所以 pi 的默认模型/默认思考档位等改动必须直接编辑 `~/.pi/agent/settings.json`，cc-switch 帮不上。
+- **models.json 是权威数据源**：cc-switch 打开 Pi 段时会把 models.json 同步回 DB（native 优先）。DB 与 models.json 内容保持一致可避免 sync 抖动。
+- **pi 默认思考档位**：settings.json 的 `defaultThinkingLevel`（全局）或 `modelThinkingLevels`（按 `"provider/modelId"` 键精准覆盖）；级联后 clamp 到模型 `thinkingLevelMap` 能力。模型定义没有 reasoningEffort 这类请求参数字段——与 opencode 的机制完全不同，不能照搬。
+- 完整实战案例（Zhipu GLM → pi 段 + 默认思考 max）见 `references/app-config-shapes.md`。
+
+## 任务 D：备份与回滚
+
+```powershell
+# 备份
+Copy-Item "$env:USERPROFILE\.cc-switch\cc-switch.db" "$env:USERPROFILE\.cc-switch\backups\cc-switch-<时间戳>.db"
+# 回滚（先关 cc-switch）
+Copy-Item "<备份文件>" "$env:USERPROFILE\.cc-switch\cc-switch.db" -Force
+```
+
+## 任务 E：Codex 段代理翻译与模型目录（2026-09-23~24 实战）
+
+cc-switch 开本地代理（`enableLocalProxy`）后 codex live 配置被接管：`base_url=http://127.0.0.1:15721/v1` + `wire_api="responses"` + `experimental_bearer_token="PROXY_MANAGED"`，上游实际发什么由 provider `meta` 决定：
+
+- `meta.apiFormat="openai_responses"` → 代理透传 `{base_url}/responses`（上游须原生支持 Responses API）
+- `meta.apiFormat="openai_chat"` → 代理把 Responses 请求翻译成 `{base_url}/chat/completions`，响应转回；推理映射看 `meta.codexChatReasoning`
+
+**智谱 GLM 两个协议分立的端点**：chat 端点 `https://open.bigmodel.cn/api/coding/paas/v4`（只有 `/chat/completions`，打 `/responses` 实测 404）、原生 Responses 端点 `https://open.bigmodel.cn/api/v1`（cc-switch 官方预设走这条，`apiFormat=openai_responses`）。两套协议不互通（`/api/v1/chat/completions` 实测 403 model_access_denied）。`provider_endpoints` 混挂两个不同协议候选 + `endpointAutoSelect=true` 是坑：自动选到不匹配的端点就 404/403。
+
+走 chat 翻译（`apiFormat=openai_chat`）时 **`codexChatReasoning` 必须开 effort 转发**，否则 Codex 选任何档位都只发 `thinking:{type:"enabled"}`、`reasoning_effort` 一个都不发（源码 `transform_codex_chat.rs::apply_reasoning_options`：`!supports_effort` 直接 return）：
+
+```json
+"codexChatReasoning": {
+  "supportsThinking": true,
+  "supportsEffort": true,
+  "thinkingParam": "thinking",
+  "effortParam": "reasoning_effort",
+  "outputFormat": "reasoning_content"
+}
+```
+
+UI 上把「支持 effort」开关从关闭切到打开**不会**自动修好——handler 是 `effortParam: checked ? (effortParam ?? "reasoning_effort") : "none"`，旧值 `"none"` 非 null 会原样保留；必须显式改成 `"reasoning_effort"`（翻译层只认 `reasoning_effort` / `reasoning.effort`，其他值走 `_ => {}` 不写）。GLM 思考语义：始终开启、`thinking.type` 仅 `enabled`（不能禁用），深度 = `reasoning_effort`（low/high/max，默认 max）；实测经代理 low≈15-20 / medium≈94-138 / high≈1600-1900 / max≈1200-2500 reasoning tokens。chat 端点对非法值静默忽略，原生 `/api/v1/responses` 严格校验（非法值 400，合法枚举 none/minimal/low/medium/high/xhigh/max）。
+
+排查：直连上游对比 `/responses` vs `/chat/completions` → `curl` 代理 `http://127.0.0.1:15721/v1/responses` → `tail ~/.cc-switch/logs/cc-switch.log | grep '\[Codex\] >>> 请求目标'` 看实际转发。
+
+`modelCatalog.models[].inputModalities` 控制 Codex 应用贴图（`["text","image"]`；能力先直连 API 实测，智谱 glm-5.3-flash ✅ / glm-5.3 ❌ 报 1210）；改完 settings_config 重启 cc-switch 会重新生成 `~/.codex/cc-switch-model-catalog.json`，Codex 应用还需重启重载。改 meta 用 `cc-update-meta.mjs`（dry-run/备份/回读）。完整字段表与验证命令见 `references/app-config-shapes.md` codex 段。
+
+**公共配置会覆盖 catalog 默认档位**（2026-09-24 实测）：`settings` 表 `common_config_codex` 的 TOML 会合并进每个 codex 供应商的 live config。里面若有 `model_reasoning_effort`，它会覆盖 model catalog 的 `default_reasoning_level`（影响 CLI/读 config.toml 的客户端；Desktop 用自选档位、Zed 用自身设置）。直接改 `~/.codex/config.toml` 会在 cc-switch 接管或异常退出恢复时被覆盖——要持久改必须改 `common_config_codex`（settings 表）。
+
+## 与 sh-zed-opencode-setup 的分工
+
+- 本 skill：cc-switch 数据库通用机制（表结构/读写/备份/各段形状/pi 机制）。
+- sh-zed-opencode-setup：opencode 侧思考档位（effort/reasoningEffort、variants 禁用）、模型 `limit`（Zed 上下文指示器）、opencode.json 回写行为、claude→opencode 迁移脚本（cc-switch-migrate.mjs）。动 opencode 段时两个都读。
+
+## 深入资料
+
+- `references/db-schema.md` —— 全部 18 张表清单、providers 表逐列详解、meta JSON 字段、settings 表已知键。
+- `references/app-config-shapes.md` —— 各 app_type 的 settings_config 形状、Switch vs Additive 同步模式、codex 代理翻译与模型目录（apiFormat/codexChatReasoning/inputModalities）、pi 深挖（models.json schema、thinking 级联）、完整实战案例。
+- `references/deepseek-codex-integration.md` —— DeepSeek 官方接入 Codex 规范全文对比、一键脚本与 CC Switch 冲突分析、原生 Responses 透传配置模板与端到端验证命令。
