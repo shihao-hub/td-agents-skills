@@ -1,7 +1,7 @@
 ---
 name: skill-engineering-notes
 description: |
-  工程实战手记与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与条目扩充规范，并列出当前 01–11 条覆盖的坑位与关键词。当用户点名本文件、提到"工程手记/避坑知识库"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境、Antigravity 粘图快捷键与 Kitty 协议透传、计划任务触发终端闪标签页（控制台委托 handoff）与 conhost 无窗口注册这类问题时，先读本文件定位条目。
+  工程实战手记与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与条目扩充规范，并列出当前 01–14 条覆盖的坑位与关键词。当用户点名本文件、提到"工程手记/避坑知识库"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境、Antigravity 粘图快捷键与 Kitty 协议透传、计划任务触发终端闪标签页（控制台委托 handoff）与 conhost 无窗口注册、降噪耳机人声掩蔽与音频下载、AutoHotkey 窗口单手盲切等问题时，先读本文件定位条目。
 version: 1.0.0
 created: 2026-10-08
 updated: 2026-10-10
@@ -24,9 +24,9 @@ updated: 2026-10-10
 知识库刻意分成两层，为的是"扫一眼就能判断要不要读"：
 
 1. **第一级｜元数据与路由（`kb-engineering-notes/SKILL-DRAFT.md`）**：定义技能名称与 description、维护"问题 → 条目"的路由表，是**唯一权威索引**；
-2. **第二级｜专项实战（`01-` ~ `07-` 编号条目）**：每个文件只深入解决一个核心痛点，并自带 skill-creator 规范的 `name`/`description` frontmatter——即"条目即技能"的隐形形态，命名不改就永远不会被注册。
+2. **第二级｜专项实战（`01-` ~ `14-` 编号条目）**：每个文件只深入解决一个核心痛点，并自带 skill-creator 规范的 `name`/`description` frontmatter——即"条目即技能"的隐形形态，命名不改就永远不会被注册。
 
-因此查阅顺序固定为：**本文件 → `SKILL-DRAFT.md` 路由表 → 命中的编号条目**。本文件第三节的清单只是速览，条目增删以 `SKILL-DRAFT.md` 为准，新增条目时不必回来同步本表。
+因此查阅顺序固定为：**本文件 → `SKILL-DRAFT.md` 路由表 → 命中的编号条目**。本文件第三节的清单只是速览，条目增删以 `SKILL-DRAFT.md` 为准，新增条目时不必须回来同步本表。
 
 ## 三、当前已收录条目速览
 
@@ -43,8 +43,11 @@ updated: 2026-10-10
 | **[`07-uv统一全机Python环境与新电脑一键引导复现指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/07-uv统一全机Python环境与新电脑一键引导复现指南.md)** | 多 Python 来源治理、uv_shim 全局转发架构、`UV_PYTHON` 锁版语义、PEP 668 / venv 无 pip 排坑、新电脑一键复现 SOP | uv, python, pip, uv_shim, UV_PYTHON, externally-managed, No module named pip, anaconda 卸载 |
 | **[`08-Windows下Java与Maven便携子目录配置及Zed任务调试集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/08-Windows下Java与Maven便携子目录配置及Zed任务调试集成指南.md)** | Windows 下安装 Java/Maven 导致 C 盘膨胀、Zed 编辑器硬编码 JDK 路径或缺乏调试能力 | Java, Maven, C 盘空间, settings.xml, localRepository, Corretto, jdtls, tasks.json, JDWP, 远程调试 |
 | **[`09-Chrome手动关闭窗口固定标签丢失的SNSS会话快照解析与找回指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/09-Chrome手动关闭窗口固定标签丢失的SNSS会话快照解析与找回指南.md)** | Chrome「继续浏览上次打开的网页」只恢复一个窗口，手动关闭窗口的固定标签丢失找回、独占锁规避与 SNSS 快照解析 | Chrome, 固定标签丢失, SNSS, TabRestoreService, Sessions, Session_, Tabs_ |
-| **[`10-AntigravityCLI粘贴图片改键Windows终端Kitty协议透传与BOM排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/10-AntigravityCLI粘贴图片改键Windows终端Kitty协议透传与BOM排障指南.md)** | Antigravity CLI / Pi 粘图片快捷键改 Alt+Shift+V、Windows Terminal Kitty CSI-u 扩展协议透传、PowerShell 写入 UTF-8 BOM 报错排查 | 粘图片快捷键, edit.paste, app.clipboard.pasteImage, Alt+Shift+V, sendInput, 118;4u, Kitty CSI-u, ufeff, UTF-8 BOM, keybindings.json |
+| **[`10-AntigravityCLI粘贴图片改键Windows终端Kitty协议透传与BOM排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/10-AntigravityCLI粘贴图片改键Windows终端Kitty协议透传与BOM排障指南.md)** | Antigravity CLI / Pi 粘贴图片快捷键改 Alt+Shift+V、Windows Terminal Kitty CSI-u 扩展协议透传、PowerShell 写入 UTF-8 BOM 报错排查 | 粘贴图片快捷键, edit.paste, app.clipboard.pasteImage, Alt+Shift+V, sendInput, 118;4u, Kitty CSI-u, ufeff, UTF-8 BOM, keybindings.json |
 | **[`11-Windows计划任务控制台委托闪窗排障与conhost无窗口注册指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/11-Windows计划任务控制台委托闪窗排障与conhost无窗口注册指南.md)** | 计划任务/定时脚本触发时 Windows Terminal 闪空白 PowerShell 标签页（弹终端）、`-WindowStyle Hidden` 无效的排障；含 conhost --headless 无窗口注册与手动配置命令 | 弹终端, 闪窗, WT 标签页, 控制台委托, handoff, conhost --headless, PseudoConsoleWindow, register_task.ps1, 手动配置任务 |
+| **[`12-AntigravityCLI执行模式辨析与免批YOLO及配置面板排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/12-AntigravityCLI执行模式辨析与免批YOLO及配置面板排障指南.md)** | Antigravity CLI 执行模式（plan/accept-edits）与免批 YOLO 权限辨析、状态栏无 yolo 认知重塑、/permissions 与 /config 面板排障、--dangerously-skip-permissions 启动参数 | Antigravity CLI, YOLO, accept-edits, plan, /permissions, /config, Tool Permission, --dangerously-skip-permissions |
+| **[`13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md)** | 主动降噪耳机无法消除突发人声交谈、轻音乐休止符漏音痛点，利用听觉掩蔽（Auditory Masking）构建抗干扰声床；含 Wikimedia Commons API 免鉴权检索下载公有领域名曲与纯 Python 无依赖合成立体声褐噪音/雨声完整 SOP | 降噪耳机, 隔绝人声, 听觉掩蔽, 褐噪音, Brown Noise, 白噪音, 雨声, Wikimedia Commons, 公有领域轻音乐, 萨蒂, 肖邦, 卡农, 巴赫 |
+| **[`14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md)** | Windows 常驻应用多（IDE/终端/浏览器/IM）、鼠标跨屏甩动疲劳、Alt+Tab 轮转顺序不稳定、PowerToys 快捷键误触冷启动 | AutoHotkey, AHK v2, 窗口切换, 盲切, 单手快捷键, Toggle, 前台置顶, 任务栏, PowerToys 缺陷 |
 
 ## 四、AI 使用指引（当用户指定本文件或命中上述关键词时）
 
@@ -53,6 +56,11 @@ updated: 2026-10-10
    - Git / Sublime Merge 提交整理与权限报错 → 直接读 `01-` ~ `03-`；
    - Cursor / VS Code 预览与 Agent 免审批、沙箱网络 → 读 `04-`、`05-`；
    - Git Worktree 依赖隔离、多 Python 环境统一、Java/Maven/Zed 便携集成 → 读 `06-`、`07-`、`08-`；
+   - Chrome 会话丢失与固定标签抢救 → 读 `09-`；
+   - 终端改键透传 / 计划任务弹窗闪退 → 读 `10-`、`11-`；
+   - Antigravity CLI 执行模式与 YOLO 权限免审 → 读 `12-`；
+   - 降噪耳机人声掩蔽与专注音乐/环境声下载合成 → 读 `13-`；
+   - Windows 窗口单手盲切与 AHK v2 Toggle 自动化 → 读 `14-`；
    - 命中不明确时，先看 `SKILL-DRAFT.md` 的路由表再定；
 3. **扩充新知识**：按 `SKILL-DRAFT.md` 第 3 节的规范，以 `0N-中文描述.md` 顺次新增条目，并更新那里的路由表；
 4. **要求转正为自动技能时**：执行 `git mv kb-engineering-notes/SKILL-DRAFT.md kb-engineering-notes/SKILL.md`。

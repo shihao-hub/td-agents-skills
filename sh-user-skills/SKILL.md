@@ -2,7 +2,7 @@
 name: sh-user-skills
 description: |
   个人技能库总入口与分流器：用户只有一句模糊需求、或忘记技能名时，在此按关键词匹配并加载对应子技能 SOP。覆盖五域：
-  装机与环境（PowerShell7 绿色安装、uv/Python 环境统一、atuin 命令历史、多 Agent 终端与 Git Bash、内存防死机/虚拟内存/提交内存归因/内存条扩容判断、pi 快捷键与滚轮、终端字体、Sublime 右键菜单、VS Code 提交图与插件搬运、Zed LSP 白名单与 opencode 配置、chrome-devtools-mcp、Antigravity CLI YOLO与权限策略）；
+  装机与环境（PowerShell7 绿色安装、uv/Python 环境统一、atuin 命令历史、多 Agent 终端与 Git Bash、内存防死机/虚拟内存/提交内存归因/内存条扩容判断、pi 快捷键与滚轮、终端字体、Sublime 右键菜单、VS Code 提交图与插件搬运、Zed LSP 白名单与 opencode 配置、chrome-devtools-mcp）；
   排障（C 盘空间不足、声卡无声/爆音、代理下 UWP 与商店、Zed 语言服务器下载失败、ACP 登录与代理、Agent Panel 报错、Zed 会话丢失、GLM 401）；
   开发与重构（后端系统设计、计划模式与计划/规格驱动、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、monorepo 提交推送、GitHub 仓库大扫除、GitHub/GitLab 共存、cc-switch 供应商读写）；
   文档与交接（PRD/技术方案、书转 skill、跨 agent 交接、排障复盘）；
@@ -74,7 +74,6 @@ updated: 2026-10-10
 | Python 项目打包成免安装绿色版 | `sh-pystand-pack` |
 | C++ 编译报错／CMake 集成 Lua | `sh-cluacpp-build` |
 | 把这个能力沉淀成 skill／书转 skill | `sh-book2skill-sop`（书/文档）或 `skill-creator` |
-| antigravity cli 没有 yolo／cli 只有 plan 和 accept／agy config 或 permissions 怎么配 | `sh-agy-cli-permissions` |
 
 ### ⚡ 领域技能族路由器（二级分流）
 涉及特定垂直生态（Antigravity、飞书、Redis）时，由族路由器进一步按 8~28 个子领域精准下发：
@@ -104,7 +103,6 @@ updated: 2026-10-10
 | `sh-vscode-fork-ext-port` | 把 VS Code 系插件/扩展跨分支 IDE 手工搬运并注册生效（Cursor/Antigravity IDE/Trae）。点名使用 |
 | `sh-zed-lsp-config` | 配置：给项目目录配 Zed .zed/settings.json LSP 白名单，按项目开启省内存。点名使用 |
 | `sh-zed-opencode-setup` | 配置：Zed 的 opencode agent 安装修复、思考档位、供应商配置、cc-switch 迁移。点名使用 |
-| `sh-agy-cli-permissions` | 配置：Antigravity CLI 执行模式（plan/accept）辨析、YOLO 免审与 Tool Permission 配置。点名使用 |
 
 ### 🔧 系统与运行排障
 磁盘、网络代理、声卡、模型鉴权、IDE 崩溃与会话丢失诊断：

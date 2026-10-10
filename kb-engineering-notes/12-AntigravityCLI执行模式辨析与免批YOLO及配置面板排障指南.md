@@ -1,12 +1,9 @@
 ---
-name: sh-agy-cli-permissions
-description: 配置：Antigravity CLI 模式辨析与免批 YOLO、Tool Permission 及规则表配置。点名使用
-version: 1.0.1
-created: 2026-10-10
-updated: 2026-10-10
+name: kb-agy-cli-permissions
+description: Antigravity CLI 执行模式（plan/accept-edits）辨析与免批 YOLO 模式配置指南。解决为什么状态栏没有 yolo、/permissions 全是 0 规则、/config 面板 Tool Permission 调整与 --dangerously-skip-permissions 启动参数配置。
 ---
 
-# Antigravity CLI 模式辨析与权限配置 (YOLO SOP)
+# Antigravity CLI 执行模式辨析、免批 YOLO 与配置面板排障指南
 
 > 本技能解决在 Antigravity CLI (`agy`) 中“为什么没有 YOLO 模式”、“为什么模式栏只有 plan 和 accept”、“`/permissions` 为什么全是 0”、“`/config` 面板怎么配置”、“如何实现无人值守全自动执行”等问题。
 
