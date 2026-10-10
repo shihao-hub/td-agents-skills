@@ -128,6 +128,7 @@ kb-engineering-notes/
 | Windows 各 AI Agent 终端默认是 CMD 或 PowerShell，经常乱码或脚本语法报错，希望统一走 Git Bash | [`36-Windows各Agent客户端终端机制与GitBash环境切换指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/36-Windows各Agent客户端终端机制与GitBash环境切换指南.md) | Agent 终端乱码, 切换 Git Bash, Codex 终端设置, OpenCode 终端 |
 | opencode 需要通过 chrome-devtools-mcp 控制本机浏览器，遇到远程端口连不上或握手失败 | [`37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md) | chrome-devtools-mcp, 浏览器自动化控制, opencode 浏览器插件, 调试端口 |
 | Zed 的 opencode 插件思考档位失灵、服务进程断连或无法成功读取自定义 API 配置 | [`38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md) | Zed opencode, 思考档位, 供应商配置迁移, opencode 启动脚本 |
+| 需要核实「某个公开信息到底有没有/是什么」（如某公司内部工具名），手上只有终端、没有搜索 API，且担心把「我没查到」误当「不存在」 | [`39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md) | 公开信息核查, 到底有没有, 第一方信源, DuckDuckGo HTML, html.duckduckgo.com, uddg 解包, SERP 降级页, 假阴性, site: 收敛, 是不是不存在 |
 
 ---
 
