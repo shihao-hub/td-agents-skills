@@ -1,6 +1,6 @@
 ---
 name: kb-engineering-notes
-description: 开发人员通用工程实战手记与硬核排障知识库。收录在实际开发中沉淀的工具高阶交互、系统底层机制（Windows 文件锁、进程冲突、异常调度）以及经过严格验证的标准排障 SOP。当遇到复杂 Git 跨提交整理、Sublime Merge 操作困惑、Windows 下 Permission Denied 变基卡死、Rescheduled 队列异常或 Cursor/VS Code Markdown 预览模式切换时查阅本指南。
+description: 开发者通用工程实战手记、自动化流水线与硬核排障知识库。兼具「疑难排障（Windows 文件锁、进程池堆积、闪窗、网络代理）」与「工程实现/生成流水线（文档与试卷自动化排版、脚手架、复杂脚本设计）」两翼实战 SOP。当遇到疑难报错或需要落地工程自动化流水线时查阅本指南。
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -14,7 +14,7 @@ description: 开发人员通用工程实战手记与硬核排障知识库。收�
 
 ## 1. 知识库架构与设计哲学
 
-本知识库采用**两级渐进式感知架构（Two-stage Progressive Disclosure）**：
+本知识库采用**两级渐进式感知架构（Two-stage Progressive Disclosure）**，涵盖**疑难排障（Type A）**与**工程方案/自动化生成流水线（Type B）**两翼：
 
 ```text
 kb-engineering-notes/
@@ -33,24 +33,27 @@ kb-engineering-notes/
 ├── 12-AntigravityCLI执行模式辨析与免批YOLO及配置面板排障指南.md # [Stage 2: 专项配置] 针对 CLI 执行模式、YOLO 权限免审批与配置面板
 ├── 13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md # [Stage 2: 专项实战] 针对降噪耳机人声泄露掩蔽、Commons API 下载与纯 Python 音频合成
 ├── 14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md # [Stage 2: 专项效率] 针对 Windows 多常驻窗口盲切、左手单手 Toggle 与 AutoHotkey v2 自动化
+├── 15-python-docx自动化生成举一反三试卷与格式精细排版指南.md # [Stage 2: 专项实现] 针对教辅试卷生成、东亚字体分离(w:eastAsia)与 python-docx 精细排版流水线
 └── ...（后续顺次扩充）
 ```
 
 - **文件名自解释（Self-describing Filename）**：每个知识文件均以`【编号 + 目标工具 + 核心问题场景 + 解决目标】`命名，AI 或开发者仅需浏览文件名列表，即可 100% 判断该文件是否适用于当前上下文，无需逐个打开探查。
-- **单一职责与实战仿真**：每个文件只深入解决一个具体核心痛点，内容必须源于真实生产/开发踩坑，包含精准排查命令、界面现象对照和确定性操作 SOP。
+- **排障与工程实现双翼**：
+  - **Type A（疑难排障型）**：解决踩坑、文件锁、底层冲突，包含精准排查命令、界面现象对照和确定性操作 SOP；
+  - **Type B（方案与生成流水线型）**：解决端到端工程实现、内容/试卷/文档自动化生成、样式排版引擎落地，包含业务输入输出、底层技术剖析、代码实现与交付验证模板。
 - **条目即技能（隐形技能约定）**：每个 `0N-*.md` 条目在元数据上都视为一个独立 skill，必须带 skill-creator 规范的 frontmatter（`name` + `description`），正文保持单文件 ≤500 行、以 SOP 体为主。
 
 ### 条目即技能：为什么“是技能”却检测不到
 
 靠的是两条命名约束，别去动它们：
 
-- harness 在子目录里只认名为 `SKILL.md` 的文件；本目录条目一律用 `0N-主题.md`，因此永不注册（实测：同层的 `SKILL-DRAFT.md` 带完整 frontmatter，也从未出现在技能目录里）；
+- harness 在子目录里只认名为 `SKILL.md` 的文件；本目录条目一律用 `0N-主题.md`，因此永不注册（实测：同层的 `SKILL-DRAFT.md` 带完备 frontmatter，也从未出现在技能目录里）；
 - 总控文件用 `SKILL-DRAFT.md` 而非 `SKILL.md`，将来转正只需改这一个文件名。
 
 ### 条目元数据规范
 
-- `name` 取 `kb-<英文主题短横线>`（如 `kb-git-worktree-deps`），**不带编号**：编号只是排序外壳，`name` 才是将来独立成 skill 时沿用的稳定标识，定了就别改，免得引用失效；
-- `description` 按 skill-creator 写法：一句话功能语义 + "何时查阅"的触发场景，控制在 200 字符内，关键词尽量用用户真会说的症状词与报错串；
+- `name` 取 `kb-<英文主题短横线>`（如 `kb-docx-practice-generator`），**不带编号**：编号只是排序外壳，`name` 才是将来独立成 skill 时沿用的稳定标识，定了就别改，免得引用失效；
+- `description` 按 skill-creator 写法：一句话功能语义 + "何时查阅"的触发场景，控制在 200 字符内，关键词尽量用用户真会说的症状词、技术词或目标交付词；
 - 本目录的 description 面向**路由与检索**。若某条目将来真要转正为全局技能，除改名建目录外，还必须按 `SKILL-AUTHORING-RULES.md` 把 description 重写成点名触发式（≤70 字符、结尾 `点名使用`）。
 
 ---
@@ -78,17 +81,24 @@ kb-engineering-notes/
 | Antigravity CLI 执行模式（plan/accept-edits）与免批 YOLO 权限混淆、状态栏无 yolo、/permissions 规则为空、/config 面板与免审启动参数配置 | [`12-AntigravityCLI执行模式辨析与免批YOLO及配置面板排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/12-AntigravityCLI执行模式辨析与免批YOLO及配置面板排障指南.md) | Antigravity CLI, YOLO, accept-edits, plan, /permissions, /config, Tool Permission, --dangerously-skip-permissions |
 | 佩戴降噪耳机仍能听到人声谈话、轻音乐休止符间隙漏音打断心流，需要构建抗干扰声床、免鉴权下载公有领域名曲或合成立体声褐噪音/自然雨声 | [`13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md) | 降噪耳机, 隔绝人声, 听觉掩蔽, 褐噪音, Brown Noise, 白噪音, 雨声, Wikimedia Commons, 公有领域轻音乐, 萨蒂, 肖邦, 卡农, 巴赫 |
 | Windows 常驻应用多（IDE/终端/浏览器/IM）、鼠标跨屏甩动疲劳、Alt+Tab 轮转顺序不稳定、PowerToys 快捷键误触冷启动 | [`14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md) | AutoHotkey, AHK v2, 窗口切换, 盲切, 单手快捷键, Toggle, 前台置顶, 任务栏, PowerToys 缺陷 |
+| 需要基于 python-docx 批量生成 Word 试卷或教辅练习题，处理东亚中文字体分离(w:eastAsia)、页边距、行间距微调、化学式上下标排版或自动化装配流水线 | [`15-python-docx自动化生成举一反三试卷与格式精细排版指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/15-python-docx自动化生成举一反三试卷与格式精细排版指南.md) | python-docx, 试卷生成, 举一反三, eastAsia, 宋体回退, 行距, 上下标, 批量生成流水线, Word 排版 |
 
 ---
 
 ## 3. 知识扩充规范（追加新知识时遵循）
 
-当你开发中遇到新的典型踩坑（如 Docker 卷权限、Python 编译依赖、网络代理截断等）需要归档时：
-1. **确定文件名与 `name`**：文件名遵循 `编号-目标技术核心问题场景与解决目标.md`，序号顺延（如 `15-DockerDesktop卷挂载Windows符号链接失效排障.md`）；同时在 frontmatter 里定一个 `kb-<英文短横线>` 的 `name`；
-2. **文档结构标准**：
-   - **YAML frontmatter**：`name` + `description`（skill-creator 规范，见第 1 节「条目即技能」），缺了它这条目就不算合规；
-   - **一、现象与报错直击**：贴出真实终端输出或 UI 截图文字；
-   - **二、底层根因剖析**：讲透为什么会发生（操作系统机制、并发锁、协议冲突等）；
-   - **三、标准解决与抢救 SOP**：提供原子化、可直接复制执行的命令与操作步骤；
-   - **四、验证与防复发建议**：如何确认已彻底解决；
+当你开发中遇到新的典型踩坑或沉淀出高价值工程实现流水线需要归档时：
+1. **确定文件名与 `name`**：文件名遵循 `编号-目标技术核心问题场景与解决目标.md`，序号顺延（如 `16-DockerDesktop卷挂载Windows符号链接失效排障.md`）；同时在 frontmatter 里定一个 `kb-<英文短横线>` 的 `name`；
+2. **文档结构标准（双轨结构）**：
+   - **通用 YAML frontmatter**：`name` + `description`（skill-creator 规范，见第 1 节「条目即技能」），缺了它这条目就不算合规；
+   - **Type A：疑难排障型条目**：
+     - 一、现象与报错直击：贴出真实终端输出或 UI 截图文字；
+     - 二、底层根因剖析：讲透为什么会发生（操作系统机制、并发锁、协议冲突等）；
+     - 三、标准解决与抢救 SOP：提供原子化、可直接复制执行的命令与操作步骤；
+     - 四、验证与防复发建议：如何确认已彻底解决；
+   - **Type B：方案与生成流水线型条目**：
+     - 一、业务场景与生成需求：输入源、生成目标与最终交付格式；
+     - 二、排版/技术核心难点与底层剖析：格式规范、底层引擎机制（如 XML 命名空间、编码标准）；
+     - 三、标准自动化生成流水线与代码实现：可直接复用的完整脚本骨架与核心装配函数；
+     - 四、交付验证与工程扩展建议：产物校验断言与新场景复用 SOP；
 3. **更新本路由表**：在上面的路由表格中添加新条目的索引行。

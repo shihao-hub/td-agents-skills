@@ -1,8 +1,8 @@
 ---
 name: skill-engineering-notes
 description: |
-  工程实战手记与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与条目扩充规范，并列出当前 01–14 条覆盖的坑位与关键词。当用户点名本文件、提到"工程手记/避坑知识库"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境、Antigravity 粘图快捷键与 Kitty 协议透传、计划任务触发终端闪标签页（控制台委托 handoff）与 conhost 无窗口注册、降噪耳机人声掩蔽与音频下载、AutoHotkey 窗口单手盲切等问题时，先读本文件定位条目。
-version: 1.0.0
+  工程实战手记、自动化流水线与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与双轨条目扩充规范（Type A 疑难排障 + Type B 工程实现/生成流水线），并列出当前 01–15 条覆盖的坑位、方案与关键词。当用户点名本文件、提到"工程手记/知识库/避坑指南"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境、Antigravity 粘图快捷键与 Kitty 协议透传、计划任务触发终端闪标签页（控制台委托 handoff）与 conhost 无窗口注册、降噪耳机人声掩蔽与音频下载、AutoHotkey 窗口单手盲切、python-docx 试卷变式题生成与东亚字体排版等问题时，先读本文件定位条目。
+version: 1.1.0
 created: 2026-10-08
 updated: 2026-10-10
 ---
@@ -14,7 +14,10 @@ updated: 2026-10-10
 ## 一、知识库定位与核心价值
 
 - **目录位置**：`~/.agents/skills/kb-engineering-notes/`（等价于 `.agents/skills/kb-engineering-notes/`）
-- **定位**：长期生长的通用工程实战手记与避坑知识库。区别于一次性的临时文档，这里沉淀的是真实开发中高成本踩坑、GUI/CLI 工具高阶交互、系统底层机制（文件锁、进程冲突、异常调度）以及经过血泪验证的标准操作 SOP。
+- **定位**：长期生长的通用工程实战手记、自动化生成流水线与避坑知识库。区别于一次性的临时文档，这里沉淀的是真实开发中高成本踩坑、GUI/CLI 工具高阶交互、系统底层机制（文件锁、进程冲突、异常调度）、端到端工程自动化流水线（如教辅试卷生成、排版引擎、脚本集成），以及经过血泪验证的标准操作 SOP 与架构最佳实践。
+- **排障与实现双翼（Type A / Type B）**：
+  - **Type A（疑难排障型）**：针对操作系统底层、并发文件锁、网络/环境踩坑，遵循确定性抢救与防复发闭环；
+  - **Type B（方案与生成流水线型）**：针对内容/文档/试卷批量自动化生成、脚手架与通用工程流水线，提供输入输出建模、核心代码模板与交付验证规范。
 - **与正式 Skill 的关系**：
   - **当前状态**：知识库内部总控文件命名为 `SKILL-DRAFT.md`（非标准 `SKILL.md`），因此**不会被自动注册为活跃技能**，避免污染常规指令上下文——机制细节见 [SKILL-AUTHORING-RULES.md](file:///D:/Users/language_projects/.agents/skills/SKILL-AUTHORING-RULES.md) 第〇节；
   - **未来转正**：内部规范与元数据已 100% 遵循 `/skill-creator` 标准；若某天需要它被自动调用，只需把 `SKILL-DRAFT.md` 改名为 `SKILL.md` 即可生效。
@@ -24,7 +27,7 @@ updated: 2026-10-10
 知识库刻意分成两层，为的是"扫一眼就能判断要不要读"：
 
 1. **第一级｜元数据与路由（`kb-engineering-notes/SKILL-DRAFT.md`）**：定义技能名称与 description、维护"问题 → 条目"的路由表，是**唯一权威索引**；
-2. **第二级｜专项实战（`01-` ~ `14-` 编号条目）**：每个文件只深入解决一个核心痛点，并自带 skill-creator 规范的 `name`/`description` frontmatter——即"条目即技能"的隐形形态，命名不改就永远不会被注册。
+2. **第二级｜专项实战（`01-` ~ `15-` 编号条目）**：每个文件只深入解决一个核心痛点或交付方案，并自带 skill-creator 规范的 `name`/`description` frontmatter——即"条目即技能"的隐形形态，命名不改就永远不会被注册。
 
 因此查阅顺序固定为：**本文件 → `SKILL-DRAFT.md` 路由表 → 命中的编号条目**。本文件第三节的清单只是速览，条目增删以 `SKILL-DRAFT.md` 为准，新增条目时不必须回来同步本表。
 
@@ -48,6 +51,7 @@ updated: 2026-10-10
 | **[`12-AntigravityCLI执行模式辨析与免批YOLO及配置面板排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/12-AntigravityCLI执行模式辨析与免批YOLO及配置面板排障指南.md)** | Antigravity CLI 执行模式（plan/accept-edits）与免批 YOLO 权限辨析、状态栏无 yolo 认知重塑、/permissions 与 /config 面板排障、--dangerously-skip-permissions 启动参数 | Antigravity CLI, YOLO, accept-edits, plan, /permissions, /config, Tool Permission, --dangerously-skip-permissions |
 | **[`13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/13-降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南.md)** | 主动降噪耳机无法消除突发人声交谈、轻音乐休止符漏音痛点，利用听觉掩蔽（Auditory Masking）构建抗干扰声床；含 Wikimedia Commons API 免鉴权检索下载公有领域名曲与纯 Python 无依赖合成立体声褐噪音/雨声完整 SOP | 降噪耳机, 隔绝人声, 听觉掩蔽, 褐噪音, Brown Noise, 白噪音, 雨声, Wikimedia Commons, 公有领域轻音乐, 萨蒂, 肖邦, 卡农, 巴赫 |
 | **[`14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/14-Windows单手盲切与抽屉式Toggle应用窗口AutoHotkey配置指南.md)** | Windows 常驻应用多（IDE/终端/浏览器/IM）、鼠标跨屏甩动疲劳、Alt+Tab 轮转顺序不稳定、PowerToys 快捷键误触冷启动 | AutoHotkey, AHK v2, 窗口切换, 盲切, 单手快捷键, Toggle, 前台置顶, 任务栏, PowerToys 缺陷 |
+| **[`15-python-docx自动化生成举一反三试卷与格式精细排版指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/15-python-docx自动化生成举一反三试卷与格式精细排版指南.md)** | 基于 python-docx 的试卷与教辅「举一反三」变式题自动化生成与精细排版 SOP：原题考点映射、中西文字体分离(w:eastAsia)、行距间距设置、化学式上下标排版与批量生成流水线 | python-docx, 试卷生成, 举一反三, eastAsia, 宋体回退, 行距, 上下标, 批量生成流水线, Word 排版 |
 
 ## 四、AI 使用指引（当用户指定本文件或命中上述关键词时）
 
@@ -61,8 +65,9 @@ updated: 2026-10-10
    - Antigravity CLI 执行模式与 YOLO 权限免审 → 读 `12-`；
    - 降噪耳机人声掩蔽与专注音乐/环境声下载合成 → 读 `13-`；
    - Windows 窗口单手盲切与 AHK v2 Toggle 自动化 → 读 `14-`；
+   - python-docx 试卷与文档批量生成流水线、排版中文字体设置 → 读 `15-`；
    - 命中不明确时，先看 `SKILL-DRAFT.md` 的路由表再定；
-3. **扩充新知识**：按 `SKILL-DRAFT.md` 第 3 节的规范，以 `0N-中文描述.md` 顺次新增条目，并更新那里的路由表；
+3. **扩充新知识**：按 `SKILL-DRAFT.md` 第 3 节的规范，以 `0N-中文描述.md` 顺次新增条目（支持 Type A 排障型与 Type B 方案流水线型），并更新那里的路由表；
 4. **要求转正为自动技能时**：执行 `git mv kb-engineering-notes/SKILL-DRAFT.md kb-engineering-notes/SKILL.md`。
 
 ---

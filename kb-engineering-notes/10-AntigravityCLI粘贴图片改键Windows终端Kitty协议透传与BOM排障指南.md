@@ -48,7 +48,51 @@ description: Antigravity CLI (agy) 与 Pi 终端中修改「粘贴图片」快�
  └── 命中动作标识 edit.paste，从操作系统剪贴板提取图片并暂存上传
 ```
 
-### 2. Antigravity CLI 的按键系统与动作映射
+### 2. 核心机制解密：为什么改这个键能粘图片？（Key 与 Value 的本质）
+
+开发者最常见的困惑是：*“为什么给配置文件加了个键值对就能粘图片？普通按键不能粘，凭什么这个快捷键能粘？”*
+
+#### (1) Key 与 Value 不是普通标签，而是「函数入口」与「开门钥匙」
+
+在 `keybindings.json` 中：
+```json
+{
+  "edit.paste": ["alt+shift+v", "shift+alt+v", "ctrl+v"]
+}
+```
+- **右边的 Value（`"alt+shift+v"`）**：只是一个**触发信号（钥匙）**，告诉 CLI 捕获到哪个键盘字节序列时去调用相应功能；
+- **左边的 Key（`"edit.paste"`）**：是 CLI 源码中**写死的核心功能入口（Action ID）**。随便自定义一个 `"my.paste": "alt+shift+v"` 是完全无效的，因为 CLI 内部根本没有对应的处理函数。
+
+#### (2) `edit.paste` 内部在执行什么（剪贴板探针与位图落盘）
+
+`edit.paste` 背后绑定了一套完整的操作系统底层图形处理函数（内部枚举 `KeyPaste`）：
+
+```text
+用户按下 Alt + Shift + V
+       │
+       ▼
+CLI 命中 action: edit.paste
+       │
+       ▼
+调用 Windows Win32 剪贴板 API (OpenClipboard / GetClipboardData)
+       │
+   ┌───┴─────────────────────────────────────────┐
+   │ 探测：当前剪贴板中存在哪种数据格式？        │
+   └───┬─────────────────────────────────────┬───┘
+       ▼ 存在位图 (CF_DIB / CF_DIBV5 / 图像数据)   ▼ 仅有纯文本 (CF_UNICODETEXT)
+1. 从内存中提取原始图像二进制字节流            直接将字符串填入终端输入光标处
+2. 在本地持久化落盘为临时 .png 文件
+   (.gemini/antigravity-cli/.../.user_uploaded/)
+3. 向当前会话上下文自动挂载多模态图片附件！
+```
+
+#### (3) 为什么终端自带的 Ctrl+V 或其他键无法粘图片？
+
+1. **终端模拟器（Windows Terminal）的限制**：终端自带的粘贴（`PasteFromClipboard`）设计初衷是向终端输入输出管道（stdin）推送**纯字符流**。当剪贴板里是一张位图截图时，终端根本无法将其“打印”为字符，因此静默丢弃或毫无反应；
+2. **普通按键的限制**：普通按键只会向 CLI 发送字符的 ASCII/Unicode 码，不会主动触发操作系统的剪贴板访问接口；
+3. **改键的真实本质**：并不是改键“创造”了粘图功能，而是**为 CLI 底层早已实现的「剪贴板探针与图片落盘函数」，重新配了一把没有被系统和终端拦截的新钥匙**（从被抢占的 `Alt+V` 迁移到 `Alt+Shift+V`）。
+
+### 3. Antigravity CLI 的按键系统与动作映射
 
 通过对 `agy.exe`（Jetski 架构）逆向符号与源码可知：
 - **核心包**：`google3/third_party/jetski/cli/keybindings`。
@@ -61,7 +105,7 @@ description: Antigravity CLI (agy) 与 Pi 终端中修改「粘贴图片」快�
 > [!NOTE]
 > 若同时使用同生态的 `pi` Agent（`@earendil-works/pi-coding-agent`），其对应的粘贴图片动作 ID 为 **`app.clipboard.pasteImage`**，配置文件位于 `%USERPROFILE%\.pi\agent\keybindings.json`。
 
-### 3. Kitty CSI-u 协议计算原理
+### 4. Kitty CSI-u 协议计算原理
 
 传统 VT 100 编码通过单个控制字节或 `ESC + 字符` 表示修饰键，根本无法区分 `Shift+Alt+字母`。现代终端采用 **Kitty CSI-u** 协议表示复合修饰键：
 
@@ -72,7 +116,7 @@ $$\text{序列格式：}\quad \text{ESC}[<\text{按键码}>;<\text{修饰键位�
   - 当按下 <kbd>Alt</kbd> + <kbd>Shift</kbd> 时：$1 + 1 + 2 = 4$；
 - **计算结果**：`\u001b[118;4u`（即 `ESC[118;4u`）。
 
-### 4. PowerShell UTF-8 BOM 陷阱
+### 5. PowerShell UTF-8 BOM 陷阱
 
 - Windows PowerShell 5.1（默认 `powershell.exe`）的 `Set-Content` 和 `Out-File` 参数 `-Encoding UTF8` 会自动输出 `0xEF 0xBB 0xBF` 的 UTF-8 BOM 头。
 - Go 语言标准库 `encoding/json` 严格遵循 [RFC 8259](https://datatracker.ietf.org/doc/html/rfc8259)，规范规定 JSON 文本“MUST NOT”包含 BOM。遇到前置 `0xEF 0xBB 0xBF` 时，Go 解析器将其解码为 Unicode `\ufeff` 并抛出 `invalid character '\ufeff' looking for beginning of value`。
