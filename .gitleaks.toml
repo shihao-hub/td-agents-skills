@@ -1,0 +1,81 @@
+title = "domestic secret scanning rules"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "deepseek-api-key"
+description = "DeepSeek API Key"
+regex = '''sk-[a-f0-9]{32}'''
+keywords = ["sk-"]
+[ extinguisher = "" ]
+[ rules.allowlist ]
+regexes = ['''sk-(your-key-here|xxxx+|test|example|1234)''', '''os\.getenv''', '''process\.env''']
+
+[[rules]]
+id = "moonshot-kimi-api-key"
+description = "Moonshot Kimi API Key"
+regex = '''sk-[a-zA-Z0-9]{48}'''
+keywords = ["sk-"]
+[rules.allowlist]
+regexes = ['''sk-(your-key-here|xxxx+|test|example)''']
+
+[[rules]]
+id = "dashscope-api-key"
+description = "Alibaba DashScope API Key"
+regex = '''sk-[a-f0-9]{32}'''
+keywords = ["sk-", "dashscope", "qwen", "tongyi"]
+[rules.allowlist]
+regexes = ['''sk-(your-key-here|xxxx+|test|example)''']
+
+[[rules]]
+id = "zhipu-glm-api-key"
+description = "Zhipu GLM API Key (xxx.yyy)"
+regex = '''[a-zA-Z0-9]{32}\.[a-zA-Z0-9]{16,32}'''
+keywords = ["zhipu", "glm", "bigmodel"]
+[rules.allowlist]
+regexes = ['''example\.example''', '''xxxx+\.xxxx+''', '''your-key''']
+
+[[rules]]
+id = "minimax-api-key"
+description = "MiniMax API Key / JWT"
+regex = '''eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'''
+keywords = ["minimax", "eyJ"]
+[rules.allowlist]
+regexes = ['''eyJleGFtcGxl''']
+
+[[rules]]
+id = "minimax-group-key"
+description = "MiniMax GroupId style key"
+regex = '''(?i)minimax.{0,20}key.{0,5}[:=]\s*['"]?[A-Za-z0-9]{20,}['"]?'''
+keywords = ["minimax"]
+
+[[rules]]
+id = "baidu-qianfan-altak"
+description = "Baidu Qianfan ALTAK Token"
+regex = '''ALTAK-[A-Za-z0-9_-]{10,}'''
+keywords = ["ALTAK"]
+[rules.allowlist]
+regexes = ['''ALTAK-(test|example|xxxx+)''']
+
+[[rules]]
+id = "baichuan-api-key"
+description = "Baichuan API Key"
+regex = '''sk-[a-zA-Z0-9]{32}'''
+keywords = ["sk-", "baichuan"]
+[rules.allowlist]
+regexes = ['''sk-(your-key-here|xxxx+|test|example)''']
+
+[[rules]]
+id = "generic-db-uri-with-password"
+description = "Database URI with password"
+regex = '''(?i)(mysql|postgres|postgresql|mongodb|redis|mssql)://[^/\s:]+:[^/\s@]+@[^\s'"]+'''
+keywords = ["mysql://", "postgres://", "postgresql://", "mongodb://", "redis://"]
+[rules.allowlist]
+regexes = ['''://user:pass(word)?@''', '''://test:test@''', '''://example''']
+
+[[rules]]
+id = "generic-private-key"
+description = "PEM private key block"
+regex = '''-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----'''
+keywords = ["BEGIN PRIVATE KEY"]
