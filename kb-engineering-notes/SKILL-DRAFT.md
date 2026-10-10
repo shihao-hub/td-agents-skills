@@ -29,6 +29,7 @@ kb-engineering-notes/
 ├── 08-Windows下Java与Maven便携子目录配置及Zed任务调试集成指南.md # [Stage 2: 专项配置] 针对 Java/Maven 便携隔离、C 盘防膨胀与 Zed 任务调试
 ├── 09-Chrome手动关闭窗口固定标签丢失的SNSS会话快照解析与找回指南.md # [Stage 2: 专项抢救] 针对 SNSS 快照解析、独占锁规避与丢失窗口/固定标签找回
 ├── 10-AntigravityCLI粘贴图片改键Windows终端Kitty协议透传与BOM排障指南.md # [Stage 2: 专项配置] 针对 CLI 粘贴图片改键、Windows Terminal 扩展协议与 UTF-8 BOM 报错
+├── 11-Windows计划任务控制台委托闪窗排障与conhost无窗口注册指南.md # [Stage 2: 专项排障] 针对计划任务触发 WT 标签页闪窗（控制台委托 handoff）与无窗口任务手动注册
 └── ...（后续顺次扩充）
 ```
 
@@ -69,6 +70,8 @@ kb-engineering-notes/
 | Chrome「继续浏览上次打开的网页」只恢复了一个窗口，手动关闭的窗口（含固定标签页）整体找不回 | [`09-Chrome手动关闭窗口固定标签丢失的SNSS会话快照解析与找回指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/09-Chrome手动关闭窗口固定标签丢失的SNSS会话快照解析与找回指南.md) | 固定标签丢失, 只恢复一个窗口, 最近关闭, 继续浏览上次打开的网页 |
 | Chrome 的 Sessions 快照文件被锁无法读取（Device or resource busy / Permission denied），想不重启就解析会话数据、提取固定标签清单 | [`09-Chrome手动关闭窗口固定标签丢失的SNSS会话快照解析与找回指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/09-Chrome手动关闭窗口固定标签丢失的SNSS会话快照解析与找回指南.md) | Device or resource busy, Sessions, Session_, Tabs_, SNSS, cmd5, 固定标签清单 |
 | Antigravity CLI 或 Pi 终端中，粘贴图片快捷键 Alt+V 被占想改 Alt+Shift+V，改完终端没反应，或 keybindings.json 报 `invalid character '\ufeff'` | [`10-AntigravityCLI粘贴图片改键Windows终端Kitty协议透传与BOM排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/10-AntigravityCLI粘贴图片改键Windows终端Kitty协议透传与BOM排障指南.md) | 粘图片快捷键, edit.paste, app.clipboard.pasteImage, Alt+Shift+V, sendInput, 118;4u, Kitty CSI-u, ufeff, UTF-8 BOM, keybindings.json |
+| Windows 计划任务/定时脚本每次触发时，已运行的 Windows Terminal 里闪出一个空白 PowerShell 标签页（"弹终端"），任务"隐藏"属性与 `-WindowStyle Hidden` 都无效 | [`11-Windows计划任务控制台委托闪窗排障与conhost无窗口注册指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/11-Windows计划任务控制台委托闪窗排障与conhost无窗口注册指南.md) | 弹终端, 闪窗, WT 标签页闪现, 控制台委托, handoff, conhost --headless, PseudoConsoleWindow, -WindowStyle Hidden 无效 |
+| 需要一条命令手动注册/重配置"无窗口"计划任务（防止终端闪标签页），或任务目录搬移后动作路径失效 | [`11-Windows计划任务控制台委托闪窗排障与conhost无窗口注册指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/11-Windows计划任务控制台委托闪窗排障与conhost无窗口注册指南.md) | register_task.ps1, conhost --headless, New-ScheduledTaskAction, 手动配置, 幂等注册, $PSScriptRoot |
 
 ---
 
