@@ -2,7 +2,7 @@
 name: sh-user-skills
 description: |
   个人技能库总入口与分流器：用户只有一句模糊需求、或忘记技能名时，在此按关键词匹配并加载对应子技能 SOP。覆盖五域：
-  工程手记与避坑知识库（sh-engineering-notes 渐进式检索 kb-engineering-notes/ 38项单点排障/底层锁机制/环境配置）；
+  工程手记与避坑知识库（sh-engineering-notes 渐进式检索 kb-engineering-notes/ 单点排障/底层锁机制/环境配置）；
   开发与重构（后端系统设计、计划模式与计划/规格驱动、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、monorepo 提交推送、GitHub 仓库大扫除）；
   文档与交接（PRD/技术方案、书转 skill、跨 agent 交接、排障复盘）；
   检索与媒资归档（Everything 秒搜、抖音/B站/知乎下载、视频转写字幕、去水印、Office 提图、网页存档、飞书聊天与会话归档）；
@@ -69,7 +69,7 @@ updated: 2026-10-10
 
 | 技能名称 | 核心职责与功能（一句话） |
 | :--- | :--- |
-| `sh-engineering-notes` | 知识库：工程实战手记与避坑知识库 kb-engineering-notes/ 渐进式检索分流器（涵盖01~38项系统排障与底层机制）。点名使用 |
+| `sh-engineering-notes` | 知识库：工程实战手记与避坑知识库 kb-engineering-notes/ 渐进式检索分流器（涵盖系统排障、底层机制与实战流水线）。点名使用 |
 
 ### 🏗️ 系统设计与工程开发
 

@@ -1,7 +1,7 @@
 ---
 name: skill-engineering-notes
 description: |
-  工程实战手记、自动化流水线与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与双轨条目扩充规范（Type A 疑难排障 + Type B 工程实现/生成流水线），并列出当前 01–16 条覆盖的坑位、方案与关键词。当用户点名本文件、提到"工程手记/知识库/避坑指南"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境、Antigravity 粘图快捷键与 Kitty 协议透传、计划任务触发终端闪标签页（控制台委托 handoff）与 conhost 无窗口注册、降噪耳机人声掩蔽与音频下载、AutoHotkey 窗口单手盲切、python-docx 试卷变式题生成与东亚字体排版、Sublime Text Terminus 中文退格失效与侧边栏 PowerShell 扩展等问题时，先读本文件定位条目。
+  工程实战手记、自动化流水线与避坑知识库 kb-engineering-notes/ 的入口与查阅协议：讲清知识库定位、两级渐进式感知架构（先读内部 SKILL-DRAFT.md 路由表，再读编号条目）与双轨条目扩充规范（Type A 疑难排障 + Type B 工程实现/生成流水线），并建立系统级坑位与方案查阅协议。当用户点名本文件、提到"工程手记/知识库/避坑指南"，或正在处理 Git 跨提交整理、变基 Permission denied 文件锁、Rescheduled 队列挂起、Cursor/VS Code 预览与 YOLO 沙箱配置、Git Worktree 依赖隔离、uv 统一 Python 环境、Antigravity 粘图快捷键与 Kitty 协议透传、计划任务触发终端闪标签页（控制台委托 handoff）与 conhost 无窗口注册、降噪耳机人声掩蔽与音频下载、AutoHotkey 窗口单手盲切、python-docx 试卷变式题生成与东亚字体排版、Sublime Text Terminus 中文退格失效与侧边栏 PowerShell 扩展等问题时，先读本文件定位条目。
 version: 1.2.0
 created: 2026-10-08
 updated: 2026-10-10
@@ -27,7 +27,7 @@ updated: 2026-10-10
 知识库刻意分成两层，为的是"扫一眼就能判断要不要读"：
 
 1. **第一级｜元数据与路由（`kb-engineering-notes/SKILL-DRAFT.md`）**：定义技能名称与 description、维护"问题 → 条目"的路由表，是**唯一权威索引**；
-2. **第二级｜专项实战（`01-` ~ `15-` 编号条目）**：每个文件只深入解决一个核心痛点或交付方案，并自带 skill-creator 规范的 `name`/`description` frontmatter——即"条目即技能"的隐形形态，命名不改就永远不会被注册。
+2. **第二级｜专项实战（`0N-` 编号条目）**：每个文件只深入解决一个核心痛点或交付方案，并自带 skill-creator 规范的 `name`/`description` frontmatter——即"条目即技能"的隐形形态，命名不改就永远不会被注册。
 
 因此查阅顺序固定为：**本文件 → `SKILL-DRAFT.md` 路由表 → 命中的编号条目**。本文件第三节的清单只是速览，条目增删以 `SKILL-DRAFT.md` 为准，新增条目时不必须回来同步本表。
 
@@ -69,8 +69,9 @@ updated: 2026-10-10
    - python-docx 试卷与文档批量生成流水线、排版中文字体设置 → 读 `15-`；
    - Sublime Text Terminus 中文退格失效、侧边栏集成原生 PowerShell / WT → 读 `16-`；
    - 命中不明确时，先看 `SKILL-DRAFT.md` 的路由表再定；
-3. **扩充新知识**：按 `SKILL-DRAFT.md` 第 3 节的规范，以 `0N-中文描述.md` 顺次新增条目（支持 Type A 排障型与 Type B 方案流水线型），并更新那里的路由表；
-4. **要求转正为自动技能时**：执行 `git mv kb-engineering-notes/SKILL-DRAFT.md kb-engineering-notes/SKILL.md`。
+3. **扩充新知识**：按 `SKILL-DRAFT.md` 第 3 节的规范，以 `0N-中文描述.md` 顺次新增条目（支持 Type A 排障型与 Type B 方案流水线型），并更新内部路由表；
+4. **外部解耦原则**：知识库为自治生长体系，全量索引唯一维护在 `kb-engineering-notes/SKILL-DRAFT.md`。外部分流器（如 `sh-user-skills` 及 `sh-engineering-notes`）一律采用领域定性描述，严禁绑定条目总数或静态区间；新增条目无需向上同步修改父级描述；
+5. **要求转正为自动技能时**：执行 `git mv kb-engineering-notes/SKILL-DRAFT.md kb-engineering-notes/SKILL.md`。
 
 ---
 

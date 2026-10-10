@@ -9,7 +9,7 @@ updated: 2026-10-10
 # sh-engineering-notes：工程实战手记与避坑知识库导航
 
 > 本技能是 **`kb-engineering-notes/` 避坑知识库** 的渐进式感知入口与分流器。
-> 解决单点疑难排障、系统底层机制避坑、Windows 硬件与环境配置等 38+ 项硬核工程手记检索问题。
+> 解决单点疑难排障、系统底层机制避坑、Windows 硬件与环境配置等全量工程实战手记检索问题。
 
 ---
 
@@ -27,9 +27,9 @@ updated: 2026-10-10
 
 ---
 
-## 二、覆盖领域速览 (01 ~ 38)
+## 二、覆盖领域分类速览
 
-知识库当前已收录 **38 个专项实战条目**，涵盖：
+知识库持续沉淀专项实战条目（条目全量索引与动态路由见 `kb-engineering-notes/SKILL-DRAFT.md`），主要覆盖：
 - **Git 与版本控制** (01~03, 06, 27)：Sublime Merge 跨提交合并、Windows Git 变基 Permission Denied、Rescheduled 队列挂起、Git Worktree 依赖隔离、多账号 GitHub/GitLab 共存。
 - **IDE、编辑器与扩展** (04, 05, 08, 22~26, 30~34)：Cursor Markdown 预览与免审沙箱、VS Code 提交图、Zed 语言服务器下载与杀毒竞态、ACP 子进程池堆积、SQLite 会话恢复、LSP 白名单内存优化、Sublime 字体与右键菜单。
 - **命令行与终端** (10~12, 28, 32, 35~38)：Antigravity CLI 粘图改键 Kitty 协议、计划任务无窗口委托闪退、Antigravity CLI YOLO 免审配置、Atuin 历史命令同步、PowerShell 7 绿色部署、Pi 终端改键、Git Bash 终端切换。
