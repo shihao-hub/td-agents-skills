@@ -74,7 +74,7 @@ updated: 2026-10-10
 | Python 项目打包成免安装绿色版 | `sh-pystand-pack` |
 | C++ 编译报错／CMake 集成 Lua | `sh-cluacpp-build` |
 | 把这个能力沉淀成 skill／书转 skill | `sh-book2skill-sop`（书/文档）或 `skill-creator` |
-| antigravity cli 没有 yolo／cli 只有 plan 和 accept／agy permissions 怎么配 | `sh-agy-cli-permissions` |
+| antigravity cli 没有 yolo／cli 只有 plan 和 accept／agy config 或 permissions 怎么配 | `sh-agy-cli-permissions` |
 
 ### ⚡ 领域技能族路由器（二级分流）
 涉及特定垂直生态（Antigravity、飞书、Redis）时，由族路由器进一步按 8~28 个子领域精准下发：

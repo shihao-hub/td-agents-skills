@@ -1,14 +1,14 @@
 ---
 name: sh-agy-cli-permissions
 description: 配置：Antigravity CLI 模式辨析与免批 YOLO、Tool Permission 及规则表配置。点名使用
-version: 1.0.0
+version: 1.0.1
 created: 2026-10-10
 updated: 2026-10-10
 ---
 
 # Antigravity CLI 模式辨析与权限配置 (YOLO SOP)
 
-> 本技能解决在 Antigravity CLI (`agy`) 中“为什么没有 YOLO 模式”、“为什么模式栏只有 plan 和 accept”、“`/permissions` 为什么全是 0”、“如何实现无人值守全自动执行”等问题。
+> 本技能解决在 Antigravity CLI (`agy`) 中“为什么没有 YOLO 模式”、“为什么模式栏只有 plan 和 accept”、“`/permissions` 为什么全是 0”、“`/config` 面板怎么配置”、“如何实现无人值守全自动执行”等问题。
 
 ---
 
@@ -18,7 +18,7 @@ Antigravity CLI 将智能体的运作解耦为两个独立层级：
 
 | 层级 | 控制对象 | 可选值 | 说明 |
 | :--- | :--- | :--- | :--- |
-| **Agent Mode<br>（执行模式）** | 代码生成与文件修改策略 | • `default` (标准)<br>• `accept-edits` (界面简写为 accept)<br>• `plan` (只读规划) | 通过 `Shift + Tab` 或 `/settings` 切换。<br>`accept-edits` 只代表**自动合入代码 diff**，终端命令等危险工具**依然会弹窗确认**。 |
+| **Agent Mode<br>（执行模式）** | 代码生成与文件修改策略 | • `default` (标准)<br>• `accept-edits` (界面简写为 accept)<br>• `plan` (只读规划) | 通过 `Shift + Tab` 或 `/config`（旧版兼容 `/settings`）切换。<br>`accept-edits` 只代表**自动合入代码 diff**，终端命令等危险工具**依然会弹窗确认**。 |
 | **Permission Policy<br>（权限策略）** | 工具调用与系统命令审批 | • `request-review` (默认询问)<br>• `always-proceed` (全部自动放行)<br>• `proceed-in-sandbox` (沙箱自动放行) | 决定执行 Shell 命令、读写非工作区、访问网络时是否暂停等待人工审批。 |
 
 > **关键认知**：社区常说的 **“YOLO 模式”并不是一种 Agent Mode，而是一种 Permission Policy**（全自动免审）。因此在状态栏的模式切换列表里永远找不到名为 `yolo` 的模式。
@@ -55,9 +55,9 @@ function agy-yolo {
 
 ### 途径 2：在运行中的会话内配置（免重启）
 
-如果已经处于 `agy` 交互界面中，可通过配置面板开启：
+如果已经处于 `agy` 交互界面中，可通过配置面板开启（最新版本命令为 `/config`，兼容 `/settings`）：
 
-1. 在输入框输入 `/settings` 并回车；
+1. 在输入框输入 `/config`（或 `/settings`）并回车；
 2. **解除命令确认（关键）**：
    - 方向键移动到 **`Tool Permission`**（默认显示 `request-review`）；
    - 回车展开，选择 **`always-proceed`** 并确认；
@@ -105,7 +105,8 @@ Keyboard: ↑/↓ Navigate  ←/→ Switch View  a Add rule  e Edit rule  d/Dele
 
 | 现象 / 疑问 | 根因分析 | 解决措施 |
 | :--- | :--- | :--- |
-| **Shift+Tab 只有 plan 和 accept** | 状态栏切的是 Agent Mode（编辑模式），不是权限模式 | 接受编辑选 `accept`，命令免审通过 `--dangerously-skip-permissions` 或 `/settings` 的 `Tool Permission` 解决 |
+| **Shift+Tab 只有 plan 和 accept** | 状态栏切的是 Agent Mode（编辑模式），不是权限模式 | 接受编辑选 `accept`，命令免审通过 `--dangerously-skip-permissions` 或 `/config` 的 `Tool Permission` 解决 |
 | **选了 accept-edits 依然弹窗** | `accept-edits` 只放行文件修改，不放行 Shell 命令 | 见本文“途径 1”或“途径 2”，将 `Tool Permission` 设为 `always-proceed` |
-| **打开 /permissions 全是 0** | 这是精细化 ACL 过滤表，不是全局策略开关 | 如需全局 YOLO 无需在此逐条添加，直接在 `/settings` 切换全局策略即可 |
-| **需要跨工作区读写文件被拦截** | `Non-Workspace Access` 默认处于 `off` | 在 `/settings` 中将 `Non-Workspace Access` 设置为 `on` |
+| **打开 /permissions 全是 0** | 这是精细化 ACL 过滤表，不是全局策略开关 | 如需全局 YOLO 无需在此逐条添加，直接在 `/config` 切换全局策略即可 |
+| **命令用 /config 还是 /settings** | 最新版本主推 `/config`，`/settings` 为历史别名 | 推荐在交互输入框直接使用 `/config`，两者呼出相同配置界面 |
+| **需要跨工作区读写文件被拦截** | `Non-Workspace Access` 默认处于 `off` | 在 `/config` 中将 `Non-Workspace Access` 设置为 `on` |
