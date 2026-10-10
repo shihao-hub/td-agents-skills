@@ -1,6 +1,6 @@
 ---
 name: kb-docx-practice-generator
-description: 基于 python-docx 的试卷与教辅「举一反三」变式题自动化生成与精细排版指南：涵盖考点拆解映射、中西文字体分离(w:eastAsia)、页边距与行距控制、化学式与方程式排版、及批量自动化生成流水线。需批量生成试卷、Word 教辅或自动化排版时查阅。
+description: 基于 python-docx 的试卷与教辅「举一反三」变式题自动化生成与精细排版指南：涵盖多源逆向解析(PDF/DOCX)、考点拆解映射、中西文字体分离(w:eastAsia)、页边距与行距控制、化学式与方程式排版、及批量自动化生成流水线。需批量生成试卷、Word 教辅或自动化排版时查阅。
 ---
 
 # python-docx 自动化生成举一反三试卷与格式精细排版指南
@@ -22,7 +22,70 @@ description: 基于 python-docx 的试卷与教辅「举一反三」变式题自
 
 ---
 
-## 二、 排版引擎核心技术难点与剖析
+## 二、 前置步骤：异构输入源的逆向萃取模式（PDF / DOCX）
+
+在构建正向生成流水线之前，首要任务是从上游交付的**异构参考资料**（PDF 诊断题卷、样例 DOCX 排版模版）中提取出清洗后的文本、考点结构与排版基准。
+
+### 1. 异构源萃取器架构设计
+
+```text
+[诊断输入源]
+ ├── 原始诊断卷 (.pdf)    ──(PyMuPDF / fitz)──> 按页提取题干、化学式、图题描述纯文本
+ └── 参考模版卷 (.docx)   ──(python-docx)   ──> 逆向提取段落样式、大标题层级、表格/填空排版基准
+                                │
+                                ▼
+                     [考点拆解与变式题模型装配]
+                                │
+                                ▼
+                     [python-docx 精细排版渲染引擎]
+```
+
+### 2. 标准逆向萃取脚手架实现
+
+```python
+# -*- coding: utf-8 -*-
+"""
+多源输入逆向萃取器：从 PDF 题卷与 DOCX 样式样例中提取正文与表格结构
+"""
+
+import os
+import pymupdf  # PyMuPDF，纯 Python 高效 PDF 文本解析
+import docx
+
+
+def extract_pdf_pages_to_text(pdf_path, output_txt_path):
+    """提取 PDF 诊断卷各页纯文本，保留页码分界"""
+    doc = pymupdf.open(pdf_path)
+    with open(output_txt_path, "w", encoding="utf-8") as f:
+        for i, page in enumerate(doc):
+            text = page.get_text()
+            f.write(f"=== Page {i + 1} ===\n")
+            f.write(text)
+            f.write("\n")
+    doc.close()
+
+
+def extract_docx_structure_to_text(docx_path, output_txt_path):
+    """逆向提取 DOCX 参考样例中的全部段落与表格内容"""
+    d = docx.Document(docx_path)
+    with open(output_txt_path, "w", encoding="utf-8") as f:
+        # 1. 提取所有段落正文
+        for para in d.paragraphs:
+            if para.text.strip():
+                f.write(para.text + "\n")
+        # 2. 提取表格（如营养成分表、微观粒子表等）
+        for ti, table in enumerate(d.tables):
+            f.write(f"\n=== Table {ti + 1} ===\n")
+            for row in table.rows:
+                cells = [cell.text.strip() for cell in row.cells]
+                f.write(" | ".join(cells) + "\n")
+```
+
+- **核心价值**：避免人工手工复制粘贴格式错乱、遗漏题目；提取后的结构化纯文本可直接喂给大模型或题库接口生成同考点变式题。
+
+---
+
+## 三、 排版引擎核心技术难点与剖析
 
 在纯 Python 命令行或自动化流水线中，直接使用 `python-docx` 生成中文正规试卷时，常见以下底层格式与排版断层：
 
@@ -53,7 +116,7 @@ def set_run_font(run, font_name="宋体", font_size_pt=10.5, bold=False):
 
 ---
 
-## 三、 标准自动化生成流水线与代码实现
+## 四、 标准自动化生成流水线与代码实现
 
 以下为生成教学试卷的标准化 Python 脚本骨架与核心实现。
 
@@ -210,7 +273,7 @@ def generate_lesson_paper(paper_title, exam_data, out_filepath):
 
 ---
 
-## 四、 交付验证与工程扩展建议
+## 五、 交付验证与工程扩展建议
 
 ### 1. 质量检验与断言 SOP
 1. **进程与文件可读性**：生成完成后，使用 `docx.Document(filepath)` 重新加载，校验段落总数与关键大标题是否完整，确保无损坏的 XML 标签；
@@ -226,4 +289,4 @@ def generate_lesson_paper(paper_title, exam_data, out_filepath):
 
 ---
 
-**最后更新：** 2026-10-10
+**最后更新：** 2026-10-11
