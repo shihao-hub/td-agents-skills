@@ -97,9 +97,21 @@ updated: 2026-10-11
 
 ---
 
-### Layer 6: Windows 11 DefTerm 默认终端委托机制
-- 在 Windows 11 中，控制台子系统程序（如 `agy.exe`）在启动控制台会话时，会被内核的 **DefTerm（Default Terminal Application）** 机制自动接管并唤醒注册的终端。
-- 独立版与 Store 原版在 DefTerm 内部共享应用包名注册表键，因此独立版接管后，控制台委托同样自然生效。
+### Layer 6: Windows 11 DefTerm 默认终端委托与 CUI 瞬态生命周期机制（以 agy 为例）
+- **DefTerm 委托与为什么此前会弹出原版 WT**：  
+  在 Windows 11 中，控制台子系统程序（PE Subsystem = 3, CUI，如 `agy.exe`）如果在无现成终端宿主的环境下启动（如 Win+R、运行框、桌面快捷方式），会被内核的 **DefTerm（Default Terminal Application）** 与外壳协议调度接管。此前由于注册表 `App Paths\wt.exe` 与 PATH 被微软 Store 版绑定，DefTerm 会强行唤醒沙箱内的 Store 原版 WT；**在完成 Layer 4 & Layer 5 的抢占后，所有系统级终端呼叫均被严格重定向至独立免安装版，彻底阻断了原版 WT 的唤醒**。
+- **【核心排障认知：为什么外部启动 CLI 会“一闪而过”？】**：  
+  许多 CLI 工具（如 `agy`、`python` 等）本身是控制台进程，没有自己的 GUI 消息循环窗口。当从外部环境裸启动该进程时：
+  1. Windows 操作系统必须为其临时分配一个控制台宿主（如 `conhost.exe`）；
+  2. 控制台黑框瞬间弹出，CLI 进程启动；
+  3. 若命令执行完毕、或检测到无标准输入（TTY）管道重定向（非交互模式）而退出，**子进程生命周期即告终结**；
+  4. **Windows 内核机制：操作系统会在控制台子进程退出时立即销毁其宿主窗口**！肉眼看到的就是一个黑框“一闪而过”。
+- **【优雅方案：利用定制独立版 wt 实现常驻弹窗启动】**：  
+  若需要在运行框、桌面或脚本中一键唤起独立终端并保持交互窗口不退出，应通过接管后的 `wt.exe` 结合 PowerShell 的 `-NoExit` 参数启动：
+  ```powershell
+  wt.exe -d "D:\Users\language_projects" powershell -NoExit -Command "agy --conversation=<conversation-id>"
+  ```
+  这样既能确保窗口具备 `pure_dark` 定制质感图标，又能在命令执行完后始终驻留在 Shell 中。
 
 ---
 
@@ -205,3 +217,4 @@ uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_i
 | 右键菜单图标变了但点击仍开原版 | Nilesoft 的 `modify` 无法修改原有扩展的 `cmd` | 改用隐藏原版项（`vis.remove`）+ 动态 `item(...)` 接管的方案 |
 | 右键菜单图标迟迟不刷新 | Explorer 内存缓存了旧图标 | 在桌面按住 `Ctrl` 键同时鼠标右键，或重启 Explorer |
 | 任务栏仍显示原版图标 / 外部工具唤醒旧图标 | 1) 旧实例常驻且 WT 为单实例机制；2) 遗漏 102/103 资源组；3) Win11 图标缓存未离线清空 | 运行带 `--restart-explorer` 参数的脚本，引擎将全量烧录 101/102/103 并离线彻底清空 `iconcache_*.db`；在方便时重启一次终端即可彻底纯净 |
+| 外部启动器/运行框直接执行 CLI（如 `agy`）一闪而过 | CLI 程序属于 CUI 进程，裸启动后由于无现成 Shell 托管，执行完毕或转入后台时系统会销毁控制台宿主 | 改由独立版 `wt` 托管并带 `-NoExit`：`wt.exe -d "<目录>" powershell -NoExit -Command "agy ..."` |
