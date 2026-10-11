@@ -59,6 +59,7 @@ kb-engineering-notes/
 ├── 38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md # [Stage 2: 专项配置] 针对 opencode 思考档位与供应商迁移
 ├── 39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md # [Stage 2: 专项流水线] 针对无 API 事实核查与 DDG 逆向
 ├── 40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md # [Stage 2: 专项流水线] 针对面向对象 OOP 重构与设计模式演进落地
+├── 41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md # [Stage 2: 专项排障] 针对 Windows 跨盘单文件链接、Junction 与开发者模式符号链接
 └── ...（后续顺次扩充）
 ```
 
@@ -132,6 +133,8 @@ kb-engineering-notes/
 | Zed 的 opencode 插件思考档位失灵、服务进程断连或无法成功读取自定义 API 配置 | [`38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md) | Zed opencode, 思考档位, 供应商配置迁移, opencode 启动脚本 |
 | 需要核实「某个公开信息到底有没有/是什么」（如某公司内部工具名），手上只有终端、没有搜索 API，且担心把「我没查到」误当「不存在」 | [`39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md) | 公开信息核查, 到底有没有, 第一方信源, DuckDuckGo HTML, html.duckduckgo.com, uddg 解包, SERP 降级页, 假阴性, site: 收敛, 是不是不存在 |
 | 遗留系统代码腐化、大类长函数、嵌套分支过多，需进行面向对象 (OOP) 重构、消除条件分支、引入设计模式或提升工程内聚度 | [`40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md) | OOP 重构, 遗留代码, 代码坏味道, 接缝测试, 字符化测试, 策略模式, 工厂模式, 组合优于继承, 依赖倒置, 架构分层 |
+
+| Windows 下跨盘单文件软链接失败、Junction 报目录名称无效、硬链接禁止跨卷、或符号链接权限不足 (WinError 1314) | [`41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md) | Windows 软链接, Symlink, Junction 目录联接, mklink /H 硬链接, WinError 1314, 开发者模式, SeCreateSymbolicLinkPrivilege, 单文件跨盘链接 |
 
 ---
 
