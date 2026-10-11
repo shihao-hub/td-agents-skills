@@ -1,74 +1,146 @@
 ---
 name: skill-authoring-rules
 description: |
-  公共根级技能与族路由器的创作规范：目录结构与命名正则、description 的 1–1024 字符常驻预算、点名触发写法与反军备竞赛红线、正文渐进披露与 evals 产出要求，并说明本 harness 实际把哪些文件注册为技能。当你新建或改造根级技能、sh-* 族路由器，或需要判断某个能力该走公共规范还是个人沉淀类规范时使用。个人沉淀类技能（sh-user-skills/ 下的 sh-* 子技能）走 skill-user-authoring-rules，不要套用本规范。
-version: 1.0.0
+  技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记与回填闭环）、以及工程实战避坑知识库（卷三：kb-*/0N-*.md两级渐进式感知/Type A排障与Type B流水线双轨结构/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
+version: 2.0.0
 created: 2026-10-07
-updated: 2026-10-09
+updated: 2026-10-11
 ---
 
-# SKILL-AUTHORING-RULES：公共根级技能创作规范
+# SKILL-AUTHORING-RULES：技能与工程知识库创作总规范
 
-> 本文件约束**公共根级技能**与**族路由器本身**；个人沉淀类技能请改看 [SKILL-USER-AUTHORING-RULES.md](file:///D:/Users/language_projects/.agents/skills/SKILL-USER-AUTHORING-RULES.md)。
-> 使用模式前提：这类技能的 description 常驻每个会话的 system prompt，**用户点名调用即可，AI 不必自主触发**——写清"是什么"比写满"什么时候必须用"更划算。
-
-## 〇、先认清机制：这个 harness 把什么注册成技能
-
-动手前先确认落点，放错地方要么技能不生效，要么把 prompt 预算烧掉：
-
-| 形态 | 是否注册 | 说明 |
-|---|---|---|
-| `<skills-root>/<name>/SKILL.md` | ✅ | 只扫这一层，嵌套子目录不发现 |
-| `<skills-root>/SKILL-<NAME>.md`（根目录散装单文件）+ 合规 frontmatter | ✅ | 实测（2026-10-09）：补上 `name`/`description` 后立即以 `skill-<name>` 出现在技能目录里 |
-| 同目录但不带 frontmatter 的 `.md`（`GUIDE-*.md`、`plans-*.md`、未改造的 `SKILL-*.md`） | ❌ | 实测均未注册：没有 `name`/`description` 就不会进技能目录 |
-| 子目录里命名为 `SKILL-DRAFT.md` 等非 `SKILL.md` 的文件 | ❌ | 子目录扫描只认 `SKILL.md`；这是"内容合规但暂不注册"的写法（见 `kb-engineering-notes/`） |
-
-由此得到两条实操结论：
-
-- **想只沉淀文档、不占 prompt 预算**：别给根目录散装 `.md` 加 frontmatter，或者按 `SKILL-DRAFT.md` 的写法放进子目录；
-- **想知道某个技能有没有真正生效**：看它是否出现在会话的 available skills 列表里——文件写了不等于注册成功，frontmatter 缺字段会被静默跳过。
-
-## 一、硬约束（违反即加载失败或失效）
-
-| 约束 | 内容 | 为什么 |
-|---|---|---|
-| 目录结构 | `~/.agents/skills/<name>/SKILL.md`，只扫这一层，嵌套不发现 | 把多个子技能塞进一个目录不会逐个注册，只会剩族路由器一个入口 |
-| 命名 | 目录名 / `name` 字段 == 小写字母数字 + 单连字符，正则 `^[a-z0-9]+(-[a-z0-9]+)*$` | 引擎按此校验，非法名会被跳过 |
-| description | 1–1024 字符，单行或块状 YAML；**常驻每个会话的 system prompt——长度即每会话成本** | 超限会被截断（实测报 `[Skill conflicts] ... description exceeds 1024 characters`），尾部内容失联 |
-| 同步 | 只改 `~/.agents/skills` 一处；`~/.config/opencode/skills` 与 `~/.claude/skills` 是指向它的 Junction，自动跟随 | 三处各改一遍必然漂移 |
-
-## 二、description 规范（核心）
-
-description 是点名匹配与"用户说得不精确时能否被想起"的唯一依据，按下面五条写：
-
-1. **一句话功能语义**，目标 ≤70 字符（本次 23 条实测平均 ~55）
-2. **性质前缀**：装机类 `装机：`、配置类 `配置：`、排障类 `排障：`；任务类不加前缀，直接动词短语开头
-3. **保留核心关键词**：任务类保留任务语义（如"去水印/提字幕"），排障类保留症状词（如"401/登录失败/不生效"）——用户口语里冒出来的正是这些词
-4. **结尾固定**：`点名使用`
-5. **禁止**：触发词穷举、"必须使用本 skill"、"即使只说 X 也要触发"等军备竞赛语言——这类措辞既挤占预算，又会让模型对真实边界失去判断
-
-**示例**（好坏对比，取自 sh-pwsh7-install）：
-
-```
-❌ 在 Windows 上零影响安装 PowerShell 7.x（跨平台 pwsh）：ZIP 绿色版安装到用户目录……当用户提到安装/升级 PowerShell 7、pwsh、PS7……即使只说"装个新版 powershell"也应触发。
-✅ 装机：PowerShell 7 绿色版 ZIP 安装，零影响可卸干净。点名使用
-```
-
-**例外——主动触发类（auto）**：真正需要 AI 自主触发、影响功能开发流程的方法论/流程 skill（现有：sh-backend-design、sh-tech-doc-writing）不写"点名使用"，改为保留触发语义但**划清边界**："用户要 X 时使用；Y 场景不用"，同样禁止军备竞赛语言。新建此类需在 description 中明确正反边界各一句。
-
-## 三、正文结构惯例
-
-- 正文精炼（≤250 行），每个 skill 保持"可从头到尾执行"的 SOP 体或"可查阅"的手册体，二选一为主。
-  正文是每次触发都要读进上下文的，所以只留会被反复用到的内容。
-- 深度知识下沉 `references/`（按需加载，不占正文），可执行脚本放 `scripts/`。
-- 评测放 `evals/evals.json`：**任务式用例**（prompt = 用户视角的任务描述，expected_output = 正确执行结果），不写触发断言。
-  这类断言测的是"技能有没有被调用"，属 description 优化的范畴，放进用例只会让评测失真。
-
-## 四、创作流程（强制）
-
-**新建或大改这类 skill 时，必须调用 `skill-creator` skill 来编写、优化与评测**（含 description 按上述规范生成、evals 产出），不要手写 SKILL.md 后直接入库。本文档仅是规格约束，执行交给 skill-creator。
+> **单一真理来源（Single Source of Truth）声明**：  
+> 本文件为技能仓库（`~/.agents/skills/`）的**唯一权威创作与维护总规范**。统合了历史上的公共技能规则、个人子技能规则以及工程知识库协议。  
+> 核心目标：**在海量技能（50+）与持续生长的排障手记场景下，严守全局 System Prompt 预算，杜绝模型认知冲突与误触发，保证高频工作流的确定性执行。**
 
 ---
 
-**最后更新：** 2026-10-09
-**来源：** plans-01 与 sh-user-skills 收敛演进实践
+## 〇、机制先行：Harness 注册机制与落位分诊
+
+动手前先确认落位，放错地方要么技能失效，要么将全局 Prompt 预算烧穿或引起模型幻觉：
+
+| 物理落位形态 | 是否被 Harness 注册为全局技能 | 定位与适用场景 | 对应规范章节 |
+|---|:---:|---|---|
+| `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`） | **卷一** |
+| `~/.agents/skills/SKILL-<NAME>.md`（根散装文件 + frontmatter） | ✅ | **系统治理类单文件技能**（本文件 `SKILL-AUTHORING-RULES.md` 即属于此形态） | **卷一** |
+| `~/.agents/skills/sh-user-skills/<name>/README.md` | ❌ | **个人沉淀类子技能**：通过 `README.md` 命名避开全局自动扫描，由 `sh-user-skills` 按需通过 `view_file` 调入 | **卷二** |
+| `~/.agents/skills/<kb-dir>/0N-*.md`（知识库条目） | ❌ | **隐形技能 / 实战手记**：单点深度排障或工程实现，自带合规 frontmatter 但不命名为 `SKILL.md`，靠 `SKILL-DRAFT.md` 动态索引 | **卷三** |
+| `<kb-dir>/SKILL-DRAFT.md` | ❌ | **知识库母版 / 动态路由表**：草稿与二级分流器，转正时 `git mv` 为 `SKILL.md` | **卷三** |
+| 根目录下无 frontmatter 的 `.md`（`GUIDE-*`、`plans-*`） | ❌ | **纯文档与历史规划记事**：不参与任何技能注册 | - |
+
+### 🎯 落位三步分诊法
+1. **这是公共族路由器或全局核心枢纽吗？**  
+   👉 **是**：进入 **卷一**，建立 `<name>/SKILL.md`。
+2. **这是个人高频业务 SOP 或专属工作流，但无需污染每个日常会话吗？**  
+   👉 **是**：进入 **卷二**，收敛在 `sh-user-skills/<name>/README.md`，并在总分流器登记。
+3. **这是针对特定报错、环境底层机制或自动化排版流水线的实战手记/避坑指南吗？**  
+   👉 **是**：进入 **卷三**，按 `0N-*.md` 规整入 `kb-engineering-notes/`，绝不常驻全局。
+
+---
+
+## 卷一：公共根级技能与族路由器规范
+
+本卷约束位于 `~/.agents/skills/<name>/SKILL.md` 的全局根级技能及 `sh-*-skills` 族路由器。
+
+### 1. 物理约束与硬红线
+- **目录结构**：`~/.agents/skills/<name>/SKILL.md`，Harness 仅扫描此层，嵌套子目录不自动发现。
+- **命名规范**：目录名与 `name` 严格一致，纯小写字母数字与单连字符，正则 `^[a-z0-9]+(-[a-z0-9]+)*$`。
+- **description 预算红线**：**1~1024 字符**。超限即被 Harness 截断并报错 `[Skill conflicts] ... exceeds 1024 characters`，导致尾部技能在全局 Prompt 中失联。
+- **多端同步规范**：仅在 `D:\Users\language_projects\.agents\skills` 编辑；其他客户端目录（如 `~/.config/opencode/skills`、`~/.claude/skills`）为 Junction 软链，自动跟随，严禁多头修改。
+
+### 2. description 编写标准
+- **结构**：一句话功能语义（≤70 字符）+ 领域/性质前缀（如 `装机：`、`配置：`、`排障：`、`路由器：`）+ 核心关键词 + 结尾固定 `点名使用`。
+- **反军备竞赛红线**：严禁出现“必须调用本技能”、“即使只说 X 也要使用”等对抗性提示词；严禁穷举同义词堆砌字数。
+- **主动触发类（Auto）例外**：极少数需要 AI 自主根据上下文介入的方法论技能（如 `sh-backend-design`），不写“点名使用”，但必须显式划清正反边界（“用户需要 X 时使用；Y 场景不使用”）。
+
+### 3. 正文与评测
+- 正文保持精炼（≤250 行），遵循 SOP 体或速查手册体；深度背景下沉至 `references/`，辅助脚本放 `scripts/`。
+- 评测必须编写任务式用例 `evals/evals.json`，只测任务完成效果，不测触发率断言。
+
+---
+
+## 卷二：个人沉淀类子技能创作规范（sh-user-skills）
+
+本卷约束收敛在 `D:\Users\language_projects\.agents\skills\sh-user-skills/` 体系下的所有子技能。
+
+### 1. 核心机制：以 `README.md` 绝缘全局探测
+- **子技能入口**：`sh-user-skills/<name>/README.md`。**严禁命名为 `SKILL.md`**。
+- **激活模式**：仅供用户点名或经 `sh-user-skills` 语义分流命中后，由 AI 借助 `view_file` 按需读入执行，执行完毕即释放，永不占用常驻上下文。
+
+### 2. 子技能 README.md 标准结构
+顶部必须包含完整 YAML frontmatter：
+```yaml
+---
+name: sh-<name>
+description: 一句话功能语义，结尾固定点名使用。点名使用
+version: 1.0.0
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+```
+正文标准要素：
+- **版本与来源对照**；
+- **前置检查与环境准备**；
+- **分步执行 SOP**（命令原子化、可直接复用、步骤带校验）；
+- **常见踩坑与回滚指南**。
+
+### 3. 顶层分流器登记与闭环回填（SOP）
+新建或调整个人子技能时，**必须执行四步闭环**：
+1. **新建目录与文件**：创建 `sh-user-skills/<name>/README.md`，脚本入 `scripts/`，长文档入 `references/`。
+2. **总控表格登记**：在 `sh-user-skills/SKILL.md` 的对应分类表格追加一行 `| <name> | <一句话职责> |`。
+3. **口语映射补全**：在 `### 🗣️ 口语说法 -> 技能速查` 表格中补充典型的自然语言提问模式。
+4. **1024 字符校验与闭环回填**：若新技能引入了全新的业务领域，在顶层 description 对应分组补词，并执行 PowerShell 脚本实测验证字符数严格 `≤ 1024`：
+   ```powershell
+   $raw = Get-Content -Encoding UTF8 "D:\Users\language_projects\.agents\skills\sh-user-skills\SKILL.md" -Raw
+   ([regex]::Match($raw, '(?ms)^description: \|?\r?\n(.*?)^version:').Groups[1].Value).Length
+   ```
+
+---
+
+## 卷三：工程实战避坑知识库规范（kb-engineering-notes）
+
+本卷约束 `kb-engineering-notes/` 及其同类隐形工程知识库的建设与扩充。
+
+### 1. 两级渐进式感知架构
+为防止数十篇长篇排障文档撑爆上下文，知识库实行两级感知：
+1. **第一级（权威路由）**：`kb-engineering-notes/SKILL-DRAFT.md`，维护唯一的「问题/症状/报错关键词 -> 对应编号条目」映射表。
+2. **第二级（专项条目）**：`0N-*.md` 编号条目，每个条目针对单点技术痛点，AI 命中后使用 `view_file` 单篇加载。
+
+### 2. 双轨条目结构规范
+所有手记条目命名为 `0N-目标技术核心问题与解决目标.md`，编号顺延，且必须具备合规 frontmatter（`name: kb-<topic>`，不带序号，供未来转正）。正文严格执行双轨四段论：
+
+- **Type A：疑难排障型条目**：
+  1. `一、现象与报错直击`（贴出真实终端错误文本、exit code 或 UI 截图）；
+  2. `二、底层根因剖析`（讲透操作系统句柄锁、并发冲突、协议不兼容等机制）；
+  3. `三、标准抢救与修复 SOP`（原子化步骤、直接可贴命令）；
+  4. `四、验证与防复发闭环`（检查命令、规避建议）。
+- **Type B：方案与生成流水线型条目**：
+  1. `一、业务场景与生成需求`（输入源、生成目标与最终交付格式）；
+  2. `二、排版/技术难点与底层剖析`（底层引擎机制、XML/编码规范）；
+  3. `三、标准自动化流水线与代码实现`（可复用完整脚本骨架）；
+  4. `四、交付验证与扩展建议`（校验断言、复用 SOP）。
+
+### 3. 外部自治与解耦原则（核心契约）
+- **独立生长**：知识库为**完全自洽索引**体系，全量索引唯一维护在内部 `SKILL-DRAFT.md`。
+- **严禁向外耦合**：外部路由器（如 `sh-engineering-notes` 及顶层 `sh-user-skills`）统一采用领域定性描述，**严禁绑定条目总数或静态区间（如禁止写“38项”、“01~38”）**。
+- **新增条目免更新父级**：日常开发追加 `0N-*.md` 时，只需更新内部 `SKILL-DRAFT.md` 路由表，无需向上修改任何父级技能文件。
+
+### 4. 转正清单（条目独立为正式全局技能时）
+当某篇手记被频繁呼叫，需要转正为全局可调用的独立技能时：
+1. 新建 `<name>/` 目录，将条目改名为该目录下的 `SKILL.md`；
+2. 按卷一规范重写 description（≤70 字符，点名触发式）；
+3. 从知识库 `SKILL-DRAFT.md` 路由表中摘除该条目；
+4. 若整库转正，执行 `git mv kb-engineering-notes/SKILL-DRAFT.md kb-engineering-notes/SKILL.md`。
+
+---
+
+## 附录：创作合规性检查清单（Checklist）
+
+新建或修改任何技能/手记前，逐项勾选确认：
+- [ ] 属于哪一类？（卷一根级 / 卷二个人子技能 / 卷三知识库手记）
+- [ ] 命名是否符合对应正则？（根级 `^[a-z0-9-]+$`；用户技能 `^sh-[a-z0-9-]+$`；知识库 `0N-*.md`）
+- [ ] 引导文件名是否正确？（根级 `SKILL.md`；个人技能 `README.md`；知识库 `SKILL-DRAFT.md`）
+- [ ] description 是否存在军备竞赛词或冗余列表？
+- [ ] 顶层 `sh-user-skills/SKILL.md` 的 description 字符数是否严格 `≤ 1024`？
+- [ ] 是否违反了知识库外部解耦原则（有无写死条目数）？
+- [ ] 关联测试/执行命令是否已经过真实环境验证？

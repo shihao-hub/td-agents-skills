@@ -3,7 +3,7 @@ name: sh-user-skills
 description: |
   个人技能库总入口与分流器：用户只有一句模糊需求、或忘记技能名时，在此按关键词匹配并加载对应子技能 SOP。覆盖五域：
   工程手记与避坑知识库（sh-engineering-notes 渐进式检索 kb-engineering-notes/ 单点排障/底层锁机制/环境配置）；
-  开发与重构（后端系统设计、计划模式与计划/规格驱动、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、monorepo 提交推送、GitHub 仓库大扫除）；
+  开发与重构（后端系统设计、计划驱动与规格驱动工作流、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、monorepo 提交推送、GitHub 仓库大扫除）；
   文档与交接（PRD/技术方案、书转 skill、跨 agent 交接、排障复盘）；
   检索与媒资归档（Everything 秒搜、抖音/B站/知乎下载、视频转写字幕、去水印、Office 提图、网页存档、飞书聊天与会话归档）；
   另有飞书、Redis/Iris、antigravity 三个族路由器；用户直接点名 `sh-*` 子技能（含拼写近似）时也由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
@@ -55,7 +55,7 @@ updated: 2026-10-10
 | Python 项目打包成免安装绿色版 | `sh-pystand-pack` |
 | C++ 编译报错／CMake 集成 Lua | `sh-cluacpp-build` |
 | 把这个能力沉淀成 skill／书转 skill | `sh-book2skill-sop`（书/文档）或 `skill-creator` |
-| 只读规划探索／方案获批后再写代码 | `sh-claude-plan-mode` 或 `sh-plan-driven-development` |
+| 制定实施计划／只读规划方案／探索比选 | `sh-plan-driven-development`（支持默认交付 plans/ 与 --claude 探索规划） |
 
 ### ⚡ 领域技能族路由器（二级分流）
 
@@ -76,9 +76,8 @@ updated: 2026-10-10
 | 技能名称 | 核心职责与功能（一句话） |
 | :--- | :--- |
 | `sh-backend-design` | 后端系统设计：从需求分析到接口契约、表结构与工程分层全流程。点名使用 |
-| `sh-plan-driven-development` | 轻量规划执行工作流：澄清需求、调研并落盘单文件实施计划，获批后连续执行。点名使用 |
+| `sh-plan-driven-development` | 计划与规划模式总入口：统一分发实施交付计划（默认 kiro 单文件 plans/）、只读探索规划（--claude 方案比选与 Critical Files 对齐）并预留 agy/dsh。点名使用 |
 | `sh-spec-driven-development` | Spec 驱动开发工作流：按 feature/bug 分流产出需求设计与任务清单，逐份获批后执行。点名使用 |
-| `sh-claude-plan-mode` | 非平凡开发任务的计划模式：只读探索与澄清，方案获批后再实施。点名使用 |
 | `sh-oop-refactor` | 运用 OOP 思想与设计模式重构项目：代码坏味道诊断、接缝测试、架构方案到小步执行。点名使用 |
 | `sh-sql-query-builder` | 重构 SOP：把 SQLAlchemy Core 嵌套只读查询抽取为文本 SQL 模板+builder。点名使用 |
 | `sh-cluacpp-build` | C/C++/Lua 项目工具链与构建手册：LLVM/Ninja/MSVC、CMake Presets、FetchContent 集成 Lua。点名使用 |
