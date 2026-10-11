@@ -68,6 +68,7 @@ updated: 2026-10-10
    - Windows 窗口单手盲切与 AHK v2 Toggle 自动化 → 读 `14-`；
    - python-docx 试卷与文档批量生成流水线、排版中文字体设置 → 读 `15-`；
    - Sublime Text Terminus 中文退格失效、侧边栏集成原生 PowerShell / WT → 读 `16-`；
+   - 面向对象 OOP 重构 / 设计模式演进 / 遗留代码坏味道与大类长函数治理 → 读 `40-`；
    - 命中不明确时，先看 `SKILL-DRAFT.md` 的路由表再定；
 3. **扩充新知识**：按 `SKILL-DRAFT.md` 第 3 节的规范，以 `0N-中文描述.md` 顺次新增条目（支持 Type A 排障型与 Type B 方案流水线型），并更新内部路由表；
 4. **外部解耦原则**：知识库为自治生长体系，全量索引唯一维护在 `kb-engineering-notes/SKILL-DRAFT.md`。外部分流器（如 `sh-user-skills` 及 `sh-engineering-notes`）一律采用领域定性描述，严禁绑定条目总数或静态区间；新增条目无需向上同步修改父级描述；

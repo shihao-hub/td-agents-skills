@@ -57,6 +57,8 @@ kb-engineering-notes/
 ├── 36-Windows各Agent客户端终端机制与GitBash环境切换指南.md # [Stage 2: 专项配置] 针对各 Agent 终端机制与 Git Bash
 ├── 37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md # [Stage 2: 专项配置] 针对浏览器控制与 MCP 调试
 ├── 38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md # [Stage 2: 专项配置] 针对 opencode 思考档位与供应商迁移
+├── 39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md # [Stage 2: 专项流水线] 针对无 API 事实核查与 DDG 逆向
+├── 40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md # [Stage 2: 专项流水线] 针对面向对象 OOP 重构与设计模式演进落地
 └── ...（后续顺次扩充）
 ```
 
@@ -129,6 +131,7 @@ kb-engineering-notes/
 | opencode 需要通过 chrome-devtools-mcp 控制本机浏览器，遇到远程端口连不上或握手失败 | [`37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md) | chrome-devtools-mcp, 浏览器自动化控制, opencode 浏览器插件, 调试端口 |
 | Zed 的 opencode 插件思考档位失灵、服务进程断连或无法成功读取自定义 API 配置 | [`38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md) | Zed opencode, 思考档位, 供应商配置迁移, opencode 启动脚本 |
 | 需要核实「某个公开信息到底有没有/是什么」（如某公司内部工具名），手上只有终端、没有搜索 API，且担心把「我没查到」误当「不存在」 | [`39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md) | 公开信息核查, 到底有没有, 第一方信源, DuckDuckGo HTML, html.duckduckgo.com, uddg 解包, SERP 降级页, 假阴性, site: 收敛, 是不是不存在 |
+| 遗留系统代码腐化、大类长函数、嵌套分支过多，需进行面向对象 (OOP) 重构、消除条件分支、引入设计模式或提升工程内聚度 | [`40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md) | OOP 重构, 遗留代码, 代码坏味道, 接缝测试, 字符化测试, 策略模式, 工厂模式, 组合优于继承, 依赖倒置, 架构分层 |
 
 ---
 
