@@ -9,8 +9,9 @@
 #   - no visible Everything window (the user is not looking at the GUI)
 #   - no es.exe process in flight
 #   - last_use.txt is older than $idleMinutes
-#   - the process was not started after the last recorded activity
-#     (an instance started later was most likely launched manually -> leave it)
+#   - the process was not started after the last recorded activity, unless it
+#     is older than $protectHours (an instance started later was most likely
+#     launched manually -> leave it, but only for a grace period, not forever)
 
 # Native commands may emit stderr (e.g. IPC race); keep them non-terminating.
 $ErrorActionPreference = 'Continue'
@@ -20,6 +21,7 @@ $stateDir = Join-Path $env:APPDATA 'language_projects\sh-everything-search'
 $lastUseFile = Join-Path $stateDir 'last_use.txt'
 $logFile = Join-Path $stateDir 'idle_exit.log'
 $idleMinutes = 15
+$protectHours = 2
 $mainMinBytes = 50MB
 
 $main = Get-Process -Name Everything -ErrorAction SilentlyContinue |
@@ -36,13 +38,18 @@ $lastUse = [DateTime]::Parse(([System.IO.File]::ReadAllText($lastUseFile)).Trim(
 $idleActual = ([DateTime]::UtcNow - $lastUse).TotalMinutes
 if ($idleActual -lt $idleMinutes) { exit 0 }
 
+$protectExpired = $false
 try {
-    if ($main.StartTime.ToUniversalTime() -gt $lastUse) { exit 0 }
+    $startedAt = $main.StartTime.ToUniversalTime()
+    $protectExpired = ($startedAt -gt $lastUse) -and (([DateTime]::UtcNow - $startedAt).TotalHours -ge $protectHours)
+    if (-not $protectExpired) { exit 0 }
 } catch { exit 0 }
 
 & $esExe -exit *> $null
 if ($LASTEXITCODE -eq 0) {
     New-Item -ItemType Directory -Force -Path $stateDir | Out-Null
-    Add-Content -Path $logFile -Value ('{0} idle {1:N0} min -> exited' -f (Get-Date -Format o), $idleActual)
+    $tag = ''
+    if ($protectExpired) { $tag = ' (protect expired)' }
+    Add-Content -Path $logFile -Value ('{0} idle {1:N0} min -> exited{2}' -f (Get-Date -Format o), $idleActual, $tag)
 }
 exit 0
