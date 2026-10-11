@@ -1,8 +1,8 @@
 ---
 name: skill-authoring-rules
 description: |
-  技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记与回填闭环）、以及工程实战避坑知识库（卷三：kb-*/0N-*.md两级渐进式感知/Type A排障与Type B流水线双轨结构/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
-version: 2.0.0
+  技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/0N-*.md两级渐进式感知/Type A排障与Type B流水线双轨结构/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
+version: 2.1.0
 created: 2026-10-07
 updated: 2026-10-11
 ---
@@ -24,6 +24,7 @@ updated: 2026-10-11
 | `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`） | **卷一** |
 | `~/.agents/skills/SKILL-<NAME>.md`（根散装文件 + frontmatter） | ✅ | **系统治理类单文件技能**（本文件 `SKILL-AUTHORING-RULES.md` 即属于此形态） | **卷一** |
 | `~/.agents/skills/sh-user-skills/<name>/README.md` | ❌ | **个人沉淀类子技能**：通过 `README.md` 命名避开全局自动扫描，由 `sh-user-skills` 按需通过 `view_file` 调入 | **卷二** |
+| `~/.agents/skills/<name>/`（junction 链出，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的子技能**：需进全局清单的高频/关键入口（如 `sh-plan-driven-development`、`sh-engineering-notes`），用 `uv run expose_user_skill.py <name>` 生成，链接产物不入库 | **卷二·4** |
 | `~/.agents/skills/<kb-dir>/0N-*.md`（知识库条目） | ❌ | **隐形技能 / 实战手记**：单点深度排障或工程实现，自带合规 frontmatter 但不命名为 `SKILL.md`，靠 `SKILL-DRAFT.md` 动态索引 | **卷三** |
 | `<kb-dir>/SKILL-DRAFT.md` | ❌ | **知识库母版 / 动态路由表**：草稿与二级分流器，转正时 `git mv` 为 `SKILL.md` | **卷三** |
 | 根目录下无 frontmatter 的 `.md`（`GUIDE-*`、`plans-*`） | ❌ | **纯文档与历史规划记事**：不参与任何技能注册 | - |
@@ -52,6 +53,11 @@ updated: 2026-10-11
 - **结构**：一句话功能语义（≤70 字符）+ 领域/性质前缀（如 `装机：`、`配置：`、`排障：`、`路由器：`）+ 核心关键词 + 结尾固定 `点名使用`。
 - **反军备竞赛红线**：严禁出现“必须调用本技能”、“即使只说 X 也要使用”等对抗性提示词；严禁穷举同义词堆砌字数。
 - **主动触发类（Auto）例外**：极少数需要 AI 自主根据上下文介入的方法论技能（如 `sh-backend-design`），不写“点名使用”，但必须显式划清正反边界（“用户需要 X 时使用；Y 场景不使用”）。
+- **路由器与知识库入口例外（关键词集群形态）**：`sh-user-skills`、族路由器与知识库入口（如 `sh-engineering-notes`）不适用首款模板（显式豁免“≤70 字符 + 点名使用”结尾）；其 description 允许并鼓励采用「定位语 + 用户真实会说的症状词/报错词/工具名关键词集群 + 触发或兜底说明」形态，用于启发式分流与主动查阅，**不视为“同义词堆砌”**；反军备竞赛红线仍然有效（禁对抗性触发语、禁无信息量重复）。此类 description 还须满足：
+  - 关键词密度优先，不写长句铺陈，只写用户可能原样说出的词；
+  - 分流器保留“点名 `sh-*` 子技能（含拼写近似）兜底解析”条款；知识库入口写明“报出症状即优先查阅”的触发语（属主动触发类，不写“点名使用”）；
+  - 严格 ≤1024 字符，并按卷二第 3 节命令实测校验；
+  - 严禁绑定条目总数或静态编号区间（沿用卷三外部解耦原则）。
 
 ### 3. 正文与评测
 - 正文保持精炼（≤250 行），遵循 SOP 体或速查手册体；深度背景下沉至 `references/`，辅助脚本放 `scripts/`。
@@ -94,6 +100,21 @@ updated: YYYY-MM-DD
    $raw = Get-Content -Encoding UTF8 "D:\Users\language_projects\.agents\skills\sh-user-skills\SKILL.md" -Raw
    ([regex]::Match($raw, '(?ms)^description: \|?\r?\n(.*?)^version:').Groups[1].Value).Length
    ```
+
+### 4. 提级暴露机制（expose_user_skill）
+
+子技能默认隐形；当某技能需要进入全局技能清单（高频点名，或需要常驻关键词钩子，如知识库入口 `sh-engineering-notes`）时，在仓库根执行：
+
+```powershell
+uv run expose_user_skill.py <name> --check   # 预演
+uv run expose_user_skill.py <name>           # 实跑
+```
+
+脚本把 `sh-user-skills/<name>/` 以链接方式暴露为根级 `~/.agents/skills/<name>/`：`README.md` 改名链出为 `SKILL.md`，其余内容原名链出；`.gitkeep` 与 `.gitignore` 占位入库，链接产物不入库。暴露后：
+
+- 该技能 description 进入全局 prompt，此后遵守卷一对根级技能的全部约束（≤1024、关键词集群规范等）；
+- 真身仍在 `sh-user-skills/<name>/`，**一切修改只动真身**；改后重跑脚本（`--check` 探测链接失联）；
+- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`sh-engineering-notes`。
 
 ---
 
@@ -140,7 +161,7 @@ updated: YYYY-MM-DD
 - [ ] 属于哪一类？（卷一根级 / 卷二个人子技能 / 卷三知识库手记）
 - [ ] 命名是否符合对应正则？（根级 `^[a-z0-9-]+$`；用户技能 `^sh-[a-z0-9-]+$`；知识库 `0N-*.md`）
 - [ ] 引导文件名是否正确？（根级 `SKILL.md`；个人技能 `README.md`；知识库 `SKILL-DRAFT.md`）
-- [ ] description 是否存在军备竞赛词或冗余列表？
+- [ ] description 是否存在军备竞赛词或对抗性触发语？（路由器/知识库入口的关键词集群不视为“冗余列表”）
 - [ ] 顶层 `sh-user-skills/SKILL.md` 的 description 字符数是否严格 `≤ 1024`？
 - [ ] 是否违反了知识库外部解耦原则（有无写死条目数）？
 - [ ] 关联测试/执行命令是否已经过真实环境验证？
