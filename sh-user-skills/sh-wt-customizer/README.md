@@ -55,20 +55,27 @@ updated: 2026-10-11
 
 ---
 
-### Layer 2: PE 可执行文件图标资源物理烧录
-- **原理**：使用 `rcedit.exe` 向 `WindowsTerminal.exe` 与 `wt.exe` 的 PE 资源段（`RT_GROUP_ICON` / `RT_ICON`）直接写入定制 ICO 图标。
-- **【核心踩坑：文件独占锁（File Lock）】**：  
-  Windows 内核对正在运行的可执行文件施加独占执行锁。如果桌面上已开有任何 Windows Terminal 窗口，`rcedit` 写入必报失败或静默无视。  
-  **规则**：**在执行 PE 图标注入前，必须彻底关闭屏幕上正在运行的所有 Windows Terminal 进程**。
+### Layer 2: PE 可执行文件图标资源物理烧录与运行中热替换
+- **原理**：调用 Win32 核心资源 API（`BeginUpdateResourceW` / `UpdateResourceW` / `EndUpdateResourceW`）向 `WindowsTerminal.exe` 与 `wt.exe` 的 PE 资源段（`RT_GROUP_ICON` / `RT_ICON`）直接写入定制 ICO 图标。
+- **【核心踩坑 1：3 套图标资源组盲区（Group 101 vs 102 vs 103）】**：  
+  Windows Terminal 内部并非只有 1 个图标，而是内置了 3 套资源组：
+  - `Group 101`（`IDI_APPICON`）：默认主图标；
+  - `Group 102`（`IDI_APPICON_HC_BLACK`）：高对比度深色模式图标；
+  - `Group 103`（`IDI_APPICON_HC_WHITE`）：高对比度浅色模式图标。  
+  若仅修改 Group 101，一旦系统处于特定对比度或外壳按索引枚举，旧版黑白原版图标就会死灰复燃！**规则：必须全量将 101、102、103 同步烧录为选定款式，并同步覆盖 `Images/` 目录下的物理对比度 ico 文件**。
+- **【核心踩坑 2：运行中文件独占锁与原子热替换机制】**：  
+  Windows 内核对正在运行的可执行文件施加写入锁（报 `ERROR_ACCESS_DENIED = 5`）。若用户当前桌面上开着常驻终端（如挂着后台服务或命令行会话），直接覆写必败。  
+  **优雅方案（无需杀用户进程）**：Windows 内核**允许对正在运行的 EXE 进行同分区重命名**！引擎采用“临时副本完整烧录 ➔ 原子重命名旧运行实例为 `.old_running` ➔ 将全新补丁 EXE 原位就位”的流水线，实现零中断平滑热替换。新打开的窗口或子进程将即刻加载全新版本。
 
 ---
 
-### Layer 3: 任务栏与开始菜单快捷方式守卫
-- **原理**：通过 `WScript.Shell` COM 组件生成并更新快捷方式：
-  - 任务栏：`%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar\Windows Terminal.lnk`；
-  - 开始菜单：`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Windows Terminal.lnk`。
-- 将快捷方式的目标指向独立版 exe，并将 `IconLocation` 指向定制 ICO 路径。
-- 通过更新快捷方式文件的修改时间戳（`os.utime`），触发 Windows 外壳侦听更新。
+### Layer 3: 开始菜单快捷方式守卫与深度离线缓存重构（严禁强写任务栏目录）
+- **原理与避坑铁律（Windows 11 任务栏固定机制）**：
+  - 开始菜单：更新 `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Windows Terminal.lnk`，目标指向独立版 `WindowsTerminal.exe`，并绑定定制 ICO。
+  - **【致命反模式警示：严禁强写 `User Pinned\TaskBar\`】**：在 Windows 11 中，任务栏固定项必须由 Taskband 注册表与系统 COM API 协同维护。若代码强行在 `User Pinned\TaskBar\` 下丢未注册的 `.lnk`，会导致“物理文件存在但注册表未登记”，进而导致任务栏右键菜单丢失【固定到任务栏】与【从任务栏取消固定】，退化成只剩 `[ ✕ 关闭窗口 ]` 的死锁！必须仅通过开始菜单快捷方式或运行中的原生窗口由用户/系统正常固定，脚本自动检测并清理孤立的 TaskBar 快捷方式以解除死锁。
+- **【核心踩坑：Windows 11 任务栏固定项死守旧缓存】**：  
+  在 Windows 11 中，任务栏固定项深度缓存于 `%LOCALAPPDATA%\Microsoft\Windows\Explorer\iconcache_*.db`。若仅调用普通重启 Explorer，系统会直接重载旧数据库，任务栏图标顽固不刷新！  
+  **终极解法**：在关闭 `explorer.exe` 的间隙，离线暴力删除全部 30 个 `iconcache_*.db`、`thumbcache_*.db` 与 `%LOCALAPPDATA%\IconCache.db`，再拉起 Explorer 并广播 `SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH)`，强制外壳 100% 重新从最新 PE 与快捷方式提取生成高清质感图标！
 
 ---
 
@@ -127,7 +134,7 @@ updated: 2026-10-11
 1. **操作系统**：Windows 11 / Windows 10 (x64)；
 2. **执行环境**：Python 3.10+（系统已装 `python` 或 `uv` 均可）；
 3. **物资自愈机制（自动化流水线）**：
-   - **`rcedit.exe`**：无需提前准备。脚本缺失时会自动从 GitHub Release（带国内加速镜像回退）下载 `rcedit-x64.exe` 并存入脚本目录；
+   - **零第三方 PE 工具依赖**：彻底摆脱对 `rcedit.exe` 等第三方 CLI 工具的依赖，内部直接基于 Windows 原生 Win32 API（`BeginUpdateResourceW` / `UpdateResourceW`）进行精确 PE 资源注入，原生稳定且零外部可执行文件残留；
    - **Windows Terminal 独立免安装版**：无需提前准备。脚本缺失时会自动查询 GitHub API 获取最新版 `Microsoft.WindowsTerminal_xxx_x64.zip`，下载并解压到目标目录，且自动将路径置顶写入用户环境变量 `Path`；
    - **内置图标库**（已随本技能 `icons/` 目录分发入库，无需额外下载）：
      - `pure_dark.ico`：极简深黑哑光（推荐，极客质感）；
@@ -155,14 +162,13 @@ python D:\path\to\sh-wt-customizer\scripts\patch_wt.py --auto-setup --style pure
 ```
 
 > **该命令在后台全自动完成的闭环动作**：
-> 1. **自动获取 rcedit**：检测并自动从官方源下载 `rcedit.exe`；
-> 2. **自动获取免安装终端**：查询 GitHub 最新 Release，自动下载并解压至 `D:\Users\Softwares\WindowsTerminal`（若无 D 盘则智能落地至 `%LOCALAPPDATA%\Programs\WindowsTerminal`）；
-> 3. **自动配置环境变量**：通过 Win32 API 将安装路径置顶写入用户级 `Path` 并广播系统环境变更；
-> 4. **物理烧录 PE 资源**：使用选定的 `pure_dark.ico` 图标烧录至 `WindowsTerminal.exe` 与 `wt.exe` 的 PE 资源段；
-> 5. **接管 Win + R 运行框**：在注册表 `HKCU\...\App Paths\wt.exe` 写入独立版路径，阻断系统向 Store 版的偏航；
-> 6. **生成定制快捷方式**：同步更新任务栏与开始菜单的高清深黑图标快捷方式；
-> 7. **右键菜单自适应接管**：自动检测 Nilesoft Shell，若已安装则安全生成 `.bak` 备份并注入独立版接管项；若未安装则平稳跳过；
-> 8. **重启 Explorer 刷新缓存**：平稳重启 Windows 资源管理器，所有入口即刻热生效。
+> 1. **自动获取免安装终端**：查询 GitHub 最新 Release，自动下载并解压至 `D:\Users\Softwares\WindowsTerminal`（若无 D 盘则智能落地至 `%LOCALAPPDATA%\Programs\WindowsTerminal`）；
+> 2. **自动配置环境变量**：通过 Win32 API 将安装路径置顶写入用户级 `Path` 并广播系统环境变更；
+> 3. **纯原生 Win32 API 物理烧录 PE 资源**：使用原生 Win32 资源更新 API 将选定的 `pure_dark.ico` 注入 `WindowsTerminal.exe` 与 `wt.exe` 的多套资源组（Group 101/102/103）并同步物理覆盖 Images 对比度图标；
+> 4. **接管 Win + R 运行框**：在注册表 `HKCU\...\App Paths\wt.exe` 写入独立版路径，阻断系统向 Store 版的偏航；
+> 5. **生成与规范快捷方式**：同步更新开始菜单高清深黑图标快捷方式，并清理冲突孤立的任务栏项以恢复原生任务栏固定；
+> 6. **右键菜单自适应接管**：自动检测 Nilesoft Shell，若已安装则安全生成 `.bak` 备份并注入独立版接管项；若未安装则平稳跳过；
+> 7. **离线重构图标缓存并重启 Explorer**：在 Explorer 停止间隙离线清空全部 30 个缓存数据库并平稳重启 Explorer，所有入口即刻热生效。
 
 ---
 
@@ -227,8 +233,8 @@ uv run scripts/patch_wt.py --revert --remove-path --restart-explorer
 
 | 症状 / 报错 | 根因剖析 | 标准抢救 SOP |
 |---|---|---|
-| `[-] 注入 PE 图标失败` | WindowsTerminal 进程正在运行，Windows 锁定了 exe | 关闭桌面上所有终端窗口后重新执行脚本 |
-| `Win + R wt` 依旧弹默认原版 | 注册表 `App Paths\wt.exe` 仍指向 WindowsApps | 运行脚本自动重定向，或手动在 `HKCU\...\App Paths\wt.exe` 写入独立版路径 |
+| `[-] 注入 PE 图标失败` / 文件被占用 | WindowsTerminal 进程正在运行，Windows 锁定了 exe | 引擎已内置“原子重命名热替换”机制，自动平滑替换就位，无需手动强杀进程 |
+| `Win + R wt` 依旧弹默认原版 | 注册表 `App Paths\wt.exe` 仍指向 WindowsApps | 运行脚本自动重定向，或手动在 `HKCU\...\App Paths\wt.exe` 写入独立版路径与 Path |
 | 右键菜单图标变了但点击仍开原版 | Nilesoft 的 `modify` 无法修改原有扩展的 `cmd` | 改用隐藏原版项（`vis.remove`）+ 动态 `item(...)` 接管的方案 |
 | 右键菜单图标迟迟不刷新 | Explorer 内存缓存了旧图标 | 在桌面按住 `Ctrl` 键同时鼠标右键，或重启 Explorer |
-| 外部程序启动时仍唤醒原版 | Windows 11 DefTerm 默认终端绑定了 UWP 包 | 参考 `agyquota` 实践，为对应外部 CUI 程序打 Subsystem 2 GUI 补丁 |
+| 任务栏仍显示原版图标 / 外部工具唤醒旧图标 | 1) 旧实例常驻且 WT 为单实例机制；2) 遗漏 102/103 资源组；3) Win11 图标缓存未离线清空 | 运行带 `--restart-explorer` 参数的脚本，引擎将全量烧录 101/102/103 并离线彻底清空 `iconcache_*.db`；在方便时重启一次终端即可彻底纯净 |

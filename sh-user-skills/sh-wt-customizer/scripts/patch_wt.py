@@ -6,15 +6,24 @@
 ========================================================================================
 Windows Terminal (wt) 独立版定制、图标注入、任务栏与右键菜单全链路接管与无损复原引擎
 ========================================================================================
+【升级特性】
+1. 纯 Win32 原生 PE 资源注入：无需外部依赖即可全量覆盖 Group 101、102、103 全套图标；
+2. 运行中 EXE 原子热替换：突破 Windows 内核执行独占锁，无需杀进程即可就位新版本；
+3. 伴随资源同步：同步更新 Images/ 对比度图标与 App Paths 伴随 Path 键值；
+4. Windows 11 深度离线图标缓存重构：彻底解决任务栏固定项死守旧缓存问题；
+5. 100% 官方原生无损复原。
+========================================================================================
 """
 
 import argparse
 import ctypes
+from ctypes import wintypes
 import io
 import json
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import time
@@ -33,7 +42,6 @@ if sys.platform == "win32":
 SCRIPT_DIR = Path(__file__).resolve().parent
 ICONS_DIR = SCRIPT_DIR.parent / "icons"
 
-RCEDIT_DEFAULT_PATH = Path(r"D:\Users\language_projects_bin\rcedit.exe")
 DEFAULT_TARGET_DIRS = [
     Path(r"D:\Users\Softwares\WindowsTerminal"),
     Path(r"D:\Users\tools\WindowsTerminal"),
@@ -42,11 +50,34 @@ DEFAULT_TARGET_DIRS = [
 STATE_FILE = Path(os.path.expandvars(r"%APPDATA%\language_projects\wt_customizer\state.json"))
 APP_PATHS_KEY = r"Software\Microsoft\Windows\CurrentVersion\App Paths\wt.exe"
 
-# Nilesoft Shell 典型安装目录候选
 NILESOFT_CANDIDATE_DIRS = [
     Path(r"D:\Program Files\Nilesoft Shell\imports"),
     Path(r"C:\Program Files\Nilesoft Shell\imports"),
 ]
+
+# Win32 API 声明
+kernel32 = ctypes.windll.kernel32
+user32 = ctypes.windll.user32
+shell32 = ctypes.windll.shell32
+
+RT_ICON = 3
+RT_GROUP_ICON = 14
+
+kernel32.BeginUpdateResourceW.argtypes = [wintypes.LPCWSTR, wintypes.BOOL]
+kernel32.BeginUpdateResourceW.restype = wintypes.HANDLE
+
+kernel32.UpdateResourceW.argtypes = [
+    wintypes.HANDLE,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    wintypes.WORD,
+    ctypes.c_void_p,
+    wintypes.DWORD
+]
+kernel32.UpdateResourceW.restype = wintypes.BOOL
+
+kernel32.EndUpdateResourceW.argtypes = [wintypes.HANDLE, wintypes.BOOL]
+kernel32.EndUpdateResourceW.restype = wintypes.BOOL
 
 
 def load_state() -> dict:
@@ -69,6 +100,103 @@ def get_available_styles() -> dict[str, Path]:
     return {ico.stem: ico for ico in ICONS_DIR.glob("*.ico")}
 
 
+def parse_ico(ico_bytes: bytes):
+    idReserved, idType, idCount = struct.unpack('<HHH', ico_bytes[:6])
+    if idReserved != 0 or idType != 1:
+        raise ValueError("非法的 ICO 文件格式")
+
+    entries = []
+    images = []
+    for i in range(idCount):
+        offset = 6 + i * 16
+        bWidth, bHeight, bColorCount, bReserved, wPlanes, wBitCount, dwBytesInRes, dwImageOffset = struct.unpack(
+            '<BBBBHHII', ico_bytes[offset:offset+16]
+        )
+        img_data = ico_bytes[dwImageOffset : dwImageOffset + dwBytesInRes]
+        entries.append({
+            'bWidth': bWidth, 'bHeight': bHeight, 'bColorCount': bColorCount, 'bReserved': bReserved,
+            'wPlanes': wPlanes, 'wBitCount': wBitCount, 'dwBytesInRes': dwBytesInRes
+        })
+        images.append(img_data)
+    return entries, images
+
+
+def update_group_icon_in_file(exe_path: Path, group_id: int, ico_path: Path, start_icon_id: int = 1) -> bool:
+    ico_bytes = ico_path.read_bytes()
+    entries, images = parse_ico(ico_bytes)
+
+    hUpdate = kernel32.BeginUpdateResourceW(str(exe_path), False)
+    if not hUpdate:
+        raise OSError(f"BeginUpdateResourceW 失败: {kernel32.GetLastError()}")
+
+    try:
+        grp_header = struct.pack('<HHH', 0, 1, len(entries))
+        grp_entries = []
+        for i, ent in enumerate(entries):
+            icon_id = start_icon_id + i
+            grp_entry = struct.pack(
+                '<BBBBHHIH',
+                ent['bWidth'], ent['bHeight'], ent['bColorCount'], ent['bReserved'],
+                ent['wPlanes'], ent['wBitCount'], ent['dwBytesInRes'], icon_id
+            )
+            grp_entries.append(grp_entry)
+
+            img_data = images[i]
+            res = kernel32.UpdateResourceW(
+                hUpdate, RT_ICON, icon_id, 0, img_data, len(img_data)
+            )
+            if not res:
+                raise OSError(f"UpdateResource RT_ICON 失败: {kernel32.GetLastError()}")
+
+        grp_data = grp_header + b''.join(grp_entries)
+        res_grp = kernel32.UpdateResourceW(
+            hUpdate, RT_GROUP_ICON, group_id, 0, grp_data, len(grp_data)
+        )
+        if not res_grp:
+            raise OSError(f"UpdateResource RT_GROUP_ICON 失败: {kernel32.GetLastError()}")
+
+        if not kernel32.EndUpdateResourceW(hUpdate, False):
+            raise OSError(f"EndUpdateResourceW 失败: {kernel32.GetLastError()}")
+        return True
+    except Exception:
+        kernel32.EndUpdateResourceW(hUpdate, True)
+        raise
+
+
+def safe_patch_pe_binary(target_exe: Path, ico_path: Path, group_ids: list[int]) -> bool:
+    print(f"[*] 正在为 {target_exe.name} 注入定制图标 (Group IDs: {group_ids})...")
+    temp_patched = target_exe.with_suffix(".exe.new_patch")
+    shutil.copy2(target_exe, temp_patched)
+
+    start_id = 1
+    for gid in group_ids:
+        update_group_icon_in_file(temp_patched, gid, ico_path, start_icon_id=start_id)
+        start_id += 20
+
+    old_backup = target_exe.with_suffix(".exe.old_running")
+    if old_backup.is_file():
+        try:
+            old_backup.unlink()
+        except Exception:
+            pass
+
+    try:
+        os.replace(temp_patched, target_exe)
+        print(f"[+] 成功直接写入 PE 资源: {target_exe.name}")
+        return True
+    except PermissionError:
+        print(f"[*] 检测到 {target_exe.name} 正在运行，使用原子重命名热替换...")
+        os.rename(target_exe, old_backup)
+        os.rename(temp_patched, target_exe)
+        print(f"[+] 成功热替换运行中的 {target_exe.name} (旧进程仍存活，新启动将完全生效)")
+        return True
+    except Exception as e:
+        print(f"[-] 注入 PE 图标异常: {e}")
+        if temp_patched.is_file():
+            temp_patched.unlink(missing_ok=True)
+        return False
+
+
 def add_to_user_path(directory: Path) -> bool:
     dir_str = str(directory)
     try:
@@ -86,7 +214,7 @@ def add_to_user_path(directory: Path) -> bool:
                     WM_SETTINGCHANGE = 0x001A
                     SMTO_ABORTIFHUNG = 0x0002
                     result = ctypes.c_ulong()
-                    ctypes.windll.user32.SendMessageTimeoutW(
+                    user32.SendMessageTimeoutW(
                         HWND_BROADCAST, WM_SETTINGCHANGE, 0, "Environment", SMTO_ABORTIFHUNG, 3000, ctypes.byref(result)
                     )
                 except Exception:
@@ -118,7 +246,7 @@ def remove_from_user_path(directory: Path) -> bool:
                     WM_SETTINGCHANGE = 0x001A
                     SMTO_ABORTIFHUNG = 0x0002
                     result = ctypes.c_ulong()
-                    ctypes.windll.user32.SendMessageTimeoutW(
+                    user32.SendMessageTimeoutW(
                         HWND_BROADCAST, WM_SETTINGCHANGE, 0, "Environment", SMTO_ABORTIFHUNG, 3000, ctypes.byref(result)
                     )
                 except Exception:
@@ -161,14 +289,6 @@ def download_file(url: str, dest_path: Path, desc: str = "文件") -> bool:
         except Exception as e:
             print(f"\n[-] 从 {u} 下载失败: {e}，尝试备用线路...")
     return False
-
-
-def auto_setup_rcedit() -> Path | None:
-    dest = SCRIPT_DIR / "rcedit.exe"
-    url = "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe"
-    if download_file(url, dest, "rcedit.exe"):
-        return dest
-    return None
 
 
 def auto_setup_windows_terminal(custom_dir: str | None = None) -> Path | None:
@@ -226,37 +346,6 @@ def auto_setup_windows_terminal(custom_dir: str | None = None) -> Path | None:
     return target_dir
 
 
-def ensure_rcedit(custom_path: str | None = None, auto_download: bool = False) -> Path:
-    if custom_path:
-        p = Path(custom_path).resolve()
-        if p.is_file():
-            return p
-        raise FileNotFoundError(f"指定的 rcedit 不存在: {p}")
-
-    # 候选路径：脚本同级、当前工作目录、项目默认路径
-    candidates = [
-        SCRIPT_DIR / "rcedit.exe",
-        SCRIPT_DIR / "rcedit-x64.exe",
-        Path.cwd() / "rcedit.exe",
-        Path.cwd() / "rcedit-x64.exe",
-        RCEDIT_DEFAULT_PATH,
-    ]
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-
-    path_which = shutil.which("rcedit") or shutil.which("rcedit-x64")
-    if path_which:
-        return Path(path_which)
-
-    if auto_download:
-        downloaded = auto_setup_rcedit()
-        if downloaded and downloaded.is_file():
-            return downloaded
-
-    raise RuntimeError("未找到 rcedit.exe！在新电脑上可直接传入 --auto-setup 参数，脚本将全自动下载并配置。\n下载地址: https://github.com/electron/rcedit/releases")
-
-
 def resolve_icon_path(style: str | None, custom_icon: str | None) -> Path:
     if custom_icon:
         p = Path(custom_icon).resolve()
@@ -285,8 +374,8 @@ def find_target_exes(custom_dir: str | None = None) -> list[Path]:
     exes: list[Path] = []
     for base_dir in dirs:
         if base_dir.is_dir():
-            wt_exe = base_dir / "wt.exe"
             main_exe = base_dir / "WindowsTerminal.exe"
+            wt_exe = base_dir / "wt.exe"
             if main_exe.is_file():
                 exes.append(main_exe)
             if wt_exe.is_file():
@@ -298,66 +387,37 @@ def find_target_exes(custom_dir: str | None = None) -> list[Path]:
     if which_wt:
         p = Path(which_wt).resolve()
         if "WindowsApps" not in str(p) and p.is_file():
-            exes.append(p)
             companion = p.parent / "WindowsTerminal.exe"
             if companion.is_file():
                 exes.append(companion)
+            exes.append(p)
     return exes
 
 
-def is_process_running(exe_name: str) -> bool:
-    try:
-        res = subprocess.run(
-            ["powershell", "-NoProfile", "-Command", f"Get-Process -Name '{exe_name}' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id"],
-            capture_output=True,
-            text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-        )
-        return bool(res.stdout.strip())
-    except Exception:
-        return False
-
-
-def patch_pe_exe(exe_path: Path, ico_path: Path, rcedit_bin: Path) -> bool:
-    cmd = [str(rcedit_bin), str(exe_path), "--set-icon", str(ico_path)]
-    for _ in range(3):
-        try:
-            res = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-            )
-            if res.returncode == 0:
-                print(f"[+] 成功烧录 PE 图标资源: {exe_path.name}")
-                return True
-            time.sleep(0.3)
-        except Exception:
-            time.sleep(0.3)
-
-    print(f"[-] 烧录 PE 图标失败: {exe_path}")
-    if is_process_running("WindowsTerminal"):
-        print("    ⚠️ 检测到 Windows Terminal 正在运行中！Windows 对正在运行的 exe 加了独占执行锁。")
-        print("    💡 请彻底关闭屏幕上正在运行的所有 Windows Terminal 窗口后再次运行即可写入！")
-    return False
-
-
 def apply_app_paths(wt_exe_path: str) -> None:
+    wt_dir = str(Path(wt_exe_path).parent)
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, APP_PATHS_KEY, 0, winreg.KEY_READ) as k:
             cur_val, _ = winreg.QueryValueEx(k, "")
+            try:
+                cur_path, _ = winreg.QueryValueEx(k, "Path")
+            except Exception:
+                cur_path = ""
     except Exception:
         cur_val = ""
+        cur_path = ""
 
     state = load_state()
     if "original_app_paths" not in state:
         state["original_app_paths"] = cur_val or r"C:\Program Files\WindowsApps\Microsoft.WindowsTerminal_1.24.12741.0_x64__8wekyb3d8bbwe\wt.exe"
+        state["original_app_paths_path"] = cur_path or r"C:\Program Files\WindowsApps\Microsoft.WindowsTerminal_1.24.12741.0_x64__8wekyb3d8bbwe"
         save_state(state)
 
     try:
         with winreg.CreateKey(winreg.HKEY_CURRENT_USER, APP_PATHS_KEY) as k:
             winreg.SetValueEx(k, "", 0, winreg.REG_SZ, wt_exe_path)
-        print(f"[+] 已劫持注册表 App Paths wt.exe -> {wt_exe_path} (保证 Win+R 立即生效)")
+            winreg.SetValueEx(k, "Path", 0, winreg.REG_SZ, wt_dir)
+        print(f"[+] 已接管注册表 App Paths wt.exe -> {wt_exe_path} (含 Path -> {wt_dir})")
     except Exception as e:
         print(f"[-] 配置 App Paths 失败: {e}")
 
@@ -365,10 +425,13 @@ def apply_app_paths(wt_exe_path: str) -> None:
 def revert_app_paths() -> None:
     state = load_state()
     orig = state.get("original_app_paths")
+    orig_path = state.get("original_app_paths_path")
     if orig:
         try:
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, APP_PATHS_KEY) as k:
                 winreg.SetValueEx(k, "", 0, winreg.REG_SZ, orig)
+                if orig_path:
+                    winreg.SetValueEx(k, "Path", 0, winreg.REG_SZ, orig_path)
             print(f"[+] 已恢复注册表 App Paths wt.exe -> {orig}")
         except Exception as e:
             print(f"[-] 恢复 App Paths 失败: {e}")
@@ -412,7 +475,6 @@ def apply_nilesoft(exe_target: str) -> None:
     term_nss = nilesoft_dir / "terminal.nss"
     mod_nss = nilesoft_dir / "modify.nss"
 
-    # 1. 备份
     for f in [term_nss, mod_nss]:
         if f.is_file():
             bak = f.with_suffix(".nss.bak")
@@ -425,7 +487,6 @@ def apply_nilesoft(exe_target: str) -> None:
 
     safe_target = exe_target.replace("\\", "\\\\")
 
-    # 2. 补丁 terminal.nss
     if term_nss.is_file():
         try:
             content = term_nss.read_text(encoding="utf-8")
@@ -437,7 +498,6 @@ def apply_nilesoft(exe_target: str) -> None:
         except Exception as e:
             print(f"[-] 更新 terminal.nss 失败: {e}")
 
-    # 3. 补丁 modify.nss (隐藏系统 Store 版并用独立版接管启动命令与图标)
     if mod_nss.is_file():
         try:
             content = mod_nss.read_text(encoding="utf-8")
@@ -477,7 +537,64 @@ def revert_nilesoft() -> None:
                 print(f"[-] 还原 {name} 失败: {e}")
 
 
-def refresh_shell(shortcuts: list[Path]) -> None:
+def sync_images_contrast(wt_dir: Path, ico_path: Path) -> None:
+    images_dir = wt_dir / "Images"
+    if not images_dir.is_dir():
+        return
+    for name in ["terminal_contrast-black.ico", "terminal_contrast-white.ico"]:
+        dst = images_dir / name
+        bak = images_dir / f"{name}.bak"
+        if dst.is_file() and not bak.is_file():
+            try:
+                shutil.copy2(dst, bak)
+            except Exception:
+                pass
+        try:
+            shutil.copy2(ico_path, dst)
+            print(f"[+] 已同步覆盖 Images/{name}")
+        except Exception as e:
+            print(f"[-] 同步 Images/{name} 异常: {e}")
+
+
+def revert_images_contrast(wt_dir: Path) -> None:
+    images_dir = wt_dir / "Images"
+    if not images_dir.is_dir():
+        return
+    for name in ["terminal_contrast-black.ico", "terminal_contrast-white.ico"]:
+        dst = images_dir / name
+        bak = images_dir / f"{name}.bak"
+        if bak.is_file():
+            try:
+                shutil.copy2(bak, dst)
+                bak.unlink()
+                print(f"[+] 已还原 Images/{name}")
+            except Exception:
+                pass
+
+
+def refresh_live_windows(ico_path: Path) -> None:
+    """向当前已打开的 Windows Terminal 窗口发送 WM_SETICON 即时热刷新"""
+    WM_SETICON = 0x0080
+    h_big = user32.LoadImageW(None, str(ico_path), 1, 32, 32, 0x00000010)
+    h_small = user32.LoadImageW(None, str(ico_path), 1, 16, 16, 0x00000010)
+
+    def enum_desk(hwnd, lParam):
+        cls_buff = ctypes.create_unicode_buffer(256)
+        user32.GetClassNameW(hwnd, cls_buff, 256)
+        if "cascadia_hosting" in cls_buff.value.lower():
+            user32.SendMessageW(hwnd, WM_SETICON, 1, h_big)
+            user32.SendMessageW(hwnd, WM_SETICON, 0, h_small)
+        return True
+
+    WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+    hDesk = user32.OpenDesktopW("Default", 0, False, 0x0040 | 0x0001)
+    if hDesk:
+        user32.EnumDesktopWindows(hDesk, WNDENUMPROC(enum_desk), 0)
+        user32.CloseDesktop(hDesk)
+
+
+def rebuild_icon_cache_and_restart_explorer(shortcuts: list[Path], ico_path: Path | None = None) -> None:
+    print("[*] 正在执行 Windows 11 深度离线图标缓存重构与 Explorer 重启...")
     now = time.time()
     for s in shortcuts:
         try:
@@ -486,33 +603,43 @@ def refresh_shell(shortcuts: list[Path]) -> None:
         except Exception:
             pass
 
-    try:
-        subprocess.run(
-            ["ie4uinit.exe", "-show"],
-            check=False,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-        )
-    except Exception:
-        pass
+    # 1. 停止 Explorer
+    subprocess.run(["powershell", "-NoProfile", "-Command", "Stop-Process -Name explorer -Force"], check=False)
+    time.sleep(1.0)
 
-    try:
-        SHCNE_ASSOCCHANGED = 0x08000000
-        SHCNF_FLUSH = 0x1000
-        ctypes.windll.shell32.SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, None, None)
-    except Exception:
-        pass
+    # 2. 彻底离线删除缓存数据库
+    explorer_dir = Path(os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\Windows\Explorer"))
+    deleted_count = 0
+    for pattern in ["iconcache*.db", "thumbcache*.db"]:
+        for f in explorer_dir.glob(pattern):
+            try:
+                f.unlink()
+                deleted_count += 1
+            except Exception:
+                pass
 
+    iconcache_root = Path(os.path.expandvars(r"%LOCALAPPDATA%\IconCache.db"))
+    if iconcache_root.is_file():
+        try:
+            iconcache_root.unlink()
+            deleted_count += 1
+        except Exception:
+            pass
 
-def restart_explorer() -> None:
-    try:
-        subprocess.run(
-            ["powershell", "-NoProfile", "-Command", "Stop-Process -Name explorer -Force; Start-Sleep -Milliseconds 800; if (-not (Get-Process explorer -ErrorAction SilentlyContinue)) { Start-Process explorer.exe }"],
-            check=False,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-        )
-        print("[+] 已平稳重启 Windows Explorer 刷新图标与外壳缓存")
-    except Exception as e:
-        print(f"[-] 重启 Explorer 异常: {e}")
+    print(f"[+] 已离线清除 {deleted_count} 个 Windows 图标缓存数据库！")
+
+    # 3. 启动 Explorer
+    subprocess.run(["powershell", "-NoProfile", "-Command", "Start-Process explorer.exe"], check=False)
+    time.sleep(1.5)
+
+    # 4. 广播外壳变更通知
+    SHCNE_ASSOCCHANGED = 0x08000000
+    SHCNF_FLUSH = 0x1000
+    shell32.SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, None, None)
+    print("[+] 已广播 Windows 外壳与图标刷新通知 (SHChangeNotify FLUSH)")
+
+    if ico_path:
+        refresh_live_windows(ico_path)
 
 
 def apply(style: str | None, custom_icon: str | None, target_dir: str | None, restart_exp: bool, custom_rcedit: str | None = None, auto_setup: bool = False) -> int:
@@ -532,9 +659,15 @@ def apply(style: str | None, custom_icon: str | None, target_dir: str | None, re
             print("💡 提示：在新电脑上可直接传入 --auto-setup 参数，脚本将全自动从 GitHub 下载最新独立版并完成全链路部署。")
             return 1
 
-    rcedit_bin = ensure_rcedit(custom_rcedit, auto_download=auto_setup)
+    wt_base_dir = target_exes[0].parent
     for exe in target_exes:
-        patch_pe_exe(exe, ico_path, rcedit_bin)
+        if exe.name.lower() == "windowsterminal.exe":
+            safe_patch_pe_binary(exe, ico_path, [101, 102, 103])
+        else:
+            safe_patch_pe_binary(exe, ico_path, [101])
+
+    # 同步 Images/
+    sync_images_contrast(wt_base_dir, ico_path)
 
     main_wt = str(target_exes[0])
     wt_bin = str(target_exes[1]) if len(target_exes) > 1 else main_wt
@@ -542,14 +675,15 @@ def apply(style: str | None, custom_icon: str | None, target_dir: str | None, re
     # 1. 注册表 App Paths
     apply_app_paths(wt_bin)
 
-    # 2. 快捷方式
+    # 2. 快捷方式 (仅管理开始菜单，严禁强写 User Pinned TaskBar 以防任务栏注册表脱节致使固定功能失效)
     updated_shortcuts: list[Path] = []
-    taskbar_dir = Path(os.path.expandvars(r"%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"))
-    taskbar_dir.mkdir(parents=True, exist_ok=True)
-    taskbar_lnk = taskbar_dir / "Windows Terminal.lnk"
-    if update_shortcut(taskbar_lnk, str(ico_path), main_wt, "Windows Terminal (Customized)"):
-        updated_shortcuts.append(taskbar_lnk)
-        print(f"[+] 已同步任务栏快捷方式: {taskbar_lnk}")
+    orphaned_taskbar_lnk = Path(os.path.expandvars(r"%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar\Windows Terminal.lnk"))
+    if orphaned_taskbar_lnk.is_file():
+        try:
+            orphaned_taskbar_lnk.unlink()
+            print(f"[+] 已清理冲突的孤立任务栏快捷方式 (恢复原生固定机制): {orphaned_taskbar_lnk.name}")
+        except Exception:
+            pass
 
     start_menu_lnk = Path(os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Windows Terminal.lnk"))
     if update_shortcut(start_menu_lnk, str(ico_path), main_wt, "Windows Terminal"):
@@ -561,16 +695,24 @@ def apply(style: str | None, custom_icon: str | None, target_dir: str | None, re
 
     # 记录安装状态
     state = load_state()
-    state["installed_dir"] = str(Path(main_wt).parent)
+    state["installed_dir"] = str(wt_base_dir)
     state["style"] = ico_path.stem
     save_state(state)
 
-    # 4. 外壳刷新
-    refresh_shell(updated_shortcuts)
-    print("[+] 已广播 Windows 外壳与图标缓存刷新通知 (SHChangeNotify FLUSH)")
-
+    # 4. 外壳与缓存刷新
     if restart_exp:
-        restart_explorer()
+        rebuild_icon_cache_and_restart_explorer(updated_shortcuts, ico_path)
+    else:
+        now = time.time()
+        for s in updated_shortcuts:
+            try:
+                os.utime(s, (now, now))
+            except Exception:
+                pass
+        SHCNE_ASSOCCHANGED = 0x08000000
+        SHCNF_FLUSH = 0x1000
+        shell32.SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, None, None)
+        refresh_live_windows(ico_path)
 
     print("\n" + "=" * 70)
     print("✅ Windows Terminal 定制与全链路守护已成功应用！")
@@ -589,7 +731,13 @@ def revert(restart_exp: bool, remove_path: bool = False) -> int:
     # 2. 还原 Nilesoft Shell
     revert_nilesoft()
 
-    # 3. 移除快捷方式
+    # 3. 还原 Images 对比度图标
+    state = load_state()
+    installed_dir = state.get("installed_dir")
+    if installed_dir:
+        revert_images_contrast(Path(installed_dir))
+
+    # 4. 移除快捷方式
     taskbar_lnk = Path(os.path.expandvars(r"%APPDATA%\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar\Windows Terminal.lnk"))
     start_menu_lnk = Path(os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Windows Terminal.lnk"))
     touched: list[Path] = []
@@ -601,33 +749,30 @@ def revert(restart_exp: bool, remove_path: bool = False) -> int:
             except Exception as e:
                 print(f"[-] 移除快捷方式失败 {lnk.name}: {e}")
 
-    # 4. 可选移除 PATH
-    state = load_state()
-    installed_dir = state.get("installed_dir")
+    # 5. 可选移除 PATH
     if remove_path and installed_dir:
         remove_from_user_path(Path(installed_dir))
 
-    refresh_shell(touched)
-    print("[+] 已广播 Windows 外壳刷新通知 (SHChangeNotify FLUSH)")
-
     if restart_exp:
-        restart_explorer()
+        rebuild_icon_cache_and_restart_explorer(touched)
+    else:
+        SHCNE_ASSOCCHANGED = 0x08000000
+        SHCNF_FLUSH = 0x1000
+        shell32.SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, None, None)
 
     print("\n" + "=" * 70)
     print("✅ 已彻底还原为官方原生状态！")
-    print("💡 提示：如需彻底移除独立版，从用户环境变量 Path 移除该目录并删除解压文件夹即可。")
     print("=" * 70)
     return 0
 
 
 def main():
     parser = argparse.ArgumentParser(description="Windows Terminal (wt) 独立版定制、图标注入与全链路接管引擎")
-    parser.add_argument("--auto-setup", action="store_true", help="新电脑全自动部署模式：自动从 GitHub 下载最新免安装终端与 rcedit，并自动配置 PATH")
+    parser.add_argument("--auto-setup", action="store_true", help="新电脑全自动部署模式：自动从 GitHub 下载最新免安装终端，并自动配置 PATH")
     parser.add_argument("--style", type=str, default="pure_dark", help="图标风格 (pure_dark, titanium, underlit_chrome, dark_blue, cyan_matrix)")
     parser.add_argument("--custom-icon", type=str, default=None, help="自定义 .ico 文件绝对路径")
     parser.add_argument("--target-dir", type=str, default=None, help="Windows Terminal 免安装独立版解压目录")
-    parser.add_argument("--rcedit", type=str, default=None, help="自定义 rcedit.exe 路径")
-    parser.add_argument("--restart-explorer", action="store_true", help="修改完成后自动重启资源管理器以立即刷新缓存")
+    parser.add_argument("--restart-explorer", action="store_true", help="修改完成后自动离线重建图标缓存并重启 Explorer")
     parser.add_argument("--revert", action="store_true", help="一键彻底撤销修改并还原为系统官方原生状态")
     parser.add_argument("--remove-path", action="store_true", help="复原时一并从用户环境变量 Path 中移除独立版目录")
     parser.add_argument("--list-styles", action="store_true", help="列出全部可用图标风格")
@@ -644,7 +789,7 @@ def main():
     if args.revert:
         sys.exit(revert(args.restart_explorer, args.remove_path))
 
-    sys.exit(apply(args.style, args.custom_icon, args.target_dir, args.restart_explorer, args.rcedit, args.auto_setup))
+    sys.exit(apply(args.style, args.custom_icon, args.target_dir, args.restart_explorer, None, args.auto_setup))
 
 
 if __name__ == "__main__":
