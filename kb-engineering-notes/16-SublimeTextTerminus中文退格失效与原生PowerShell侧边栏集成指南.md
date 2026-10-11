@@ -1,6 +1,6 @@
 ---
 name: kb-sublime-terminus-powershell
-description: Sublime Text 终端插件 Terminus 中文输入吞字/光标错位、Backspace 无法退格删除、右键侧边栏默认启动 CMD 假借 PowerShell 外壳的底层根因剖析，以及内置终端轻量化治愈与原生英文侧边栏一键拉起 Windows Terminal/PowerShell 的双轨集成实战 SOP。
+description: Sublime Text 终端插件 Terminus 中文输入吞字/光标错位、Backspace 无法退格删除、右键侧边栏默认启动 CMD 假借 PowerShell 外壳的底层根因剖析，以及内置终端轻量化治愈、原生英文侧边栏经 PATH 优先解析拉起独立定制版 Windows Terminal/PowerShell 的双轨集成实战 SOP。
 ---
 
 # Sublime Text Terminus 中文退格失效与原生 PowerShell 侧边栏集成指南
@@ -71,6 +71,21 @@ Sublime Text 是顶级的文本排版编辑器，但**不是原生的终端仿�
 Windows 11 引入了“默认终端应用程序（Default Terminal Application）”的全局委托机制：
 - 当一个程序请求启动传统的 `cmd.exe` 控制台子系统时，操作系统不再拉起旧版的 `conhost.exe` 黑框，而是自动将其托管到 **Windows Terminal**（`wt.exe`）的多标签页窗口内；
 - 很多开发者习惯将 Windows Terminal 称为“PowerShell 窗口”（因为其首个标签页通常是 PowerShell）。当看到 Windows Terminal 外壳弹出来、但里面的提示符却是 `C:\Users\xxx>` 时，就会产生“为什么我的 PowerShell 变成了 CMD”的错觉。
+
+### 5. 独立免安装版 WT 接管后的新现实：机器上不止一个 `wt.exe`
+
+执行过自定义图标 / 任务栏守卫（见 `sh-wt-customizer`）的机器上，磁盘里同时躺着**两个 `wt.exe`**：
+
+| 身份 | 本机路径 | 性质 |
+|:---|:---|:---|
+| **独立定制版（真身）** | `D:\Users\Softwares\WindowsTerminal\wt.exe` | 官方 GitHub Releases 解压的纯 Win32 免安装版，图标已定制、目录可写 |
+| **Store 沙箱原版（影子）** | `%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe` → `C:\Program Files\WindowsApps\Microsoft.WindowsTerminal_*\wt.exe` | 0 字节 AppExecutionAlias 重解析点，指向只读、受签名完整性保护的 MSIX 包 |
+
+- **谁被叫起来，完全由 PATH 顺序决定**：定制脚本已把独立版目录插到用户级 `Path` 最顶端（优先于 `%LOCALAPPDATA%\Microsoft\WindowsApps`），并把 `HKCU\...\App Paths\wt.exe` 一并重定向；
+- **`shutil.which` / `os.path.exists` 天生分不清真身与影子**（本机实测）：影子入口表现为 `os.path.isfile()=True`、`os.path.getsize()=0`、`os.path.islink()=False` —— 它是 AppExecutionAlias 重解析点而非符号链接，任何“文件存在性检查”都会把它当合法终端放行，**唯一可行判据是路径中是否含 `\WindowsApps\`**；
+- **因此集成代码里任何形如 `os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe")` 的硬编码兜底都是致命反模式**：一旦它被触发，用户就会被悄悄打回未定制的 Store 原版 —— 图标、版本、Nilesoft 右键菜单、DefTerm 委托全部露馅，且现象是“偶尔变回原版”这种极难复现的玄学；
+- **正确姿势**：只把 `wt.exe` 这个**名字**交给 PATH 解析，再对「调用方进程 PATH 陈旧」与「只命中 Store 影子」两类失效做防御（见轨道二代码）；
+- **DefTerm 设为 conhost 不影响本链路**：独立版定制 SOP 推荐把默认终端应用程序改回 conhost 以阻断后台静默脚本弹窗抢焦点，但那是管“无人托管的新控制台委托”，与代码里**显式点名 `wt.exe`** 是两条独立通路 —— 显式调用永远秒开定制版 WT。
 
 ---
 
@@ -158,18 +173,100 @@ import subprocess
 import sublime
 import sublime_plugin
 
+WT_EXE = "wt.exe"
+WINDOWSAPPS_MARK = "\\windowsapps\\"
+
+
+def _is_store_shadow(exe_path):
+    """Store 版 wt.exe 被关在受保护的 WindowsApps 沙箱内，是未定制的影子入口"""
+    return WINDOWSAPPS_MARK in exe_path.lower()
+
+
+def _which_in_path_value(exe_name, path_value):
+    for raw_dir in path_value.split(os.pathsep):
+        directory = raw_dir.strip().strip('"')
+        if not directory:
+            continue
+        candidate = os.path.join(directory, exe_name)
+        if os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def _registry_path_value():
+    """回读注册表 PATH：调用方进程启动早于 PATH 变更时，os.environ 只是陈旧快照"""
+    if os.name != "nt":
+        return ""
+    import winreg
+
+    locations = (
+        (winreg.HKEY_CURRENT_USER, "Environment"),
+        (
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+        ),
+    )
+    collected = []
+    for hive, sub_key in locations:
+        try:
+            with winreg.OpenKey(hive, sub_key) as key:
+                value, _ = winreg.QueryValueEx(key, "Path")
+        except OSError:
+            continue
+        collected.append(os.path.expandvars(value))
+    return os.pathsep.join(collected)
+
+
+def resolve_wt_exe():
+    """优先取 PATH 里的 wt.exe（PATH 顶端即独立定制版），拒绝回退到 Store 沙箱影子入口"""
+    from_path = shutil.which(WT_EXE)
+    if from_path and not _is_store_shadow(from_path):
+        return from_path
+
+    from_registry = _which_in_path_value(WT_EXE, _registry_path_value())
+    if from_registry and not _is_store_shadow(from_registry):
+        return from_registry
+
+    return from_path or from_registry
+
 
 class OpenExternalTerminalCommand(sublime_plugin.WindowCommand):
     """
     在当前选中的文件或目录上下文，唤出系统原生终端（Windows Terminal / PowerShell）
     """
+
     def run(self, paths=[]):
-        target_dir = None
+        target_dir = self._target_dir(paths)
+
+        # 只把 wt.exe 这个"名字"交给 PATH 解析；严禁硬编码
+        # %LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe —— 那是未定制的 Store 影子入口
+        wt_exe = resolve_wt_exe()
+        if wt_exe:
+            try:
+                # 显式传递 powershell.exe，避免 WT 全局默认 Profile 被改成 CMD 时再次跑偏
+                subprocess.Popen([wt_exe, "-d", target_dir, "powershell.exe"], shell=False)
+                return
+            except OSError:
+                pass
+
+        # 降级备选：直接唤出原生 powershell.exe 独立窗口并切换至目标目录
+        subprocess.Popen(
+            [
+                "powershell.exe",
+                "-NoExit",
+                "-Command",
+                f"Set-Location -LiteralPath '{target_dir}'",
+            ],
+            cwd=target_dir,
+            shell=False,
+        )
+
+    def _target_dir(self, paths):
         if paths and len(paths) > 0:
             target_dir = paths[0]
         else:
-            vars = self.window.extract_variables()
-            target_dir = vars.get("file_path") or vars.get("folder")
+            variables = self.window.extract_variables()
+            target_dir = variables.get("file_path") or variables.get("folder")
 
         if not target_dir:
             target_dir = os.path.expanduser("~")
@@ -178,21 +275,7 @@ class OpenExternalTerminalCommand(sublime_plugin.WindowCommand):
         if os.path.isfile(target_dir):
             target_dir = os.path.dirname(target_dir)
 
-        # 优先检测并使用现代 Windows Terminal (wt.exe)，并显式指定运行 powershell.exe
-        wt_path = shutil.which("wt.exe") or os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe")
-        if os.path.exists(wt_path):
-            try:
-                subprocess.Popen([wt_path, "-d", target_dir, "powershell.exe"], shell=False)
-                return
-            except Exception:
-                pass
-
-        # 降级备选：直接唤出原生 powershell.exe 独立窗口并切换至目标目录
-        subprocess.Popen(
-            ["powershell.exe", "-NoExit", "-Command", f"Set-Location -LiteralPath '{target_dir}'"],
-            cwd=target_dir,
-            shell=False
-        )
+        return target_dir
 
     def is_visible(self, paths=[]):
         return True
@@ -213,7 +296,10 @@ class OpenExternalTerminalCommand(sublime_plugin.WindowCommand):
 
 > **设计要点**：
 > - 命名严格采用 Sublime Text 原生命名规范 `Open PowerShell here...`（带省略号 `...` 表示将调起外部交互操作），与系统的 `Open Containing Folder...`、`Find in Folder...` 在视觉、语言与留白风格上保持绝对一致；
-> - 脚本内部显式传递参数 `powershell.exe` 给 `wt.exe`，避免 Windows Terminal 内部的全局默认配置为 CMD 时再次跑偏。
+> - **只解析名字、不写死路径**：`shutil.which("wt.exe")` 优先，PATH 顶端即独立定制版；硬编码 `WindowsApps` 兜底会在 PATH 失效时把用户打回未定制的 Store 原版；
+> - **双防线抗 PATH 失效**：先看进程 `os.environ['PATH']`，若只命中 Store 影子（或干脆没命中），再回读注册表 `HKCU\Environment` + `HKLM\...\Session Manager\Environment` 的 `Path` 重新解析；解析结果一旦落在 `\WindowsApps\` 内即判定为影子入口并拒绝；
+> - **改完 PATH 必须重启 Sublime Text**：插件宿主是独立子进程，`os.environ` 只是它启动那一刻的快照，注册表回读防线只兜底、不替代重启；
+> - 脚本内部显式传递参数 `powershell.exe` 给 `wt.exe`，避免 Windows Terminal 内部的全局默认配置为 CMD 时再次跑偏（若 WT 默认 Profile 已换成别的 Shell，此处按需同步）。
 
 ---
 
@@ -225,11 +311,21 @@ class OpenExternalTerminalCommand(sublime_plugin.WindowCommand):
 |:---|:---|:---|
 | **右键侧边栏菜单** | 侧边栏出现 `Open PowerShell here...` 选项 | 纯英文无缝融入 Sublime UI，无视觉违和 |
 | **外部终端拉起** | 点击后弹出 Windows Terminal 窗口，提示符为 `PS <选中目录路径>>` | 100% 锁定进入 PowerShell，且工作目录一致 |
+| **拉起的是独立定制版** | 同机存在两个 `wt.exe` 时点击菜单 | 解析结果为 `D:\Users\Softwares\WindowsTerminal\wt.exe`（非 `%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe`），窗口/任务栏图标为定制款 |
 | **外部中文与补全** | 敲拼音输入中文、按 Tab 自动补全、按 Backspace 退格 | 原生 GPU 渲染，输入法候选框精确跟随，删除无残影 |
 | **内置 Terminus 启动** | 点击 `Open Terminus here...` | 进入带 UTF-8 的 PowerShell 模式 |
 | **内置 Terminus 退格** | 敲入任意英文字符并快速连续按 Backspace | 字符顺畅删除，屏幕无任何残留幽灵字符 |
 
-### 2. 编辑器终端选型工程心法
+### 2. 外部终端拉起的三个必踩坑
+
+| 坑 | 现象 | 正解 |
+|:---|:---|:---|
+| **硬编码 `WindowsApps` 兜底** | 大多数时候正常，偶尔变回旧图标 / 旧版本的“原版终端” | 只传 `wt.exe` 名字交由 PATH 解析，并显式拒绝 `\WindowsApps\` 内命中 |
+| **调用方进程 PATH 陈旧** | 明明已把独立版置顶 PATH，脚本却还是拉出原版 | 回读注册表 `HKCU\Environment` / `HKLM\...\Session Manager\Environment` 的 `Path` 重新解析；长效解法是重启调用方进程（Sublime 需重启，Explorer 需接收 `WM_SETTINGCHANGE`） |
+| **在 Git Bash 里手工 `PATH="C:/..."` 造环境验证** | `shutil.which("wt.exe")` 诡异地返回 `None`，误以为解析逻辑坏了 | MSYS2 的 path-list 转换会把**盘符的冒号**当成路径列表分隔符：`PATH="C:/Users/..."` 传到子进程变成 `'C;D:\Program Files\Git\Users\...'`，两段都不存在。**验证 PATH 行为请在 PowerShell 里做，勿在 Git Bash 用赋值式 PATH** |
+| **误把 DefTerm 当成拦路虎** | 为“让 `wt.exe` 能被叫起来”而把默认终端改回 WT，结果后台脚本又开始弹窗抢焦点 | 澄清两条独立通路：DefTerm 只管无人托管的新控制台委托，**显式点名 `wt.exe` 不受其影响**，开发者环境应保持 conhost |
+
+### 3. 编辑器终端选型工程心法
 
 * **何时必须使用外部终端（Windows Terminal）**：
   * 需要输入中文 commit 信息、中文参数或路径时；
@@ -242,3 +338,5 @@ class OpenExternalTerminalCommand(sublime_plugin.WindowCommand):
 ---
 
 **归档说明：** 本条目沉淀自 Sublime Text 4 在 Windows 平台下集成内置终端时的典型架构踩坑，给出了兼顾纯英文 UI 美学与全功能终端能力的双轨落地标准。
+
+**后续更新（本机 WT 已换为独立定制版）：** 原版文档的 `open_external_terminal.py` 曾以 `%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe` 作硬编码兜底，在 WT 独立版接管后已属反模式（详见 二.5）；现已改为**只解析名字 + 注册表 PATH 回读 + Store 影子拒绝**，侧边栏拉起 100% 命中定制版。完整的独立版部署/图标注入/PATH 与 App Paths 接管/DefTerm 治理见 `sh-wt-customizer`。

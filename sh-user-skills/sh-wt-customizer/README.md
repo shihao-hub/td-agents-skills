@@ -112,6 +112,14 @@ updated: 2026-10-11
   wt.exe -d "D:\Users\language_projects" powershell -NoExit -Command "agy --conversation=<conversation-id>"
   ```
   这样既能确保窗口具备 `pure_dark` 定制质感图标，又能在命令执行完后始终驻留在 Shell 中。
+- **【核心排障认知 2：DefTerm 对 Git Bash / 后台静默脚本的过度委托与焦点劫持反模式】**：  
+  - **致命现象**：在 Git Bash（MSYS2 / MinGW）、Node.js/Python 无窗口子进程、定时任务或 AI Agent（如 Claude / OpenCode / AGY）中执行 `powershell.exe -NoProfile -Command "..."` 时，屏幕上突然弹出一个 Windows Terminal 窗口并强行夺取全局前台焦点（Foreground Window）。在测试 Alt+Tab、Win+Tab、`XamlExplorerHostIslandWindow` 等系统级 XAML 切换界面时，WT 弹窗会瞬间击溃正在测试的焦点状态！
+  - **底层机制**：Git Bash 基于 POSIX pipe/pty 仿真，无 Win32 原生控制台宿主（`CONIN$` / `CONOUT$`）。原生 `powershell.exe` 启动时判定无控制台依附，系统强制触发 `AllocConsole()`。而在 Win11 默认配置下（`HKCU\Console\%%Startup` 的 `DelegationTerminal` 为 `{00000000-...}` 即“让 Windows 决定”），系统自动将新控制台委托给 Windows Terminal。WT 作为现代 GUI 应用程序，只要接活就必须弹出一个 XAML 窗口，哪怕只是跑一句静默的 `-Command`！
+  - **开发者黄金法则（DefTerm 最佳实践）**：
+    1. **系统级根治（强烈推荐开发者环境）**：运行 `uv run ... patch_wt_icon.py --defterm conhost`，或在系统设置（开发者选项 ➔ 终端）中将“默认终端应用程序”改回【Windows 控制台主机】（`conhost.exe`，GUID: `{B23D10C0-E52E-411E-9D5B-C09FDF709C7D}`）。
+       > **重要认知澄清**：日常主动使用独立版 WT（桌面快捷方式、开始菜单、Win+R `wt`、右键菜单）丝毫不受影响，依然秒开定制版 WT；改回 conhost 仅切断了“后台静默命令行被强行委托弹窗抢焦点”的流氓行为。
+    2. **代码级防御（子进程编程）**：在 Python / Go / C# 启动后台 PowerShell 子进程时，显式传递 `CREATE_NO_WINDOW = 0x08000000` 标志，告知内核无需分配控制台，彻底绕过 `AllocConsole()` 与 DefTerm 委托。
+    3. **命令行级阻断**：在 Git Bash 中通过 `conhost.exe powershell.exe -NoProfile -Command "..."` 包装执行。
 
 ---
 
@@ -181,6 +189,9 @@ uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_i
 
 # 3. 查看可用款式列表
 uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_icon.py --list-styles
+
+# 4. 配置系统默认终端为 conhost (阻断静默脚本弹窗抢焦点，推荐开发者必配)
+uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_icon.py --defterm conhost
 ```
 
 ---
@@ -198,12 +209,13 @@ go run . revert wt
 uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_icon.py --revert --remove-path --restart-explorer
 ```
 
-> **自动完成的 5 项无损复原动作**：
-> 1. **注册表复原**：自动将 `HKCU\...\App Paths\wt.exe` 还原回官方商店原版路径；
-> 2. **右键菜单复原**：自动将 Nilesoft Shell 的 `modify.nss` 和 `terminal.nss` 从 `.bak` 备份中完整还原，清理注入规则，并删除 `.bak` 临时文件；
-> 3. **Images 资源复原**：自动将 `terminal_contrast-*.ico` 还原为原版；
-> 4. **快捷方式清理**：自动清理开始菜单定制的 `.lnk` 文件；
-> 5. **环境变量清理**：自动将独立版目录从用户级环境变量 `Path` 中移除。
+> **自动完成的 6 项无损复原动作**：
+> 1. **注册表 App Paths 复原**：自动将 `HKCU\...\App Paths\wt.exe` 还原回官方商店原版路径；
+> 2. **默认终端 DefTerm 复原**：自动将 `HKCU\Console\%%Startup` 恢复为原版默认委托设置；
+> 3. **右键菜单复原**：自动将 Nilesoft Shell 的 `modify.nss` 和 `terminal.nss` 从 `.bak` 备份中完整还原，清理注入规则，并删除 `.bak` 临时文件；
+> 4. **Images 资源复原**：自动将 `terminal_contrast-*.ico` 还原为原版；
+> 5. **快捷方式清理**：自动清理开始菜单定制的 `.lnk` 文件；
+> 6. **环境变量清理**：自动将独立版目录从用户级环境变量 `Path` 中移除。
 
 ---
 
@@ -218,3 +230,5 @@ uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_i
 | 右键菜单图标迟迟不刷新 | Explorer 内存缓存了旧图标 | 在桌面按住 `Ctrl` 键同时鼠标右键，或重启 Explorer |
 | 任务栏仍显示原版图标 / 外部工具唤醒旧图标 | 1) 旧实例常驻且 WT 为单实例机制；2) 遗漏 102/103 资源组；3) Win11 图标缓存未离线清空 | 运行带 `--restart-explorer` 参数的脚本，引擎将全量烧录 101/102/103 并离线彻底清空 `iconcache_*.db`；在方便时重启一次终端即可彻底纯净 |
 | 外部启动器/运行框直接执行 CLI（如 `agy`）一闪而过 | CLI 程序属于 CUI 进程，裸启动后由于无现成 Shell 托管，执行完毕或转入后台时系统会销毁控制台宿主 | 改由独立版 `wt` 托管并带 `-NoExit`：`wt.exe -d "<目录>" powershell -NoExit -Command "agy ..."` |
+| Git Bash / Agent / 后台脚本调用 `powershell.exe` 频繁弹出 WT 窗口并抢占焦点 | Win11 DefTerm 默认将无 Win32 Console 的 CUI 进程委托给 WT，WT 必须弹出 GUI 窗口接管，破坏前台焦点（如 Alt+Tab / `XamlExplorerHostIslandWindow` 测试） | 1) 运行 `uv run patch_wt_icon.py --defterm conhost` 或在系统设置中将“默认终端应用程序”设为【Windows 控制台主机】（不影响日常用 WT）；2) 脚本启动子进程时显式带 `CREATE_NO_WINDOW (0x08000000)` |
+| 外部程序（Sublime、脚本、快捷方式）拉起的 wt 又是原版图标/版本 | 调用方要么硬编码了 `%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe`（Store 影子别名），要么进程 `os.environ['PATH']` 是 PATH 变更前的陈旧快照 | **只传 `wt.exe` 名字交给 PATH 解析**（PATH 顶端即独立版），并在命中 `\WindowsApps\` 时回读注册表 `HKCU\Environment` / `HKLM\...\Session Manager\Environment` 的 `Path` 重新解析；同时重启调用方进程。严禁硬编码 Store 路径 |

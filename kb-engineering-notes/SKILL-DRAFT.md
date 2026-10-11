@@ -68,6 +68,8 @@ kb-engineering-notes/
 ├── 47-SublimeText全局搜索FindInFiles穿透Gitignore慢查排障与配置防线指南.md # [Stage 2: 专项排障] 针对全局搜索穿透 .gitignore、node_modules 慢查排障与 binary_file_patterns 防线
 ├── 48-WindowsTerminal分屏窗格布局判定与关闭误触治理指南.md # [Stage 2: 专项排障] 针对 WT 分屏窗格识别、closePane 焦点语义与分屏键误触治理
 ├── 49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md # [Stage 2: 专项排障] 针对浏览器静默注入扩展、注册表外源安装机制与免迅雷 BT 纯净下载
+├── 50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范.md # [Stage 2: 专项流水线] 针对单目录平铺知识库文件名元数据缺失、Explorer排序割裂与批量迁移SOP
+├── 51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md # [Stage 2: 专项排障] 针对FastEmbed+LanceDB离线向量检索搭建、语义稀释漏检与混合重排加权
 └── ...（后续顺次扩充）
 ```
 
@@ -150,6 +152,8 @@ kb-engineering-notes/
 | Sublime Text 全局搜索速度暴跌扫描数十万文件、穿透 `.gitignore` 搜入 `node_modules` / `.thirdparty` 并报 `Unable to open file` | [`47-SublimeText全局搜索FindInFiles穿透Gitignore慢查排障与配置防线指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/47-SublimeText全局搜索FindInFiles穿透Gitignore慢查排障与配置防线指南.md) | Sublime Text, Find in Files, Use Gitignore, node_modules 慢查, Unable to open file, binary_file_patterns, project filters, F4 遍历, 搜索穿透 |
 | 一个 Windows Terminal 窗口里文字被竖/横线切成几块，不知道哪块能关、怕关掉连 agent 会话一起杀，或误触分屏键后想收场 | [`48-WindowsTerminal分屏窗格布局判定与关闭误触治理指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/48-WindowsTerminal分屏窗格布局判定与关闭误触治理指南.md) | Windows Terminal 分屏, 窗格 pane, 右侧窗格关不掉, Ctrl+Shift+W, ClosePane, 焦点窗格, alt+shift+plus 误触, SwitchToTab3, ctrl+alt+4, defaults.json, Move pane to new window, Toggle pane zoom |
 | Chrome 或 Firefox 自动静默安装迅雷下载插件、扩展删除了又死灰复燃，或需免迅雷客户端纯净下载种子/磁力链 | [49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md) | 迅雷插件, 自动安装, ChromeExtensionCache, xl_ext_chrome, NativeMessagingHosts, 注册表残留, 裸磁力链, qBittorrent, Tracker加速, 免迅雷下载 |
+| 知识库平铺文件越来越多（50+）、Windows Explorer 排序割裂无聚合、文件名太长被截断、机器无法直接提取分类元数据 | [50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范.md) | 平铺目录, 文件命名规范, 元数据嵌入, Explorer排序, 正则提取, 受控词典, 批量重命名, DryRun, 回滚SOP |
+| 本地文档/技能库离线语义检索搭建（FastEmbed+LanceDB+Watchdog）、专有技术词检索遭遇语义稀释漏检、切块挤占或前端 SyntaxError 假死 | [51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md) | 本地语义检索, FastEmbed, LanceDB, bge-small-zh, 混合检索, Hybrid Search, 语义稀释, Lexical Boost, 关键词加权, Watchdog 防抖, Group-by-File, 默认折叠, WinError 10048, 离线 RAG |
 
 ---
 
