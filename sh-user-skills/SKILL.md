@@ -1,21 +1,23 @@
 ---
 name: sh-user-skills
 description: |
-  个人技能库总入口与分流器：用户只有一句模糊需求、或忘记技能名时，在此按关键词匹配并加载对应子技能 SOP。覆盖五域：
-  工程手记与避坑知识库（sh-engineering-notes 渐进式检索 kb-engineering-notes/ 单点排障/底层锁机制/环境配置）；
+  个人技能库总入口与分流器：用户只有一句模糊需求、忘记技能名，或遇到底层报错/环境与配置疑难时，在此匹配并加载对应子技能 SOP。
+  第一优先——内置工程避坑知识库（sh-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理等；全量索引以知识库内部路由表为准，随条目持续生长。
   开发与重构（后端系统设计、计划驱动与规格驱动工作流、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、monorepo 提交推送、GitHub 仓库大扫除）；
   文档与交接（PRD/技术方案、书转 skill、跨 agent 交接、排障复盘）；
   检索与媒资归档（Everything 秒搜、抖音/B站/知乎下载、视频转写字幕、去水印、Office 提图、网页存档、飞书聊天与会话归档）；
   另有飞书、Redis/Iris、antigravity 三个族路由器；用户直接点名 `sh-*` 子技能（含拼写近似）时也由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
-version: 1.1.0
+version: 1.2.0
 created: 2026-10-07
-updated: 2026-10-10
+updated: 2026-10-11
 ---
 
 # sh-user-skills：个人技能库总目录与分流导航
 
 > 本技能是 `sh-*` 个人技能体系的**顶层总入口与单一真理服务台**。
 > 当您**忘记具体技能名称**，或**只有一句模糊需求**时，直接呼叫本技能即可。
+>
+> **🔎 知识库优先原则（最高优先级）**：凡用户提及底层报错、系统/IDE/终端异常、环境与配置疑难（含“声卡爆音”“C 盘爆了”“Git 报错”等口语症状），不必等待点名，直接进入内置工程避坑知识库执行两级渐进式检索：`sh-engineering-notes → kb-engineering-notes/SKILL-DRAFT.md → 命中条目`。知识库入口已提级暴露到根级，也可被直接点名。
 
 ## 交互与分流协议
 
@@ -26,7 +28,7 @@ updated: 2026-10-10
      - **唯一高置信匹配** → 告知用户并载入对应技能文档开始执行；
      - **多候选匹配** → 列出候选及对比依据，供用户点名确认。
 3. **文件寻址与加载规则**：
-   - **知识库总控路由**（`sh-engineering-notes`）：用户遇到底层报错、声卡/网络/内存排障、IDE 崩溃或环境配置时，载入 `sh-user-skills/sh-engineering-notes/README.md`，按两级渐进式感知协议查阅 `kb-engineering-notes/SKILL-DRAFT.md`；
+   - **知识库总控路由**（`sh-engineering-notes`，最高优先）：用户遇到底层报错、声卡/网络/内存排障、IDE 崩溃或环境配置时，载入 `sh-user-skills/sh-engineering-notes/README.md`（已提级暴露到根级 `sh-engineering-notes`，可直接点名），按两级渐进式感知协议查阅 `kb-engineering-notes/SKILL-DRAFT.md`；
    - **独立族路由器**（`sh-agy-skills`、`sh-lark-skills`、`sh-redis-skills`）：位于父级同级目录，按对应 `SKILL.md` 协议二次分流；
    - **收拢子技能**：均已收拢存放在本技能子目录中，且核心指导文件统一为 `README.md`（避免被 Agent 全局递归探测）。执行时，AI 使用 `view_file` 直接读取 `sh-user-skills/<skill-name>/README.md` 全文并严格按其 SOP 步骤执行。
 
@@ -34,7 +36,7 @@ updated: 2026-10-10
 
 | 用户口语说法（示例） | 技能 |
 | :--- | :--- |
-| 底层报错／排障手记／查阅避坑知识库／声卡爆音／代理下UWP打不开／C盘空间清理／内存防死机／GLM 401／Zed崩溃与LSP排障／多Git账号共存／Atuin历史丢失／VSCode搬插件 | `sh-engineering-notes`（两级渐进式检索 `kb-engineering-notes/`） |
+| 底层报错／排障手记／避坑知识库／声卡爆音／UWP打不开／C盘清理／内存防死机／GLM 401／Zed崩溃与会话／LSP排障／多Git账号／Atuin历史／VSCode搬插件／PowerShell7绿色部署／字体渲染／右键菜单／Terminus退格／Pi改键／chrome-devtools-mcp／思考档位／DDG核查／软链接机制／进程取证／WT分屏／迅雷插件 | `sh-engineering-notes`（两级渐进式检索 `kb-engineering-notes/`，已提级为根级技能） |
 | 把视频/音频转成字幕 | `sh-video-transcribe` |
 | 抖音/B站无水印下载、知乎文章存 Markdown | `sh-zhangshihao-douyin-dl` |
 | 图片去水印／去角标 | `sh-image-watermark-removal` |
@@ -65,11 +67,11 @@ updated: 2026-10-10
 | `sh-lark-skills` | 飞书全域技能族路由器：集成飞书 28 域原生能力（IM、文档、表格、多维表格、审批、任务、邮件、日历、会议、妙记等）。点名使用 |
 | `sh-redis-skills` | Redis 与 Iris 全域技能族路由器：集成 Redis 官方核心建模、连接池、集群分片、全文/向量检索、监控排障与 Iris AI 长短期记忆库。点名使用 |
 
-### 📚 工程手记与排障避坑知识库导航
+### 📚 工程手记与排障避坑知识库（第一优先）
 
 | 技能名称 | 核心职责与功能（一句话） |
 | :--- | :--- |
-| `sh-engineering-notes` | 知识库：工程实战手记与避坑知识库 kb-engineering-notes/ 渐进式检索分流器（涵盖系统排障、底层机制与实战流水线）。点名使用 |
+| `sh-engineering-notes` | 知识库入口：工程实战手记与避坑知识库 kb-engineering-notes/ 渐进式检索分流器（涵盖系统排障、底层机制与实战流水线）；已提级暴露为根级技能，可直接点名 |
 
 ### 🏗️ 系统设计与工程开发
 

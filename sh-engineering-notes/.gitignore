@@ -1,0 +1,4 @@
+# 本目录为本机软链暴露位：除本文件与 .gitkeep 外，其余（SKILL.md、references/、evals/ 等链接产物）一律不入库
+*
+!.gitkeep
+!/.gitignore
