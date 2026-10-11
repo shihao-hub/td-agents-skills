@@ -70,6 +70,7 @@ kb-engineering-notes/
 ├── 49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md # [Stage 2: 专项排障] 针对浏览器静默注入扩展、注册表外源安装机制与免迅雷 BT 纯净下载
 ├── 50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范.md # [Stage 2: 专项流水线] 针对单目录平铺知识库文件名元数据缺失、Explorer排序割裂与批量迁移SOP
 ├── 51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md # [Stage 2: 专项排障] 针对FastEmbed+LanceDB离线向量检索搭建、语义稀释漏检与混合重排加权
+├── 52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md # [Stage 2: 专项排障] 针对独立版WT委托断层、aoci黑框弹窗与PE Subsystem 2 GUI无窗口镜像
 ├── 52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md # [Stage 2: 专项排障] 针对Windows控制台委托DefTerm断层、原生CUI孤儿弹窗与Subsystem:2 GUI镜像架构
 └── ...（后续顺次扩充）
 ```
@@ -155,6 +156,7 @@ kb-engineering-notes/
 | Chrome 或 Firefox 自动静默安装迅雷下载插件、扩展删除了又死灰复燃，或需免迅雷客户端纯净下载种子/磁力链 | [49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md) | 迅雷插件, 自动安装, ChromeExtensionCache, xl_ext_chrome, NativeMessagingHosts, 注册表残留, 裸磁力链, qBittorrent, Tracker加速, 免迅雷下载 |
 | 知识库平铺文件越来越多（50+）、Windows Explorer 排序割裂无聚合、文件名太长被截断、机器无法直接提取分类元数据 | [50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范.md) | 平铺目录, 文件命名规范, 元数据嵌入, Explorer排序, 正则提取, 受控词典, 批量重命名, DryRun, 回滚SOP |
 | 本地文档/技能库离线语义检索搭建（FastEmbed+LanceDB+Watchdog）、专有技术词检索遭遇语义稀释漏检、切块挤占或前端 SyntaxError 假死 | [51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md) | 本地语义检索, FastEmbed, LanceDB, bge-small-zh, 混合检索, Hybrid Search, 语义稀释, Lexical Boost, 关键词加权, Watchdog 防抖, Group-by-File, 默认折叠, WinError 10048, 离线 RAG |
+| 使用独立定制版 Windows Terminal 时启动 Agent 强弹微软原版 WT、绕过后弹黑框 conhost 窗口、或原生 PE 二进制 MCP 服务无窗口运行架构 | [52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md) | 控制台委托, DefTerm 断层, 原版 WT 弹窗, conhost 黑框, aoci.exe 弹窗, aociw.exe, PE Subsystem 2 GUI, 便携版终端断层, MSIX COM CLSID, 孤儿控制台 |
 
 ---
 
