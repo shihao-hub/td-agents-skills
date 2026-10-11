@@ -1,9 +1,9 @@
 ---
 name: sh-wt-customizer
-description: Windows Terminal (wt) 独立版定制、图标注入、任务栏守卫、右键菜单与 Win+R 全链路接管及一键原生复原 SOP（依托 taskbarguard 资产库与引擎）。点名使用
-version: 1.1.0
+description: Windows Terminal (wt) 独立版定制、图标注入、任务栏守卫、右键菜单与 Win+R 全链路接管、独立版幂等版本升级（--update）及一键原生复原 SOP（依托 taskbarguard 资产库与引擎）。点名使用
+version: 1.2.0
 created: 2026-10-11
-updated: 2026-10-11
+updated: 2026-10-12
 ---
 
 # sh-wt-customizer：Windows Terminal (wt) 独立版定制、图标注入与全链路接管 SOP
@@ -98,6 +98,8 @@ updated: 2026-10-11
 ---
 
 ### Layer 6: Windows 11 DefTerm 默认终端委托与 CUI 瞬态生命周期机制（以 agy 为例）
+
+> **通道层面的完整剖析**：为何绿色免安装版在底层机制上**无法**被注册为系统全局 DefTerm（内核走进程外 COM 服务器激活，与 PATH / App Paths 命令行通道完全割裂）、以及 CUI/GUI 子系统与无窗口镜像方案，见知识库条目 `52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md`。
 - **DefTerm 委托与为什么此前会弹出原版 WT**：  
   在 Windows 11 中，控制台子系统程序（PE Subsystem = 3, CUI，如 `agy.exe`）如果在无现成终端宿主的环境下启动（如 Win+R、运行框、桌面快捷方式），会被内核的 **DefTerm（Default Terminal Application）** 与外壳协议调度接管。此前由于注册表 `App Paths\wt.exe` 与 PATH 被微软 Store 版绑定，DefTerm 会强行唤醒沙箱内的 Store 原版 WT；**在完成 Layer 4 & Layer 5 的抢占后，所有系统级终端呼叫均被严格重定向至独立免安装版，彻底阻断了原版 WT 的唤醒**。
 - **【核心排障认知：为什么外部启动 CLI 会“一闪而过”？】**：  
@@ -174,6 +176,8 @@ go run . run --style pure_dark wt
 go run . apply wt
 ```
 
+> 注意：CLI 目前只包装了应用/复原/DefTerm 等动作，**版本升级（`--update`）仅暴露在 Python 引擎中**，需要升级请直接用下方模式 B 的命令。
+
 ---
 
 ### 模式 B：直接调度 Python 驱动引擎（支持离线缓存重构与自安装）
@@ -192,11 +196,71 @@ uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_i
 
 # 4. 配置系统默认终端为 conhost (阻断静默脚本弹窗抢焦点，推荐开发者必配)
 uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_icon.py --defterm conhost
+
+# 5. 幂等升级独立版到 GitHub 最新稳定版（已是最新则直接退出 0），并自动重放全链路定制
+uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_icon.py --update
 ```
 
 ---
 
-## 四、100% 官方原生无损复原 SOP（Revert SOP）
+## 四、独立免安装版的版本升级与幂等守卫（`--update`）
+
+### 1. 为什么“定制版更新”必须显式处理
+
+- **独立免安装版不带自动更新器**：只有 Store / MSIX 版才由系统静默升级，而 Store 版正是被本 SOP 拒绝的“影子入口”。因此独立版**永远不会自己变新**，升级必须由人或脚本显式触发。
+- **升级会静默摧毁 Layer 2 的成果**：新版本包解压覆盖后，`WindowsTerminal.exe` 的 Group 101/102/103 与 `wt.exe` 的 Group 101 全部回到官方原版图标，`Images/terminal_contrast-*.ico` 也被包内原版覆盖。
+- **但绝大部分接管不用重做**：PATH、`App Paths\wt.exe`、DefTerm、Nilesoft 规则、开始菜单快捷方式、`settings.json` 与 PSReadLine 历史均不受影响（路径与注册表键未变，见 Layer 1）。
+
+### 2. 【致命认知陷阱】`--auto-setup` 在已装机上不会升级
+
+引擎的执行顺序是：
+
+```text
+find_target_exes()  →  目录里已有 exe 就直接用它
+                    →  只有目录为空时，才调用 auto_setup_windows_terminal() 联网部署
+```
+
+所以 `--auto-setup` 是**双重语义**：新机 = 部署器；老机 = 普通 patch（只重放定制，**不联网也不升级**）。把它当“更新命令”用会**静默无效**——脚本不报错，版本纹丝不动（最坏的失败模式：看起来成功了）。引擎现已在检测到现有安装时显式打印警告并指向 `--update`。
+
+### 3. `--update` 契约（幂等，可安全重复执行）
+
+| 步骤 | 行为 |
+|:---|:---|
+| ① 定位 | `--target-dir` → 否则读 `state.json` 的 `installed_dir_wt` → 否则 `DEFAULT_TARGET_DIRS`；找不到则直接退出 1（**不联网**） |
+| ② 比对 | 本地 `WindowsTerminal.exe` 的 Win32 `VersionInfo`（四段）vs GitHub `releases/latest` 资产名中的版本号 |
+| ③ 短路 | 本地 ≥ 远端 → 打印 `已是最新版本` 并 **exit 0**（幂等，可反复跑） |
+| ④ 升级 | 下载 → 解压到 `WindowsTerminal.new` 暂存 → 校验 `WindowsTerminal.exe` / `wt.exe` 齐全 → **自动关闭 WT 进程** → 目录级原子重命名换入（旧目录 → `.old` 后删除） |
+| ⑤ 回滚 | 任一步失败（下载/解压/缺文件/换入异常）→ 旧目录原地保留或自动回滚，**旧版始终可用**；`.new` / `.old` 残留下次运行自动清理 |
+| ⑥ 重放 | 复用完整 patch 流程：重注入 101/102/103 与 `Images/` 对比度 ico、App Paths、Nilesoft、开始菜单、`state.json`、图标缓存刷新 |
+| ⑦ 款式 | 优先级：`--style` 显式指定 → `state.json.style_wt` → `pure_dark`。**不会把用户已选款式改回默认** |
+
+> **为何必须关进程**：Windows 不允许重命名含运行中 exe 的目录，因此引擎会自动 `taskkill`。这正是选择“整目录换入”而非“逐文件替换”的原因——避免新版本 DLL 与旧 exe 混搭。
+> **`.bak` 自动重置**：整目录换入会连同上一版 `Images/*.ico.bak` 一起丢弃，所以后续 `--revert` 只会还原与当前版本匹配的原版图标。
+
+### 4. 升级丢失面一览
+
+| 对象 | 升级后 | 是否需干预 |
+|:---|:---|:---|
+| `WindowsTerminal.exe` 图标（101/102/103）、`wt.exe` 图标（101） | 被官方原版覆盖 | ✅ `--update` 自动重注入 |
+| `Images/terminal_contrast-{black,white}.ico` | 被包内原版覆盖 | ✅ `--update` 自动同步 |
+| 用户 `Path`、`App Paths\wt.exe`、DefTerm、Nilesoft `modify.nss`、开始菜单 `.lnk` | 不变 | ❌ 无需重做 |
+| `settings.json`、PSReadLine 历史 | 不变 | ❌ 无需重做 |
+| `state.json`（`version_wt` / `installed_dir_wt` / `style_wt`） | 自动更新 | ❌ 自动维护 |
+
+### 5. 自动化 / Agent 调用约定
+
+`state.json` 中已记有 `installed_dir_wt` 与 `style_wt`，因此 `--update` 是一条**无需附加参数即可安全执行**的幂等命令 —— 这正是“点名 skill 让他更新”能可靠落地的前提：版本比对、进程关闭、款式重放全在脚本内，调用方（人或 Agent）无需临场判断。
+
+```powershell
+# 最小调用（推荐给 Agent / 定时任务；可附加 --restart-explorer 一并重建图标缓存）
+uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_icon.py --update
+```
+
+**判定依据永远是脚本退出码与打印的版本行，而不是“看起来跑完了”。**
+
+---
+
+## 五、100% 官方原生无损复原 SOP（Revert SOP）
 
 如果需要彻底停用独立版，完全恢复成微软官方自带的 Windows Terminal，只需执行单条撤销命令：
 
@@ -219,7 +283,7 @@ uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_i
 
 ---
 
-## 五、常见故障排查表
+## 六、常见故障排查表
 
 | 症状 / 报错 | 根因剖析 | 标准抢救 SOP |
 |---|---|---|
@@ -231,4 +295,7 @@ uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_i
 | 任务栏仍显示原版图标 / 外部工具唤醒旧图标 | 1) 旧实例常驻且 WT 为单实例机制；2) 遗漏 102/103 资源组；3) Win11 图标缓存未离线清空 | 运行带 `--restart-explorer` 参数的脚本，引擎将全量烧录 101/102/103 并离线彻底清空 `iconcache_*.db`；在方便时重启一次终端即可彻底纯净 |
 | 外部启动器/运行框直接执行 CLI（如 `agy`）一闪而过 | CLI 程序属于 CUI 进程，裸启动后由于无现成 Shell 托管，执行完毕或转入后台时系统会销毁控制台宿主 | 改由独立版 `wt` 托管并带 `-NoExit`：`wt.exe -d "<目录>" powershell -NoExit -Command "agy ..."` |
 | Git Bash / Agent / 后台脚本调用 `powershell.exe` 频繁弹出 WT 窗口并抢占焦点 | Win11 DefTerm 默认将无 Win32 Console 的 CUI 进程委托给 WT，WT 必须弹出 GUI 窗口接管，破坏前台焦点（如 Alt+Tab / `XamlExplorerHostIslandWindow` 测试） | 1) 运行 `uv run patch_wt_icon.py --defterm conhost` 或在系统设置中将“默认终端应用程序”设为【Windows 控制台主机】（不影响日常用 WT）；2) 脚本启动子进程时显式带 `CREATE_NO_WINDOW (0x08000000)` |
+| `--auto-setup` 跑完但版本没变 | `find_target_exes` 先命中现有 exe，只有目录为空才联网部署 | 升级请用 `--update`；`--auto-setup` 只负责**首次**部署 |
+| `--update` 报“未发现已部署的独立版终端” | 未传 `--target-dir` 且 `state.json` 无 `installed_dir_wt` 记录 | 首次部署用 `--auto-setup`，或用 `--target-dir` 指向实际安装目录 |
+| `--update` 报目录换入失败 | WT 进程占用安装目录（引擎已自动 taskkill，但外部宿主可能旋即重新拉起） | 关闭全部 Windows Terminal 窗口后重跑；引擎会自动回滚，旧版不受损 |
 | 外部程序（Sublime、脚本、快捷方式）拉起的 wt 又是原版图标/版本 | 调用方要么硬编码了 `%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe`（Store 影子别名），要么进程 `os.environ['PATH']` 是 PATH 变更前的陈旧快照 | **只传 `wt.exe` 名字交给 PATH 解析**（PATH 顶端即独立版），并在命中 `\WindowsApps\` 时回读注册表 `HKCU\Environment` / `HKLM\...\Session Manager\Environment` 的 `Path` 重新解析；同时重启调用方进程。严禁硬编码 Store 路径 |
