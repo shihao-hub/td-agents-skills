@@ -179,7 +179,10 @@ WINDOWSAPPS_MARK = "\\windowsapps\\"
 
 def _is_store_shadow(exe_path):
     """Store 版 wt.exe 被关在受保护的 WindowsApps 沙箱内，是未定制的影子入口"""
-    return WINDOWSAPPS_MARK in exe_path.lower()
+    # PATH 条目可能使用正斜杠（C:/.../WindowsApps），shutil.which 会原样保留，
+    # 必须先归一化再比对，否则影子入口会漏判放行
+    normalized = exe_path.replace("/", "\\").lower()
+    return WINDOWSAPPS_MARK in normalized
 
 
 def _which_in_path_value(exe_name, path_value):
@@ -227,6 +230,8 @@ def resolve_wt_exe():
     if from_registry and not _is_store_shadow(from_registry):
         return from_registry
 
+    # 两条防线都没命中独立版时（如未做定制的普通机器）：
+    # 宁可返回 Store 原版 WT（终端功能完整），也不退回裸 conhost 的 PowerShell 窗口
     return from_path or from_registry
 
 

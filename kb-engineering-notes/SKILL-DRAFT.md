@@ -1,4 +1,4 @@
-﻿---
+---
 name: kb-engineering-notes
 description: 开发者通用工程实战手记、自动化流水线与硬核排障知识库。兼具「疑难排障（Windows 文件锁、进程池堆积、闪窗、网络代理）」与「工程实现/生成流水线（文档与试卷自动化排版、脚手架、复杂脚本设计）」两翼实战 SOP。当遇到疑难报错或需要落地工程自动化流水线时查阅本指南。
 ---
@@ -70,6 +70,7 @@ kb-engineering-notes/
 ├── 49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md # [Stage 2: 专项排障] 针对浏览器静默注入扩展、注册表外源安装机制与免迅雷 BT 纯净下载
 ├── 50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范.md # [Stage 2: 专项流水线] 针对单目录平铺知识库文件名元数据缺失、Explorer排序割裂与批量迁移SOP
 ├── 51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md # [Stage 2: 专项排障] 针对FastEmbed+LanceDB离线向量检索搭建、语义稀释漏检与混合重排加权
+├── 52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md # [Stage 2: 专项排障] 针对Windows控制台委托DefTerm断层、原生CUI孤儿弹窗与Subsystem:2 GUI镜像架构
 └── ...（后续顺次扩充）
 ```
 
