@@ -1,6 +1,6 @@
 ---
 name: kb-windows-process-launch-forensics
-description: Windows 进程"谁拉起的"取证方法论：explorer 父进程 + 无参数 ≠ 用户手动启动，只有排除法收敛价值。含 UserAssist（已被清空则取证能力缺失）、Run 键/计划任务/右键集成/Nilesoft/Win+R/Win+E 接管/事件日志（7001 登录、1000 崩溃）逐一排查清单，及 sh-everything-search idle_exit 保护条件无时效上限导致实例驻留 8.6 小时的永生漏洞与修复。排查后台常驻"不记得开过"的程序时查阅。
+description: Windows 进程"谁拉起的"取证：explorer 父进程 + 无参数 ≠ 用户手动启动（排除法收敛）。含 UserAssist、Run 键/计划任务/Nilesoft/Win+R/Win+E 接管/事件日志（7001/1000）排查清单，及 sh-everything-search idle_exit 无时效上限致实例驻留 8.6 小时的永生漏洞与修复。排查后台常驻程序时查阅。
 ---
 
 # Windows 进程启动来源取证与 Everything 闲置退出保护永生实例漏洞排障指南

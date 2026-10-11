@@ -1,6 +1,6 @@
 ---
 name: kb-chrome-snss-session-recovery
-description: Chrome 手动关闭的窗口（含固定标签页）重启后整体丢失的完整找回 SOP：Sessions 目录 SNSS v3 明文快照的帧格式与两套命令字典（Session_* 与 Tabs_*）、独占文件锁与启动轮换的规避、从 TabRestoreService「最近关闭」数据精确提取窗口与固定标签清单。当「继续浏览上次打开的网页」只恢复一个窗口、固定标签丢失、Sessions 文件报 Device or resource busy 时查阅。
+description: Chrome 手动关闭的窗口（含固定标签页）重启后丢失的找回 SOP：Sessions 目录 SNSS v3 快照帧格式、命令字典（Session_* 与 Tabs_*）、独占锁与轮换规避、从 TabRestoreService 提取窗口与固定标签清单。当「继续浏览上次打开的网页」只恢复一个窗口、固定标签丢失、Sessions 文件报 Device or resource busy 时查阅。
 ---
 
 # Chrome 手动关闭窗口与固定标签丢失：SNSS 会话快照解析与找回指南

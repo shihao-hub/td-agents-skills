@@ -1,3 +1,11 @@
+---
+name: kb-opencode-go-deepseek-flash
+description: OpenCode Go 访问 deepseek-v4.1-flash 的 TTFT 首字延迟提速实测：代理/Console 配置取舍、reasoningEffort 关闭思考提速、x-opencode-session 与 prompt cache 前缀缓存命中、MissingSessionID 报错排查。当模型响应慢、首字延迟高或想关思考提速时查阅。
+version: 1.0.0
+created: 2026-10-11
+updated: 2026-10-11
+---
+
 # OpenCode Go 访问 DeepSeek V4.1 Flash 提速实测报告
 
 > 实测环境：Windows 11 + opencode 1.18.35（`D:\nvm4w\nodejs\opencode`）／provider `opencode-go`／model `deepseek-v4.1-flash`／本地代理 `127.0.0.1:7897`
