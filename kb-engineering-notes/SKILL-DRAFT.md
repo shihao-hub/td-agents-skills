@@ -41,7 +41,7 @@ kb-engineering-notes/
 ├── 20-Windows系统C盘空间不足排查与安全清理软链接重定向指南.md # [Stage 2: 专项排障] 针对 C 盘清理与环境变量重定向
 ├── 21-opencode连接GLM模型401鉴权失败与端点排障指南.md # [Stage 2: 专项排障] 针对 GLM 401 报错与 key 映射
 ├── 22-Zed语言服务器下载失败文件重命名占用与杀毒竞态排障指南.md # [Stage 2: 专项排障] 针对 LSP 下载失败与文件独占锁
-├── 23-Zed与IDEA外接ACP代理环境失效与子进程池累积排查指南.md # [Stage 2: 专项排障] 针对 ACP 子进程池堆积与代理失效
+├── 23-Zed与IDEA外接ACP代理环境失效与子进程池累积排查指南.md # [Stage 2: 专项排障] 针对 ACP 子进程池膨胀与代理失效
 ├── 24-Zed面板InternalError会话中断与ACP线程锁竞态归因指南.md # [Stage 2: 专项排障] 针对 Panel 报错与锁竞态归因
 ├── 25-Zed会话丢失提取与SQLite数据库表解析抢救指南.md # [Stage 2: 专项抢救] 针对 SQLite 历史会话恢复
 ├── 26-Zed项目级LSP白名单配置与内存占用规避指南.md # [Stage 2: 专项配置] 针对 LSP 项目白名单与内存优化
@@ -60,6 +60,7 @@ kb-engineering-notes/
 ├── 39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md # [Stage 2: 专项流水线] 针对无 API 事实核查与 DDG 逆向
 ├── 40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md # [Stage 2: 专项流水线] 针对面向对象 OOP 重构与设计模式演进落地
 ├── 41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md # [Stage 2: 专项排障] 针对 Windows 跨盘单文件链接、Junction 与开发者模式符号链接
+├── 42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md # [Stage 2: 专项排障] 针对多 Agent 全局规则生效验证、子进程标准输入管道挂起与目录隔离探针测试
 └── ...（后续顺次扩充）
 ```
 
@@ -79,7 +80,7 @@ kb-engineering-notes/
 ### 条目元数据规范
 
 - `name` 取 `kb-<英文主题短横线>`（如 `kb-docx-practice-generator`），**不带编号**：编号只是排序外壳，`name` 才是将来独立成 skill 时沿用的稳定标识，定了就别改，免得引用失效；
-- `description` 按 skill-creator 写法：一句话功能语义 + "何时查阅"的触发场景，控制在 200 字符内，关键词尽量用用户真会说的症状词、技术词或目标交付词；
+- `description` 按 skill-creator 写法：一句话功能语义 + \"何时查阅\"的触发场景，控制在 200 字符内，关键词尽量用用户真会说的症状词、技术词或目标交付词；
 - 本目录的 description 面向**路由与检索**。若某条目将来真要转正为全局技能，除改名建目录外，还必须按 `SKILL-AUTHORING-RULES.md` 把 description 重写成点名触发式（≤70 字符、结尾 `点名使用`）。
 
 ---
@@ -133,8 +134,8 @@ kb-engineering-notes/
 | Zed 的 opencode 插件思考档位失灵、服务进程断连或无法成功读取自定义 API 配置 | [`38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/38-Zed集成opencodeAgent环境思考档位与供应商迁移指南.md) | Zed opencode, 思考档位, 供应商配置迁移, opencode 启动脚本 |
 | 需要核实「某个公开信息到底有没有/是什么」（如某公司内部工具名），手上只有终端、没有搜索 API，且担心把「我没查到」误当「不存在」 | [`39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/39-无搜索API时DuckDuckGoHTML端点事实核查与第一方信源收敛流水线指南.md) | 公开信息核查, 到底有没有, 第一方信源, DuckDuckGo HTML, html.duckduckgo.com, uddg 解包, SERP 降级页, 假阴性, site: 收敛, 是不是不存在 |
 | 遗留系统代码腐化、大类长函数、嵌套分支过多，需进行面向对象 (OOP) 重构、消除条件分支、引入设计模式或提升工程内聚度 | [`40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md) | OOP 重构, 遗留代码, 代码坏味道, 接缝测试, 字符化测试, 策略模式, 工厂模式, 组合优于继承, 依赖倒置, 架构分层 |
-
 | Windows 下跨盘单文件软链接失败、Junction 报目录名称无效、硬链接禁止跨卷、或符号链接权限不足 (WinError 1314) | [`41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md) | Windows 软链接, Symlink, Junction 目录联接, mklink /H 硬链接, WinError 1314, 开发者模式, SeCreateSymbolicLinkPrivilege, 单文件跨盘链接 |
+| 多 Agent (Pi/Claude/OpenCode/AGY) 全局规则验证、CLI 命令行调用卡死 600s 超时、管道 stdin 未闭合或需隔离测试 | [`42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md) | 多 Agent 全局规则, CLI 管道挂起, readPipedStdin, 600s 超时, < NUL, Print Mode, 隔离探针测试, GLOBAL.md 生效验证 |
 
 ---
 
