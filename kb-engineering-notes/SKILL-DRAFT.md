@@ -61,6 +61,9 @@ kb-engineering-notes/
 ├── 40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md # [Stage 2: 专项流水线] 针对面向对象 OOP 重构与设计模式演进落地
 ├── 41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md # [Stage 2: 专项排障] 针对 Windows 跨盘单文件链接、Junction 与开发者模式符号链接
 ├── 42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md # [Stage 2: 专项排障] 针对多 Agent 全局规则生效验证、子进程标准输入管道挂起与目录隔离探针测试
+├── 43-OpenCodeGo访问DeepSeekV4.1Flash提速实测与关闭思考reasoningEffort指南.md # [Stage 2: 专项排障] 针对 OpenCode Go 模型访问提速、TTFT 归因与 reasoningEffort 调优
+├── 44-SublimeTextMarkdown预览切窗口自动跳转浏览器排障与静默快捷键配置指南.md # [Stage 2: 专项排障] 针对 Sublime Markdown 预览切窗口自动跳浏览器抢焦点、MPE 源码 Fallback 缺陷与静默快捷键配置
+├── 45-全机AI密钥与模型供应商配置清点排查指南.md # [Stage 2: 专项流水线] 针对全机密钥清点、密钥指纹分组脱敏、SQLite 只读核查与残留识别
 └── ...（后续顺次扩充）
 ```
 
@@ -136,6 +139,9 @@ kb-engineering-notes/
 | 遗留系统代码腐化、大类长函数、嵌套分支过多，需进行面向对象 (OOP) 重构、消除条件分支、引入设计模式或提升工程内聚度 | [`40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/40-AI辅助面向对象OOP重构与设计模式落地演进实战指南.md) | OOP 重构, 遗留代码, 代码坏味道, 接缝测试, 字符化测试, 策略模式, 工厂模式, 组合优于继承, 依赖倒置, 架构分层 |
 | Windows 下跨盘单文件软链接失败、Junction 报目录名称无效、硬链接禁止跨卷、或符号链接权限不足 (WinError 1314) | [`41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md) | Windows 软链接, Symlink, Junction 目录联接, mklink /H 硬链接, WinError 1314, 开发者模式, SeCreateSymbolicLinkPrivilege, 单文件跨盘链接 |
 | 多 Agent (Pi/Claude/OpenCode/AGY) 全局规则验证、CLI 命令行调用卡死 600s 超时、管道 stdin 未闭合或需隔离测试 | [`42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md) | 多 Agent 全局规则, CLI 管道挂起, readPipedStdin, 600s 超时, < NUL, Print Mode, 隔离探针测试, GLOBAL.md 生效验证 |
+| OpenCode Go 模型（deepseek-v4.1-flash 等）响应慢、首字延迟高，纠结要不要改代理/Console 配置，或想关掉思考提速 | [`43-OpenCodeGo访问DeepSeekV4.1Flash提速实测与关闭思考reasoningEffort指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/43-OpenCodeGo访问DeepSeekV4.1Flash提速实测与关闭思考reasoningEffort指南.md) | opencode-go, OpenCode Go, deepseek-v4.1-flash, TTFT, 首字延迟, reasoningEffort none, x-opencode-session, MissingSessionID, prompt cache, 前缀缓存, variant |
+| Sublime Text 打开 Markdown 后切窗口自动频繁跳转浏览器抢焦点、或想一键静默浏览器预览排版免弹窗 | [`44-SublimeTextMarkdown预览切窗口自动跳转浏览器排障与静默快捷键配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/44-SublimeTextMarkdown预览切窗口自动跳转浏览器排障与静默快捷键配置指南.md) | Sublime Text, MarkdownPreviewEnhanced, 抢焦点, 自动跳转浏览器, on_activated_async, focus_existing_tab, MarkdownPreview, Shift+Alt+M, 静默预览 |
+| 想把某厂商 API Key 收敛到只留一个工具、或盘点全机有哪些地方配了同一个 key、怀疑「清干净了」其实还有残留 | [`45-全机AI密钥与模型供应商配置清点排查指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/45-全机AI密钥与模型供应商配置清点排查指南.md) | 密钥清点, key 收敛, 只保留一个工具, API Key 残留, LegacyApiKeys 迁移槽, 密钥指纹分组, sha256 分组, SQLite 只读核查, immutable=1, os.walk 跑飞, UnicodeEncodeError gbk, 环境变量没清, 泄露面盘点 |
 
 ---
 
