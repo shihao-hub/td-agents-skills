@@ -120,6 +120,56 @@ ToggleApp(exeName) {
 }
 
 ; ========================================================
+; 文件资源管理器专用 Toggle 函数 (Explorer)
+; 1. 窗口未运行 -> 启动打开资源管理器 (Run "explorer.exe")
+; 2. 窗口在后台 -> 激活并置顶到最前
+; 3. 窗口已在最前 -> 再次按下则最小化收起 (抽屉式 Toggle)
+; 4. 多窗口处理 -> 依次轮换各个文件夹窗口，最后一个最小化收起
+; 注意：不能使用 ahk_exe explorer.exe（会误匹配桌面与任务栏）
+; 必须使用 ahk_class CabinetWClass 精准匹配文件夹窗口
+; ========================================================
+ToggleExplorer() {
+    target := 'ahk_class CabinetWClass ahk_exe explorer.exe'
+    
+    ; 1. 未打开任何资源管理器窗口：直接启动打开
+    if !WinExist(target) {
+        Run('explorer.exe')
+        return
+    }
+
+    ; 2. 如果当前激活窗口正是资源管理器
+    if WinActive(target) {
+        winList := WinGetList(target)
+        ; 单窗口：直接最小化收起
+        if (winList.Length <= 1) {
+            WinMinimize('A')
+            return
+        }
+        
+        ; 多窗口：依次轮换各个窗口，轮换完最后一个后最小化收起
+        currentId := WinGetID('A')
+        nextId := 0
+        loop winList.Length {
+            if (winList[A_Index] = currentId) {
+                if (A_Index < winList.Length) {
+                    nextId := winList[A_Index + 1]
+                }
+                break
+            }
+        }
+        
+        if (nextId) {
+            WinActivate('ahk_id ' . nextId)
+        } else {
+            WinMinimize('ahk_id ' . currentId)
+        }
+    } else {
+        ; 3. 资源管理器在后台：立即置顶激活
+        WinActivate(target)
+    }
+}
+
+; ========================================================
 ; 全局纯左手单手快捷键映射配置（! 代表 Alt 键）
 ; ========================================================
 
@@ -155,6 +205,9 @@ ToggleApp(exeName) {
 
 ; Alt + W -> Windows Terminal
 !w::ToggleApp('WindowsTerminal.exe')
+
+; Alt + X -> 资源管理器 (未开启则启动，已开启则盲切/Toggle)
+!x::ToggleExplorer()
 ```
 
 ### 步骤 3：重载脚本使配置生效
@@ -188,6 +241,11 @@ AHK 脚本加载进内存后，修改文件不会自动热更新，需通过以�
 ### 5. 飞书知识库同步富文本陷阱
 将 AHK 脚本指南同步至飞书文档（Lark Docx）时，若使用 `lark-cli docs +update --doc-format markdown`，当代码块中包含 `<` 或 `>`（例如 `winList.Length <= 1`）时，服务端解析器容易降级报错（`degrade_code=3001` XML tokenization error）或截断代码。
 - **解决方案**：统一转换为飞书 DocxXML 格式写入，将代码块包裹在 `<pre><code>` 内，并对 `<`（`&lt;`）、`>`（`&gt;`）、`&`（`&amp;`）做实体转义，安全幂等覆盖。
+
+### 6. Windows 资源管理器（Explorer）特殊过滤与缺省拉起机制
+- **不能裸传 `explorer.exe`**：桌面（`WorkerW` / `Progman`）和任务栏（`Shell_TrayWnd`）均隶属于 `explorer.exe` 进程。若使用 `ToggleApp('explorer.exe')`，`WinExist` 永远命中桌面，激活时会跳回桌面，最小化时甚至会尝试最小化桌面导致界面异常；
+- **精准过滤窗口类名**：必须使用复合选择器 `ahk_class CabinetWClass ahk_exe explorer.exe` 精准匹配文件夹窗口；
+- **缺省自动启动（Run）**：不同于常驻大型开发工具（未开则静默），文件管理器在当前没有任何窗口打开时，用户按热键（如 Alt+X）本意正是“打开资源管理器”，因此在 `!WinExist` 时应调用 `Run('explorer.exe')` 自动创建窗口，兼顾冷启动与热 Toggle 盲切。
 
 ---
 
