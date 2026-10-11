@@ -1,4 +1,4 @@
----
+﻿---
 name: kb-engineering-notes
 description: 开发者通用工程实战手记、自动化流水线与硬核排障知识库。兼具「疑难排障（Windows 文件锁、进程池堆积、闪窗、网络代理）」与「工程实现/生成流水线（文档与试卷自动化排版、脚手架、复杂脚本设计）」两翼实战 SOP。当遇到疑难报错或需要落地工程自动化流水线时查阅本指南。
 ---
@@ -64,6 +64,10 @@ kb-engineering-notes/
 ├── 43-OpenCodeGo访问DeepSeekV4.1Flash提速实测与关闭思考reasoningEffort指南.md # [Stage 2: 专项排障] 针对 OpenCode Go 模型访问提速、TTFT 归因与 reasoningEffort 调优
 ├── 44-SublimeTextMarkdown预览切窗口自动跳转浏览器排障与静默快捷键配置指南.md # [Stage 2: 专项排障] 针对 Sublime Markdown 预览切窗口自动跳浏览器抢焦点、MPE 源码 Fallback 缺陷与静默快捷键配置
 ├── 45-全机AI密钥与模型供应商配置清点排查指南.md # [Stage 2: 专项流水线] 针对全机密钥清点、密钥指纹分组脱敏、SQLite 只读核查与残留识别
+├── 46-Windows进程启动来源取证与Everything闲置退出保护永生实例漏洞排障指南.md # [Stage 2: 专项排障] 针对 Windows 进程启动来源取证、UserAssist 与 Everything 闲置退出保护
+├── 47-SublimeText全局搜索FindInFiles穿透Gitignore慢查排障与配置防线指南.md # [Stage 2: 专项排障] 针对全局搜索穿透 .gitignore、node_modules 慢查排障与 binary_file_patterns 防线
+├── 48-WindowsTerminal分屏窗格布局判定与关闭误触治理指南.md # [Stage 2: 专项排障] 针对 WT 分屏窗格识别、closePane 焦点语义与分屏键误触治理
+├── 49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md # [Stage 2: 专项排障] 针对浏览器静默注入扩展、注册表外源安装机制与免迅雷 BT 纯净下载
 └── ...（后续顺次扩充）
 ```
 
@@ -140,8 +144,12 @@ kb-engineering-notes/
 | Windows 下跨盘单文件软链接失败、Junction 报目录名称无效、硬链接禁止跨卷、或符号链接权限不足 (WinError 1314) | [`41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南.md) | Windows 软链接, Symlink, Junction 目录联接, mklink /H 硬链接, WinError 1314, 开发者模式, SeCreateSymbolicLinkPrivilege, 单文件跨盘链接 |
 | 多 Agent (Pi/Claude/OpenCode/AGY) 全局规则验证、CLI 命令行调用卡死 600s 超时、管道 stdin 未闭合或需隔离测试 | [`42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md) | 多 Agent 全局规则, CLI 管道挂起, readPipedStdin, 600s 超时, < NUL, Print Mode, 隔离探针测试, GLOBAL.md 生效验证 |
 | OpenCode Go 模型（deepseek-v4.1-flash 等）响应慢、首字延迟高，纠结要不要改代理/Console 配置，或想关掉思考提速 | [`43-OpenCodeGo访问DeepSeekV4.1Flash提速实测与关闭思考reasoningEffort指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/43-OpenCodeGo访问DeepSeekV4.1Flash提速实测与关闭思考reasoningEffort指南.md) | opencode-go, OpenCode Go, deepseek-v4.1-flash, TTFT, 首字延迟, reasoningEffort none, x-opencode-session, MissingSessionID, prompt cache, 前缀缓存, variant |
-| Sublime Text 打开 Markdown 后切窗口自动频繁跳转浏览器抢焦点、或想一键静默浏览器预览排版免弹窗 | [`44-SublimeTextMarkdown预览切窗口自动跳转浏览器排障与静默快捷键配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/44-SublimeTextMarkdown预览切窗口自动跳转浏览器排障与静默快捷键配置指南.md) | Sublime Text, MarkdownPreviewEnhanced, 抢焦点, 自动跳转浏览器, on_activated_async, focus_existing_tab, MarkdownPreview, Shift+Alt+M, 静默预览 |
+| Sublime Text 打开 Markdown 后切窗口频繁跳浏览器抢焦点、或寻找更舒适的 Markdown 阅读与预览方案（排版美化/双栏分屏/免弹窗静默预览/终端阅读） | [`44-SublimeTextMarkdown预览切窗口自动跳转浏览器排障与静默快捷键配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/44-SublimeTextMarkdown预览切窗口自动跳转浏览器排障与静默快捷键配置指南.md) | Sublime Text, MarkdownPreviewEnhanced, 抢焦点, 自动跳转浏览器, MarkdownPreview, Shift+Alt+M, MarkdownEditing, MarkdownLivePreview, Terminus glow, minihtml, 预览插件选型 |
 | 想把某厂商 API Key 收敛到只留一个工具、或盘点全机有哪些地方配了同一个 key、怀疑「清干净了」其实还有残留 | [`45-全机AI密钥与模型供应商配置清点排查指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/45-全机AI密钥与模型供应商配置清点排查指南.md) | 密钥清点, key 收敛, 只保留一个工具, API Key 残留, LegacyApiKeys 迁移槽, 密钥指纹分组, sha256 分组, SQLite 只读核查, immutable=1, os.walk 跑飞, UnicodeEncodeError gbk, 环境变量没清, 泄露面盘点 |
+| 想查明 Windows 后台某个常驻程序（如 Everything）是谁在什么时间拉起的、排查后台驻留与闲置退出保护漏洞 | [`46-Windows进程启动来源取证与Everything闲置退出保护永生实例漏洞排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/46-Windows进程启动来源取证与Everything闲置退出保护永生实例漏洞排障指南.md) | 进程启动来源取证, 谁拉起的, UserAssist, Everything 驻留, idle_exit, 永生实例, 登录会话 |
+| Sublime Text 全局搜索速度暴跌扫描数十万文件、穿透 `.gitignore` 搜入 `node_modules` / `.thirdparty` 并报 `Unable to open file` | [`47-SublimeText全局搜索FindInFiles穿透Gitignore慢查排障与配置防线指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/47-SublimeText全局搜索FindInFiles穿透Gitignore慢查排障与配置防线指南.md) | Sublime Text, Find in Files, Use Gitignore, node_modules 慢查, Unable to open file, binary_file_patterns, project filters, F4 遍历, 搜索穿透 |
+| 一个 Windows Terminal 窗口里文字被竖/横线切成几块，不知道哪块能关、怕关掉连 agent 会话一起杀，或误触分屏键后想收场 | [`48-WindowsTerminal分屏窗格布局判定与关闭误触治理指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/48-WindowsTerminal分屏窗格布局判定与关闭误触治理指南.md) | Windows Terminal 分屏, 窗格 pane, 右侧窗格关不掉, Ctrl+Shift+W, ClosePane, 焦点窗格, alt+shift+plus 误触, SwitchToTab3, ctrl+alt+4, defaults.json, Move pane to new window, Toggle pane zoom |
+| Chrome 或 Firefox 自动静默安装迅雷下载插件、扩展删除了又死灰复燃，或需免迅雷客户端纯净下载种子/磁力链 | [49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南.md) | 迅雷插件, 自动安装, ChromeExtensionCache, xl_ext_chrome, NativeMessagingHosts, 注册表残留, 裸磁力链, qBittorrent, Tracker加速, 免迅雷下载 |
 
 ---
 
