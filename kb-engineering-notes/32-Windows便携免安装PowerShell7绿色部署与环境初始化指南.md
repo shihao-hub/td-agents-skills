@@ -89,6 +89,22 @@ Remove-Item $zip -Force
 
 汇报用表格：7 的版本/Edition、安装路径、5.1 验证结果、零影响清单（注册表/系统PATH/右键菜单均未动）、启动方式（完整路径或 Windows Terminal 添加配置文件）、卸载方式（删目录）。最后主动提一句：需要的话可以加用户级 PATH（可逆），等用户确认。
 
+### Step 6: 集成到 Windows Terminal（独立版与原版）
+
+在 `%LOCALAPPDATA%\Microsoft\Windows Terminal\settings.json`（独立免安装版）或 `%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json`（原版）的 `profiles.list` 中注入：
+
+```json
+{
+    "commandline": "C:\\Users\\<user>\\AppData\\Local\\Programs\\PowerShell\\7\\pwsh.exe",
+    "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
+    "hidden": false,
+    "icon": "ms-appx:///ProfileIcons/{574e775e-4f2a-5b96-ac1e-a2962a402336}.scale-200.png",
+    "name": "PowerShell 7",
+    "startingDirectory": "%USERPROFILE%"
+}
+```
+可同步将全局 `"defaultProfile"` 设为 `{574e775e-4f2a-5b96-ac1e-a2962a402336}`，开窗即享现代 PowerShell 7。
+
 ## 不适用
 
 - Linux / macOS 上的 PowerShell 安装（本 skill 只覆盖 Windows）

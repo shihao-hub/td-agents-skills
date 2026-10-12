@@ -103,6 +103,9 @@ Set-Alias hh Show-CwdHistory
 7. **`--cwd .` 在 atuin 18.22 不再解析成当前目录**（按目录字段字面匹配，`.` 返回 0 条），加上 `2>$null` 后静默失败，表现为 `hh` 什么都不显示。必须传真实路径：`--cwd $PWD.Path`。
 8. **atuin 判定"当前目录"优先读 `PWD` 环境变量**（`get_current_dir()` 里 `env::var("PWD")` 优先于进程 cwd）。从 git-bash/msys 启动的 powershell 会带 POSIX 路径的 `PWD`，目录过滤会全空——真实终端（Tabby/开始菜单启动）无此变量，不受影响。用子进程验证目录过滤前先 `Remove-Item Env:PWD`，否则拿到的是假阴性。
 9. **Ctrl+r 在 TUI 内不是"再开一次搜索"，而是循环切换过滤模式**（Ctrl+s 切换搜索模式）。配合 `filters` 把 directory 排第一，`目录 ↔ 全局` 就是一键切换。
+10. **免安装/便携版环境下的 PATH 丢失与自愈防御**。子进程或未刷新环境变量的会话可能找不到 `atuin.exe`。可在 profile 顶部探测 `$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Atuinsh...` 并动态注入 PATH。
+11. **首行双重 BOM 或零宽字符引发解析异常**。多轮脚本追加写入容易引入多重 `\ufeff`，导致 PowerShell 将 `[Console]::OutputEncoding` 判定为未知 cmdlet。必须确保文件首部剥离多余字符，维持单一标准 UTF-8 BOM。
+12. **Atuin 模块未导出 `Invoke-AtuinSearch` 导致 `Ctrl+r` 报异常并打出 `^G`**。`atuin init powershell` 内部将核心函数（`Invoke-AtuinSearch`、`Get-CommandLine`）定义在动态模块 `Atuin` 内且未通过 `Export-ModuleMember` 导出。PSReadLine 在主会话执行默认的 ScriptBlock `{ Invoke-AtuinSearch }` 时抛出 `CommandNotFoundException`，PSReadLine 捕获后发出系统 Ding 蜂鸣并在屏幕打印出 ASCII 0x07（即 `^G`）。**抢救 SOP**：在 profile 初始化后显式使用模块内部作用域闭包重新绑定：`Set-PSReadLineKeyHandler -Chord "Ctrl+r" -BriefDescription "Runs Atuin search" -ScriptBlock { & (Get-Module Atuin) { Invoke-AtuinSearch } }`。
 
 ## 诊断流程（"不显示历史"）
 
@@ -114,7 +117,7 @@ Set-Alias hh Show-CwdHistory
 4. 让用户（或子进程，注意坑 5）去掉 `2>$null` 手动跑 `atuin search --cwd $PWD.Path --limit 5` 看真实报错。
 5. 确认目录里确实没历史也会不显示（正常现象）。看库里有啥：设好 session 后跑 `atuin search --filter-mode global --limit 8 --format '{directory} | {command}'`。若全局有、当前目录没有：先确认该目录真的没记录，再按坑 7/8 检查（`--cwd` 是否真实路径、`PWD` 是否被 msys 污染）。
 6. `Get-ExecutionPolicy -List`——LocalMachine Unrestricted 一般无碍；Restricted 会导致 profile 整个不加载。
-7. 用户实际用的宿主：Tabby/VS Code/Windows Terminal 默认 shell 必须是 `powershell.exe`（5.1），本配置的 `$PROFILE` 才会被加载；pwsh 7 的 profile 在 `Documents\PowerShell\`，是另一个文件。
+7. **双端 Profile 统一支持（PS 5.1 + PowerShell 7）**：pwsh 7 的 profile 位于 `Documents\PowerShell\Microsoft.PowerShell_profile.ps1`。双端均需镜像部署，并带 PATH 自愈与 OSC 9;9 目录上报，确保在任何终端开窗按 `Ctrl+r` 均秒搜当前目录历史。
 
 ## 验证方法（改完 profile 必做）
 

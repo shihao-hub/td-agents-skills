@@ -54,6 +54,9 @@ updated: 2026-10-12
   - 设置文件：`%LOCALAPPDATA%\Microsoft\Windows Terminal\settings.json`；
   - PowerShell 历史记录：`%APPDATA%\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt`；
   - 启动后配色、分屏、字体、历史命令记录 100% 自动继承，无任何割裂感。
+- **【核心排障与最佳实践：便携版 Shell（PowerShell 7 / Git Bash）与 Atuin 目录历史集成】**：
+  - **动态生成器断层**：独立免安装版缺少 MSIX 包身份，且绿色便携版 PowerShell 7（`pwsh.exe`）未注册系统全局安装项，WT 无法自动扫描。需在 `settings.json` 的 `profiles.list` 中显式静态登记 PowerShell 7（GUID: `{574e775e-4f2a-5b96-ac1e-a2962a402336}`）与 Git Bash（`--login -i`）。
+  - **Atuin 命令历史与 `$PROFILE` 双端同步**：PowerShell 5.1 与 7 的 `$PROFILE` 物理路径相互独立（分别位于 `Documents\WindowsPowerShell` 与 `Documents\PowerShell`）。需确保双端均配置 Atuin 初始化、PATH 缺失自愈与 OSC 9;9 目录上报，使 `Ctrl+R`（当前目录命令历史搜索）与 `hh` 在定制版终端内跨 Shell 无缝生效。
 
 ---
 
@@ -136,6 +139,21 @@ updated: 2026-10-12
   // 2. 注入独立版真正启动器（图标与命令双重接管）
   item(type='dir|drive|back' title='在终端中打开(T)' pos=4 image='D:\Users\Softwares\WindowsTerminal\WindowsTerminal.exe' cmd='D:\Users\Softwares\WindowsTerminal\wt.exe' arg='-d "@sel.path\."')
   ```
+
+---
+
+### Layer 8: Windows 登录开机自启动机制接管与 UWP StartupTask 隔离
+- **【核心踩坑：WT 界面自启动开关硬绑定微软商店原版】**：  
+  在 Windows Terminal 设置界面「启动 ➔ 在计算机启动时启动（登录到 Windows 时自动启动终端）」是一个 WinRT UWP API 开关。
+  - 其底层调用 `StartupTask.RequestEnableAsync()`，将自启动注册在 `HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\Microsoft.WindowsTerminal_8wekyb3d8bbwe\StartTerminalOnLoginTask`；
+  - **后果**：登录时 Windows 操作系统直接拉起微软应用商店原版 UWP 包（`Microsoft.WindowsTerminal_8wekyb3d8bbwe`），完全无视用户环境变量 `Path` 和 `App Paths`，导致开机启动的依然是原版未定制图标的 WT！
+- **正确解法（双步闭环）**：
+  1. **关闭原版 UWP 自启动**：在 WT 设置中将该开关切为【关】（或将上述注册表项的 `State` 设为 `0` 彻底禁用）；
+  2. **注册独立版 Win32 开机启动项**：通过当前用户的 Run 注册表键挂载独立版 `wt.exe`：
+     ```powershell
+     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "WindowsTerminalCustom" -Value '"D:\Users\Softwares\WindowsTerminal\wt.exe"'
+     ```
+  3. **效果**：开机登录时 100% 自动拉起独立定制版 Windows Terminal，完美保持 `pure_dark` 极简深黑哑光图标！
 
 ---
 
@@ -294,13 +312,14 @@ go run . revert wt
 uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_icon.py --revert --remove-path --restart-explorer
 ```
 
-> **自动完成的 6 项无损复原动作**：
+> **自动完成的 7 项无损复原动作**：
 > 1. **注册表 App Paths 复原**：自动将 `HKCU\...\App Paths\wt.exe` 还原回官方商店原版路径；
 > 2. **默认终端 DefTerm 复原**：自动将 `HKCU\Console\%%Startup` 恢复为原版默认委托设置；
-> 3. **右键菜单复原**：自动将 Nilesoft Shell 的 `modify.nss` 和 `terminal.nss` 从 `.bak` 备份中完整还原，清理注入规则，并删除 `.bak` 临时文件；
-> 4. **Images 资源复原**：自动将 `terminal_contrast-*.ico` 还原为原版；
-> 5. **快捷方式清理**：自动清理开始菜单定制的 `.lnk` 文件；
-> 6. **环境变量清理**：自动将独立版目录从用户级环境变量 `Path` 中移除。
+> 3. **开机自启动清理**：自动清理 `HKCU\...\Run\WindowsTerminalCustom` Win32 自启动项；
+> 4. **右键菜单复原**：自动将 Nilesoft Shell 的 `modify.nss` 和 `terminal.nss` 从 `.bak` 备份中完整还原，清理注入规则，并删除 `.bak` 临时文件；
+> 5. **Images 资源复原**：自动将 `terminal_contrast-*.ico` 还原为原版；
+> 6. **快捷方式清理**：自动清理开始菜单定制的 `.lnk` 文件；
+> 7. **环境变量清理**：自动将独立版目录从用户级环境变量 `Path` 中移除。
 
 ---
 
@@ -316,6 +335,7 @@ uv run D:\Users\language_projects\go_projects\taskbarguard\scripts\wt\patch_wt_i
 | 任务栏仍显示原版图标 / 外部工具唤醒旧图标 | 1) 旧实例常驻且 WT 为单实例机制；2) 遗漏 102/103 资源组；3) Win11 图标缓存未离线清空 | 运行带 `--restart-explorer` 参数的脚本，引擎将全量烧录 101/102/103 并离线彻底清空 `iconcache_*.db`；在方便时重启一次终端即可彻底纯净 |
 | 外部启动器/运行框直接执行 CLI（如 `agy`）一闪而过 | CLI 程序属于 CUI 进程，裸启动后由于无现成 Shell 托管，执行完毕或转入后台时系统会销毁控制台宿主 | 改由独立版 `wt` 托管并带 `-NoExit`：`wt.exe -d "<目录>" powershell -NoExit -Command "agy ..."` |
 | Git Bash / Agent / 后台脚本调用 `powershell.exe` 频繁弹出 WT 窗口并抢占焦点 | Win11 DefTerm 默认将无 Win32 Console 的 CUI 进程委托给 WT，WT 必须弹出 GUI 窗口接管，破坏前台焦点（如 Alt+Tab / `XamlExplorerHostIslandWindow` 测试） | 1) 运行 `uv run patch_wt_icon.py --defterm conhost` 或在系统设置中将“默认终端应用程序”设为【Windows 控制台主机】（不影响日常用 WT）；2) 脚本启动子进程时显式带 `CREATE_NO_WINDOW (0x08000000)` |
+| 电脑开机/用户登录时自动拉起的 Windows Terminal 仍是微软商店原版而非定制版 | WT 设置中的“在计算机启动时启动”走的是 Windows UWP 专属的 `StartupTask` WinRT API，硬绑定了微软商店包名（`Microsoft.WindowsTerminal_8wekyb3d8bbwe`），完全无视 PATH 与 App Paths | 1) 在 WT 设置中将“在计算机启动时启动”切为【关】；2) 运行命令为定制版注册真正的 Win32 开机启动项：`Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "WindowsTerminalCustom" -Value '"D:\Users\Softwares\WindowsTerminal\wt.exe"'` |
 | `--update` 打印“检测到当前进程运行在 Windows Terminal 会话内”并 exit 1 | 安全闸门：升级需关闭 WT，而当前会话就在 WT 进程树内，`taskkill /T` 会连自己一起杀 | **这是预期保护，不是故障**。先关闭全部 WT 窗口，再从 conhost / Win+R 独立窗口执行 |
 | `--auto-setup` 跑完但版本没变 | `find_target_exes` 先命中现有 exe，只有目录为空才联网部署 | 升级请用 `--update`；`--auto-setup` 只负责**首次**部署 |
 | `--update` 报“未发现已部署的独立版终端” | 未传 `--target-dir` 且 `state.json` 无 `installed_dir_wt` 记录 | 首次部署用 `--auto-setup`，或用 `--target-dir` 指向实际安装目录 |
