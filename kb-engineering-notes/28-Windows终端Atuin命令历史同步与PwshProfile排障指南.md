@@ -58,16 +58,43 @@ filters = ["directory", "global", "host", "session", "workspace", "session-prelo
 ```powershell
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# 先初始化 atuin（这一步才会设置 ATUIN_SESSION，必须在 search 之前）
-Invoke-Expression (& { (atuin init powershell) -join "`n" })
+# 兜底确保 atuin 路径在 PATH 中（无论宿主环境如何启动或是否为免安装环境）
+$atuinPkgDir = "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Atuinsh.Atuin_Microsoft.Winget.Source_8wekyb3d8bbwe"
+if ((Test-Path "$atuinPkgDir\atuin.exe") -and ($env:Path -notlike "*$atuinPkgDir*")) {
+    $env:Path = "$atuinPkgDir;$env:Path"
+}
 
-# 上/下键恢复经典行为：召回上/下一条命令到输入行，可直接编辑（必须写在 init 之后才能覆盖 atuin 的绑定）
-# atuin 全屏搜索保留在 Ctrl+r
-Set-PSReadLineKeyHandler -Chord UpArrow -Function PreviousHistory
-Set-PSReadLineKeyHandler -Chord DownArrow -Function NextHistory
+# PSReadLine 兜底加载
+$script:PSReadLineAvailable = $false
+try {
+    Import-Module PSReadLine -ErrorAction Stop
+    $script:PSReadLineAvailable = $true
+} catch {
+    $script:PSReadLineAvailable = [bool](Get-Module PSReadLine -ErrorAction SilentlyContinue)
+}
 
-# 显示当前目录最近执行过的命令；敲 hh 刷新（默认5条），hh 20 显示20条（h 是系统内置别名，别用）
-# --filter-mode global 是保险：hh 自己用 --cwd 精确过滤，不受 config.toml 里 filter_mode 影响
+# 支持同一会话中反复执行 . $PROFILE 纯净热重载：
+# 先卸载旧动态模块并局部压制 Warning，根治 Atuin 官方输出 "already loaded, skipping" 的黄色警告
+Remove-Module Atuin -ErrorAction SilentlyContinue
+& {
+    $WarningPreference = 'SilentlyContinue'
+    Invoke-Expression (& { (atuin init powershell) -join "`n" })
+}
+
+if ($script:PSReadLineAvailable) {
+    # 修复 Atuin 官方模块未导出私有函数导致 Ctrl+r 报 CommandNotFoundException 进而发出 Ding (^G) 的缺陷
+    if (Get-Module Atuin) {
+        Set-PSReadLineKeyHandler -Chord "Ctrl+r" -BriefDescription "Runs Atuin search" -ScriptBlock {
+            & (Get-Module Atuin) { Invoke-AtuinSearch }
+        }
+    }
+
+    # 上/下键恢复经典行为：召回上/下一条命令到输入行，可直接编辑
+    Set-PSReadLineKeyHandler -Chord UpArrow -Function PreviousHistory
+    Set-PSReadLineKeyHandler -Chord DownArrow -Function NextHistory
+}
+
+# 显示当前目录最近执行过的命令；敲 hh 刷新（默认5条），hh 20 显示20条
 function Show-CwdHistory {
     param([int]$Count = 5)
     $lines = atuin search --filter-mode global --cwd $PWD.Path --limit $Count --format "{exit}`t{command}" 2>$null
@@ -106,6 +133,7 @@ Set-Alias hh Show-CwdHistory
 10. **免安装/便携版环境下的 PATH 丢失与自愈防御**。子进程或未刷新环境变量的会话可能找不到 `atuin.exe`。可在 profile 顶部探测 `$env:LOCALAPPDATA\Microsoft\WinGet\Packages\Atuinsh...` 并动态注入 PATH。
 11. **首行双重 BOM 或零宽字符引发解析异常**。多轮脚本追加写入容易引入多重 `\ufeff`，导致 PowerShell 将 `[Console]::OutputEncoding` 判定为未知 cmdlet。必须确保文件首部剥离多余字符，维持单一标准 UTF-8 BOM。
 12. **Atuin 模块未导出 `Invoke-AtuinSearch` 导致 `Ctrl+r` 报异常并打出 `^G`**。`atuin init powershell` 内部将核心函数（`Invoke-AtuinSearch`、`Get-CommandLine`）定义在动态模块 `Atuin` 内且未通过 `Export-ModuleMember` 导出。PSReadLine 在主会话执行默认的 ScriptBlock `{ Invoke-AtuinSearch }` 时抛出 `CommandNotFoundException`，PSReadLine 捕获后发出系统 Ding 蜂鸣并在屏幕打印出 ASCII 0x07（即 `^G`）。**抢救 SOP**：在 profile 初始化后显式使用模块内部作用域闭包重新绑定：`Set-PSReadLineKeyHandler -Chord "Ctrl+r" -BriefDescription "Runs Atuin search" -ScriptBlock { & (Get-Module Atuin) { Invoke-AtuinSearch } }`。
+13. **会话重载 `. $PROFILE` 时报 `The Atuin module is already loaded, skipping` 警告**。Atuin 官方脚本内部检测到 `Atuin` 模块已加载时，在 PS 5.1 会直接抛出 `Write-Warning` 并直接 `return` 退出，导致后续热重载全部被短路。**抢救 SOP**：在 profile 调用 `atuin init` 前显式执行 `Remove-Module Atuin -ErrorAction SilentlyContinue` 并将警告级别暂时静默（`$WarningPreference = 'SilentlyContinue'`），实现随时 `. $PROFILE` 均 100% 纯净热重载。
 
 ## 诊断流程（"不显示历史"）
 
