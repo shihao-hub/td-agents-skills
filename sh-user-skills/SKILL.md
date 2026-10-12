@@ -3,13 +3,13 @@ name: sh-user-skills
 description: |
   个人技能库总入口与分流器：用户只有一句模糊需求、忘记技能名，或遇到底层报错/环境与配置疑难时，在此匹配并加载对应子技能 SOP。
   第一优先——内置工程避坑知识库（sh-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理等；全量索引以知识库内部路由表为准，随条目持续生长。
-  开发与重构（后端系统设计、计划驱动与规格驱动工作流、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、WT 独立版定制守卫、monorepo 提交推送、GitHub 仓库大扫除）；
+  开发与重构（后端系统设计、计划驱动与规格驱动工作流、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、Nuitka 单文件打包、WT 独立版定制守卫、monorepo 提交推送、GitHub 仓库大扫除）；
   文档与交接（PRD/技术方案、书转 skill、跨 agent 交接、排障复盘）；
   检索与媒资归档（Everything 秒搜、抖音/B站/知乎下载、视频转写字幕、去水印、Office 提图、网页存档、飞书聊天与会话归档）；
   另有飞书、Redis/Iris、antigravity 三个族路由器；用户直接点名 `sh-*` 子技能（含拼写近似）时也由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
 version: 1.2.0
 created: 2026-10-07
-updated: 2026-10-11
+updated: 2026-10-13
 ---
 
 # sh-user-skills：个人技能库总目录与分流导航
@@ -55,6 +55,7 @@ updated: 2026-10-11
 | 给接口生成 Bruno 测试集合 | `sh-bruno-collection` |
 | 创建 Codex 插件目录与 manifest | `sh-codex-plugin-creator` |
 | Python 项目打包成免安装绿色版 | `sh-pystand-pack` |
+| Python 单脚本打包 exe／uv 脚本编译／Nuitka 单文件加速／打包成一个 exe | `sh-nuitka-pack` |
 | C++ 编译报错／CMake 集成 Lua | `sh-cluacpp-build` |
 | 把这个能力沉淀成 skill／书转 skill | `sh-book2skill-sop`（书/文档）或 `skill-creator` |
 | Windows Terminal换图标／修改终端图标／WT定制／右键在终端中打开修改 | `sh-wt-customizer` |
@@ -89,6 +90,7 @@ updated: 2026-10-11
 | `sh-bruno-collection` | 为 HTTP 接口生成 Bruno API 测试集合（.bru）。点名使用 |
 | `sh-codex-plugin-creator` | 脚手架创建 Codex 插件目录、manifest 与个人市场条目，含校验和更新流程。点名使用 |
 | `sh-pystand-pack` | PyStand+嵌入式 Python 把 Python 项目打包成免安装绿色文件夹。点名使用 |
+| `sh-nuitka-pack` | uv 单脚本+Nuitka 打包 Windows 单文件 exe 与启动加速缓存。点名使用 |
 | `sh-wt-customizer` | Windows Terminal (wt) 独立版定制：PE 图标注入、任务栏守卫、右键菜单与 Win+R 全链路接管及一键原生复原。点名使用 |
 | `sh-monorepo-commit-push` | Monorepo 与 git submodule 项目逐项审查、提交并推送。点名使用 |
 | `sh-github-repo-cleanup` | GitHub 仓库大扫除：审计→fork 转 Star→mirror 备份→批量删除/归档。点名使用 |
