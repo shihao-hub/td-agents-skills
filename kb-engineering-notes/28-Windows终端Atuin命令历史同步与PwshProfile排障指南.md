@@ -82,11 +82,14 @@ Remove-Module Atuin -ErrorAction SilentlyContinue
 }
 
 if ($script:PSReadLineAvailable) {
-    # 修复 Atuin 官方模块未导出私有函数导致 Ctrl+r 报 CommandNotFoundException 进而发出 Ding (^G) 的缺陷
+    # 修复 Atuin 官方模块未导出私有函数导致快捷键报 CommandNotFoundException 进而发出 Ding (^G) 的缺陷
+    # 同时绑定 Ctrl+r 和 Ctrl+g 双快捷键，确保无论按哪个均能一键唤起历史搜索
     if (Get-Module Atuin) {
-        Set-PSReadLineKeyHandler -Chord "Ctrl+r" -BriefDescription "Runs Atuin search" -ScriptBlock {
+        $atuinSearchBlock = {
             & (Get-Module Atuin) { Invoke-AtuinSearch }
         }
+        Set-PSReadLineKeyHandler -Chord "Ctrl+r" -BriefDescription "Runs Atuin search" -ScriptBlock $atuinSearchBlock
+        Set-PSReadLineKeyHandler -Chord "Ctrl+g" -BriefDescription "Runs Atuin search" -ScriptBlock $atuinSearchBlock
     }
 
     # 上/下键恢复经典行为：召回上/下一条命令到输入行，可直接编辑
@@ -117,6 +120,12 @@ function Show-CwdHistory {
     }
 }
 Set-Alias hh Show-CwdHistory
+
+# 随时敲 hs（History Search）全屏交互式搜索历史
+function Search-AtuinHistory {
+    atuin search -i
+}
+Set-Alias hs Search-AtuinHistory
 ```
 
 ## 必踩的坑（每个都真实踩过，原因比现象重要）
