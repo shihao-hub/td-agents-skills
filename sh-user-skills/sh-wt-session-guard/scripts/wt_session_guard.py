@@ -404,8 +404,51 @@ GUARD_LOG_FILE = WT_STATE_DIR / "session_guard.log"
 
 def is_compiled() -> bool:
     """判断当前进程是否已编译为独立二进制 exe"""
+    if "__compiled__" in globals() or getattr(sys, "frozen", False):
+        return True
+    try:
+        buf = ctypes.create_unicode_buffer(1024)
+        ctypes.windll.kernel32.GetModuleFileNameW(0, buf, 1024)
+        name = Path(buf.value).name.lower()
+        if name.endswith(".exe") and "python" not in name and "uv" not in name:
+            return True
+    except Exception:
+        pass
     exe_name = Path(sys.executable).name.lower()
-    return "__compiled__" in globals() or getattr(sys, "frozen", False) or ("python" not in exe_name and "uv" not in exe_name)
+    return "python" not in exe_name and "uv" not in exe_name
+
+
+def get_self_executable() -> str:
+    """获取当前真实可执行程序绝对路径（支持 Nuitka 单文件 exe、pythonw 及脚本模式）"""
+    if is_compiled():
+        # 1. 优先使用 Win32 GetModuleFileNameW（最权威底层 API，避开 Nuitka onefile 虚构的 temp python.exe）
+        try:
+            buf = ctypes.create_unicode_buffer(1024)
+            ctypes.windll.kernel32.GetModuleFileNameW(0, buf, 1024)
+            mod_path = Path(buf.value).resolve()
+            if mod_path.exists() and mod_path.suffix.lower() == ".exe":
+                return str(mod_path)
+        except Exception:
+            pass
+
+        # 2. 尝试 sys.argv[0]
+        try:
+            argv_path = Path(sys.argv[0]).resolve()
+            if argv_path.exists() and argv_path.suffix.lower() == ".exe":
+                return str(argv_path)
+        except Exception:
+            pass
+
+        # 3. 兜底 sys.executable
+        if Path(sys.executable).exists():
+            return str(Path(sys.executable).resolve())
+
+    # 脚本模式：优先返回同目录下的 pythonw.exe，避免控制台黑框
+    py_exec = Path(sys.executable).resolve()
+    pyw_exec = py_exec.parent / "pythonw.exe"
+    if pyw_exec.exists():
+        return str(pyw_exec)
+    return str(py_exec)
 
 
 def get_daemon_pid() -> Optional[int]:
@@ -416,7 +459,8 @@ def get_daemon_pid() -> Optional[int]:
             if psutil.pid_exists(pid):
                 p = psutil.Process(pid)
                 pname = (p.name() or "").lower()
-                if "python" in pname or "uv" in pname or "wt_session_guard" in pname:
+                target_name = Path(get_self_executable()).name.lower()
+                if "python" in pname or "uv" in pname or "wt_session_guard" in pname or target_name in pname:
                     return pid
         except Exception:
             pass
@@ -443,16 +487,14 @@ def start_daemon() -> None:
 
     import subprocess
 
+    target_exe = get_self_executable()
     if is_compiled():
         # 已编译为独立 exe：直接拉起自身二进制
-        cmd = [sys.executable, "guard", "--foreground", "--headless"]
+        cmd = [target_exe, "guard", "--foreground", "--headless"]
     else:
         # 单脚本运行：优先使用同虚拟环境下的 pythonw.exe
         script_path = str(Path(__file__).resolve())
-        py_exec = Path(sys.executable)
-        pyw_exec = py_exec.parent / "pythonw.exe"
-        target_exec = str(pyw_exec) if pyw_exec.exists() else str(py_exec)
-        cmd = [target_exec, script_path, "guard", "--foreground", "--headless"]
+        cmd = [target_exe, script_path, "guard", "--foreground", "--headless"]
 
     # DETACHED_PROCESS = 0x00000008, CREATE_NO_WINDOW = 0x08000000
     creationflags = 0x00000008 | 0x08000000
@@ -474,7 +516,7 @@ def start_daemon() -> None:
         print(f"    日志文件: {GUARD_LOG_FILE}")
         print("    可通过 `status` 查看状态，`stop-guard` 停止。")
     except Exception as e:
-        print(f"[-] 启动后台守护进程失败: {e}")
+        print(f"[-] 启动后台守护进程失败: {e} (调用命令: {cmd})")
 
 
 def stop_daemon() -> None:
