@@ -61,6 +61,7 @@ updated: 2026-10-13
 | Windows Terminal换图标／修改终端图标／WT定制／右键在终端中打开修改 | `sh-wt-customizer` |
 | 制定实施计划／只读规划方案／探索比选 | `sh-plan-driven-development`（支持默认交付 plans/ 与 --claude 探索规划） |
 | agy会话标题批量治理／汉化agy对话标题／修改会话为中文／批量重命名agy会话 | `sh-agy-session-governance` |
+| WT关闭全部标签页会话恢复／Windows Terminal关闭会话保持／agy会话恢复守护／关闭WT拦截保存／wt会话守卫／开启开机自启守卫 | `sh-wt-session-guard` |
 
 ### ⚡ 领域技能族路由器（二级分流）
 
@@ -93,6 +94,7 @@ updated: 2026-10-13
 | `sh-pystand-pack` | PyStand+嵌入式 Python 把 Python 项目打包成免安装绿色文件夹。点名使用 |
 | `sh-nuitka-pack` | uv 单脚本+Nuitka 打包 Windows 单文件 exe 与启动加速缓存。点名使用 |
 | `sh-wt-customizer` | Windows Terminal (wt) 独立版定制：PE 图标注入、任务栏守卫、右键菜单与 Win+R 全链路接管及一键原生复原。点名使用 |
+| `sh-wt-session-guard` | Windows Terminal (wt) 与 agy CLI 会话恢复守卫：右上角关闭全部标签页时双保险保底追加恢复命令、无窗口静默守护与开机自启动治理。点名使用 |
 | `sh-agy-session-governance` | agy CLI 会话标题批量治理与汉化：导出待治理英文会话、AI 协同智能翻译生成中文标题、事务双写更新 SQLite 与 annotations 文件、自动前置快照备份与一键还原。点名使用 |
 | `sh-monorepo-commit-push` | Monorepo 与 git submodule 项目逐项审查、提交并推送。点名使用 |
 | `sh-github-repo-cleanup` | GitHub 仓库大扫除：审计→fork 转 Star→mirror 备份→批量删除/归档。点名使用 |
