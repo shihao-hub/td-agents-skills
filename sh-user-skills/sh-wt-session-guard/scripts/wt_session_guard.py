@@ -653,6 +653,57 @@ def cmd_guard(args: argparse.Namespace) -> None:
                 pass
 
 
+AUTOSTART_REG_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+AUTOSTART_VAL_NAME = "WindowsTerminalSessionGuard"
+
+
+def cmd_autostart(args: argparse.Namespace) -> None:
+    """管理 Windows 开机自启动项 (HKCU Run)"""
+    import winreg
+
+    action = (getattr(args, "action", "") or "status").lower()
+    target_exe = get_self_executable()
+    if is_compiled():
+        cmd_str = f'"{target_exe}" guard --daemon'
+    else:
+        script_path = str(Path(__file__).resolve())
+        cmd_str = f'"{target_exe}" "{script_path}" guard --daemon'
+
+    if action in ("on", "enable", "install", "add"):
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_REG_KEY, 0, winreg.KEY_SET_VALUE) as key:
+                winreg.SetValueEx(key, AUTOSTART_VAL_NAME, 0, winreg.REG_SZ, cmd_str)
+            print(f"[+] 成功配置 Windows 开机静默自启动！")
+            print(f"    注册表项: HKCU\\{AUTOSTART_REG_KEY}\\{AUTOSTART_VAL_NAME}")
+            print(f"    自启命令: {cmd_str}")
+            print(f"    提示: 下次开机或登录系统时，守卫引擎将自动在后台静默运行。")
+        except Exception as e:
+            print(f"[-] 配置开机自启动失败: {e}")
+
+    elif action in ("off", "disable", "uninstall", "remove"):
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_REG_KEY, 0, winreg.KEY_SET_VALUE) as key:
+                winreg.DeleteValue(key, AUTOSTART_VAL_NAME)
+            print(f"[+] 成功移除 Windows 开机自启动项: {AUTOSTART_VAL_NAME}")
+        except FileNotFoundError:
+            print(f"[*] 开机自启动项当前未配置，无需移除。")
+        except Exception as e:
+            print(f"[-] 移除开机自启动项失败: {e}")
+
+    elif action in ("status", "check", "info"):
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, AUTOSTART_REG_KEY, 0, winreg.KEY_QUERY_VALUE) as key:
+                val, _ = winreg.QueryValueEx(key, AUTOSTART_VAL_NAME)
+            print(f"[+] 开机自启动状态: 已启用 (Enabled)")
+            print(f"    注册表项: HKCU\\{AUTOSTART_REG_KEY}\\{AUTOSTART_VAL_NAME}")
+            print(f"    自启命令: {val}")
+        except FileNotFoundError:
+            print(f"[-] 开机自启动状态: 未启用 (Disabled)")
+            print(f"    可通过 `autostart on` 命令一键开启开机自启。")
+        except Exception as e:
+            print(f"[-] 查询开机自启动状态失败: {e}")
+
+
 # -----------------------------------------------------------------------------
 # 程序入口
 # -----------------------------------------------------------------------------
@@ -688,6 +739,16 @@ def main() -> None:
     # stop-guard
     subparsers.add_parser("stop-guard", help="停止后台守护进程")
 
+    # autostart
+    p_auto = subparsers.add_parser("autostart", help="管理 Windows 用户开机自启动配置 (HKCU Run)")
+    p_auto.add_argument(
+        "action",
+        nargs="?",
+        default="status",
+        choices=["on", "off", "status", "enable", "disable", "check"],
+        help="操作: on(开启), off(关闭), status(查看状态，默认)",
+    )
+
     args = parser.parse_args()
 
     if args.subcommand == "scan":
@@ -702,6 +763,8 @@ def main() -> None:
         cmd_guard(args)
     elif args.subcommand == "stop-guard":
         stop_daemon()
+    elif args.subcommand == "autostart":
+        cmd_autostart(args)
     else:
         cmd_scan(args)
 
