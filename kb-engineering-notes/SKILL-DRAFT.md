@@ -74,6 +74,8 @@ kb-engineering-notes/
 ├── 53-WindowsTerminal拆分窗格cd目录重启不保留与OSC99路径上报排障指南.md # [Stage 2: 专项排障] 针对 WT 拆分窗格与会话恢复 cd 目录丢失、ConPTY 隔离与 OSC 9;9 路径上报
 ├── 54-Windows11豆包输入法任务栏输入指示图标隐藏与Windhawk运行时代码注入指南.md # [Stage 2: 专项排障] 针对 25H2 输入指示图标无法原生隐藏、TSF 语言栏项在 explorer 内绘制与 Windhawk 注入隐藏
 ├── 55-Manggo划词工具快捷键盲发CtrlC误杀终端会话与Windows默认AltShift切语言排障指南.md # [Stage 2: 专项排障] 针对划词工具全局快捷键盲发 Ctrl+C 杀终端会话、黑名单作用域与进程别名陷阱、Windows 默认 Alt+Shift 切换语言注册表禁用
+├── 56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md # [Stage 2: 专项排障] 针对 MCP 服务的 npx/uvx 包装层常驻进程与内存膨胀、profile patch 浅替换语义与直连入口改造
+├── 57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md # [Stage 2: 专项流水线] 针对常驻 PowerShell 地板价与每 tick 开销、csc 现场编译原生 Win32 小程序与零 conhost 集成
 └── ...（后续顺次扩充）
 ```
 
@@ -162,6 +164,12 @@ kb-engineering-notes/
 | Windows Terminal 拆分窗格或会话恢复在 cd 切换目录后，重启依然记不住新目录（退回初始路径），或拆分新窗格无法继承当前目录 | [`53-WindowsTerminal拆分窗格cd目录重启不保留与OSC99路径上报排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/53-WindowsTerminal拆分窗格cd目录重启不保留与OSC99路径上报排障指南.md) | Windows Terminal 拆分选项卡, 记不住目录, cd 重启还原, persistedWindowLayout, state.json, OSC 9;9, OSC 99, prompt, startingDirectory, CWD 上报, 拆分继承目录 |
 | Windows 11 任务栏常驻「输入指示」图标（豆包输入法头像、`英` 语言栏）删不掉：设置里没有「输入指示器」、改 CTF\LangBar 注册表无效、杀输入法进程无效，按 Win+Space 后还会自己长回来 | [`54-Windows11豆包输入法任务栏输入指示图标隐藏与Windhawk运行时代码注入指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/54-Windows11豆包输入法任务栏输入指示图标隐藏与Windhawk运行时代码注入指南.md) | 任务栏输入指示, 豆包头像图标, 英 图标删不掉, 输入指示器 找不到, 25H2 语言栏, CTF\LangBar, ShowStatus 被改回, tsf-oime.dll, TSF 语言栏项, explorer 内绘制, Win+Space 出现, Windhawk, taskbar-tray-system-icon-tweaks, hideLanguageBar, hideLanguageSupplementaryIcons |
 | 终端按快捷键被当成 Ctrl+C 杀会话或清行、划词工具（Manggo等）黑名单失效、或按完快捷键系统静默切为纯英文美式键盘打不出中文 | [`55-Manggo划词工具快捷键盲发CtrlC误杀终端会话与Windows默认AltShift切语言排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/55-Manggo划词工具快捷键盲发CtrlC误杀终端会话与Windows默认AltShift切语言排障指南.md) | Manggo, 划词翻译, 盲发 Ctrl+C, SendInput, 终端中断, SIGINT, Resume with -c, 黑名单失效, wt.exe 别名陷阱, WindowsTerminal.exe, Alt+Shift, 切语言, 纯英文键盘, HKL 0x4090409, 语言热键禁用, Keyboard Layout Toggle, 00000070 |
+| Agent 客户端进程树里每挂一个 MCP 服务就多出一串 `cmd → node → cmd → node → conhost`，内存比"刚启动"多出几百 MB、单条链路子树能占 300MB+ | [`56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md) | MCP 进程数, npx 包装层, npx-cli 108MB, uvx, uv 两层, conhost, 常驻内存, 子树 327MB, 内存降不下来, 包装进程不退出, tools/list 比对 |
+| 想改 MCP 服务启动命令或覆盖包自带的 MCP 条目，改完 `serverName` 丢了 / 不知道是否生效 / 纠结要不要重启 | [`56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md) | profile patch, cordis.patch.yml, config 浅替换, serverName 丢失, dsh --dump-config, 影子 profile, Junction 删除陷阱, MCP 热重挂, 插件要重启 |
+| 想按命令行关键字批量杀进程，结果把自己或宿主终端一起杀了（执行器报 Job runner 异常退出） | [`56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md) | CommandLine 匹配, Stop-Process 自杀, Windows Job runner exited 4294967295, -File 形态匹配, 排除自身 PID |
+| 某个常驻 PowerShell 看护/轮询脚本吃 100MB+ 内存和几个点 CPU（窗口记忆、看门狗、状态监视），想换成原生小工具 | [`57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md) | 常驻 PowerShell, 内存 106MB, 每 tick 10ms, 4% 单核, Add-Type, cmdlet 反射开销, 换原生, 原生小程序 |
+| 想给 Windows 写个不装 SDK 的常驻小工具，或用 csc 现场编译 C# 却报语法错误 | [`57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md) | csc.exe, Framework64 v4.0.30319, C# 5 语法限制, 字符串插值报错, target:winexe, platform:x64, 编译缓存, sha256 指纹, OpenProcess, WaitForSingleObject |
+| 明明设了 `windowsHide` 还是多出 `conhost.exe`；或窗口几何恢复在缩放屏上位置错位 | [`57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md) | conhost 仍在, windowsHide 无效, SW_HIDE 不等于不分配控制台, GUI 子系统, DPI 虚拟化, dpiAware 错位, SetWindowPos, GetSystemMetrics 虚拟屏, EnumWindows GC.KeepAlive |
 
 
 
