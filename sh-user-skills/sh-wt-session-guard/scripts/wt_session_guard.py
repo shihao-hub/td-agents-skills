@@ -103,11 +103,16 @@ class AgySession:
 # 核心业务逻辑
 # -----------------------------------------------------------------------------
 def setup_console_encoding() -> None:
-    """保障控制台标准输入输出为 UTF-8"""
+    """保障控制台标准输入输出为 UTF-8，并在 pythonw.exe (无控制台) 下安全重定向至 devnull"""
     if sys.platform == "win32":
-        if hasattr(sys.stdout, "buffer"):
+        if sys.stdout is None:
+            sys.stdout = open(os.devnull, "w", encoding="utf-8")
+        elif hasattr(sys.stdout, "buffer"):
             sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-        if hasattr(sys.stderr, "buffer"):
+
+        if sys.stderr is None:
+            sys.stderr = open(os.devnull, "w", encoding="utf-8")
+        elif hasattr(sys.stderr, "buffer"):
             sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 
@@ -432,7 +437,13 @@ def start_daemon() -> None:
     import subprocess
 
     script_path = str(Path(__file__).resolve())
-    cmd = ["uv", "run", script_path, "guard", "--foreground"]
+
+    # 优先使用同虚拟环境下的 pythonw.exe（GUI 子系统，PE 头原生声明无控制台，Windows 绝不弹窗）
+    py_exec = Path(sys.executable)
+    pyw_exec = py_exec.parent / "pythonw.exe"
+    target_exec = str(pyw_exec) if pyw_exec.exists() else str(py_exec)
+
+    cmd = [target_exec, script_path, "guard", "--foreground", "--headless"]
     # DETACHED_PROCESS = 0x00000008, CREATE_NO_WINDOW = 0x08000000
     creationflags = 0x00000008 | 0x08000000
     try:
@@ -447,7 +458,7 @@ def start_daemon() -> None:
         time.sleep(1.5)
         daemon_pid = get_daemon_pid()
         if daemon_pid:
-            print(f"[+] 守护进程已成功在后台启动 (PID: {daemon_pid})。")
+            print(f"[+] 守护进程已成功在后台静默启动 (PID: {daemon_pid})。")
         else:
             print(f"[+] 守护进程已发起启动 (Launcher PID: {proc.pid})。")
         print(f"    日志文件: {GUARD_LOG_FILE}")
@@ -503,15 +514,22 @@ def cmd_guard(args: argparse.Namespace) -> None:
         start_daemon()
         return
 
+    is_headless = getattr(args, "headless", False)
+    if is_headless:
+        hwnd = kernel32.GetConsoleWindow()
+        if hwnd:
+            ctypes.windll.user32.ShowWindow(hwnd, 0)
+
     # 前台/工作线程执行
-    print("==================================================================")
-    print("Windows Terminal (wt) agy 会话恢复守护引擎已启动")
-    print("监听模式：双保险协同（WT 退出自动落盘修补 + 活跃追踪）")
-    print("按 Ctrl+C 可停止当前守护进程。")
-    print("==================================================================")
+    if not is_headless:
+        print("==================================================================")
+        print("Windows Terminal (wt) agy 会话恢复守护引擎已启动")
+        print("监听模式：双保险协同（WT 退出自动落盘修补 + 活跃追踪）")
+        print("按 Ctrl+C 可停止当前守护进程。")
+        print("==================================================================")
 
     current_pid = os.getpid()
-    log_guard(f"守护引擎启动 (PID: {current_pid})")
+    log_guard(f"守护引擎启动 (PID: {current_pid}) [headless={is_headless}]")
     try:
         GUARD_PID_FILE.write_text(str(current_pid), encoding="utf-8")
     except Exception:
@@ -604,6 +622,7 @@ def main() -> None:
     p_guard = subparsers.add_parser("guard", help="启动常驻守护模式（WT 关闭时全自动补写保证 100% 还原）")
     p_guard.add_argument("--daemon", action="store_true", help="以无窗口后台守护模式运行")
     p_guard.add_argument("--foreground", action="store_true", help="显式前台运行（守护进程内部使用）")
+    p_guard.add_argument("--headless", action="store_true", help="无窗口静默运行（自动隐藏控制台窗口）")
 
     # stop-guard
     subparsers.add_parser("stop-guard", help="停止后台守护进程")
