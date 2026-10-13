@@ -74,11 +74,13 @@ try {
 }
 
 # 支持同一会话中反复执行 . $PROFILE 纯净热重载：
-# 先卸载旧动态模块并局部压制 Warning，根治 Atuin 官方输出 "already loaded, skipping" 的黄色警告
+# 1. 先卸载旧动态模块并局部压制 Warning，根治 Atuin 官方输出 "already loaded, skipping" 的黄色警告
+# 2. 剥离命令前导空格，根治复制粘贴缩进触发 Atuin 内置 ignorespace 导致历史静默丢失的缺陷
 Remove-Module Atuin -ErrorAction SilentlyContinue
 & {
     $WarningPreference = 'SilentlyContinue'
-    Invoke-Expression (& { (atuin init powershell) -join "`n" })
+    $initScript = (& { (atuin init powershell) -join "`n" }) -replace '\$env:ATUIN_COMMAND_LINE = \$line', '$env:ATUIN_COMMAND_LINE = $line.TrimStart()'
+    Invoke-Expression $initScript
 }
 
 if ($script:PSReadLineAvailable) {
@@ -135,6 +137,12 @@ Set-Alias hh Show-CwdHistory
 11. **首行双重 BOM 或零宽字符引发解析异常**。多轮脚本追加写入容易引入多重 `\ufeff`，导致 PowerShell 将 `[Console]::OutputEncoding` 判定为未知 cmdlet。必须确保文件首部剥离多余字符，维持单一标准 UTF-8 BOM。
 12. **Atuin 模块未导出 `Invoke-AtuinSearch` 导致 `Ctrl+r` 报异常并打出 `^G`**。`atuin init powershell` 内部将核心函数（`Invoke-AtuinSearch`、`Get-CommandLine`）定义在动态模块 `Atuin` 内且未通过 `Export-ModuleMember` 导出。PSReadLine 在主会话执行默认的 ScriptBlock `{ Invoke-AtuinSearch }` 时抛出 `CommandNotFoundException`，PSReadLine 捕获后发出系统 Ding 蜂鸣并在屏幕打印出 ASCII 0x07（即 `^G`）。**抢救 SOP**：在 profile 初始化后显式使用模块内部作用域闭包重新绑定：`Set-PSReadLineKeyHandler -Chord "Ctrl+r" -BriefDescription "Runs Atuin search" -ScriptBlock { & (Get-Module Atuin) { Invoke-AtuinSearch } }`。
 13. **会话重载 `. $PROFILE` 时报 `The Atuin module is already loaded, skipping` 警告**。Atuin 官方脚本内部检测到 `Atuin` 模块已加载时，在 PS 5.1 会直接抛出 `Write-Warning` 并直接 `return` 退出，导致后续热重载全部被短路。**抢救 SOP**：在 profile 调用 `atuin init` 前显式执行 `Remove-Module Atuin -ErrorAction SilentlyContinue` 并将警告级别暂时静默（`$WarningPreference = 'SilentlyContinue'`），实现随时 `. $PROFILE` 均 100% 纯净热重载。
+14. **前导空格触发 Atuin 内置 `ignorespace` 导致历史静默丢失**。在终端中执行命令时，若从文档/代码块或聊天中复制带入了行首空格（缩进），Atuin 遵循 Unix 终端安全规范，将其判定为“保密指令”（如密码/Token），在 hook 阶段（`atuin history start`）直接丢弃、不存入数据库（而原生 PSReadLine 却会记录，造成“PSReadLine 能搜到、Atuin 里凭空蒸发”的严重困惑）。**抢救 SOP**：在 profile 调用 `atuin init powershell` 时，动态注入预处理补丁，使用 `.TrimStart()` 剥离命令首部空格后再交由 Atuin 录入：
+    ```powershell
+    $initScript = (& { (atuin init powershell) -join "`n" }) -replace '\$env:ATUIN_COMMAND_LINE = \$line', '$env:ATUIN_COMMAND_LINE = $line.TrimStart()'
+    Invoke-Expression $initScript
+    ```
+    使得无论复制粘贴带几个空格，Atuin 均 100% 录入当前目录历史。
 
 ## 诊断流程（"不显示历史"）
 
