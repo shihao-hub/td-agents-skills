@@ -1,5 +1,5 @@
 ---
-name: skill-authoring-rules
+name: sh-skill-authoring-rules
 description: |
   技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/0N-*.md两级渐进式感知/Type A排障与Type B流水线双轨结构/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
 version: 2.2.0
@@ -22,9 +22,8 @@ updated: 2026-10-13
 | 物理落位形态 | 是否被 Harness 注册为全局技能 | 定位与适用场景 | 对应规范章节 |
 |---|:---:|---|---|
 | `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`） | **卷一** |
-| `~/.agents/skills/skill-authoring-rules/SKILL.md`（根级目录） | ✅ | **系统治理类根级规范技能**（本技能 `skill-authoring-rules` 即属于此形态） | **卷一** |
 | `~/.agents/skills/sh-user-skills/<name>/README.md` | ❌ | **个人沉淀类子技能**：通过 `README.md` 命名避开全局自动扫描，由 `sh-user-skills` 按需通过 `view_file` 调入 | **卷二** |
-| `~/.agents/skills/<name>/`（junction 链出，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的子技能**：需进全局清单的高频/关键入口（如 `sh-plan-driven-development`、`sh-engineering-notes`），用 `uv run expose_user_skill.py <name>` 生成，链接产物不入库 | **卷二·4** |
+| `~/.agents/skills/<name>/`（junction 链出，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的子技能**：需进全局清单的高频/关键入口（如 `sh-plan-driven-development`、`sh-engineering-notes`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，链接产物不入库 | **卷二·4** |
 | `~/.agents/skills/<kb-dir>/0N-*.md`（知识库条目） | ❌ | **隐形技能 / 实战手记**：单点深度排障或工程实现，自带合规 frontmatter 但不命名为 `SKILL.md`，靠 `SKILL-DRAFT.md` 动态索引 | **卷三** |
 | `<kb-dir>/SKILL-DRAFT.md` | ❌ | **知识库母版 / 动态路由表**：草稿与二级分流器，转正时 `git mv` 为 `SKILL.md` | **卷三** |
 | 根目录下无 frontmatter 的 `.md`（`GUIDE-*`、`plans-*`） | ❌ | **纯文档与历史规划记事**：不参与任何技能注册 | - |
@@ -114,7 +113,7 @@ uv run expose_user_skill.py <name>           # 实跑
 
 - 该技能 description 进入全局 prompt，此后遵守卷一对根级技能的全部约束（≤1024、关键词集群规范等）；
 - 真身仍在 `sh-user-skills/<name>/`，**一切修改只动真身**；改后重跑脚本（`--check` 探测链接失联）；
-- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`sh-engineering-notes`。
+- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`sh-engineering-notes`、`sh-skill-authoring-rules`。
 
 ---
 

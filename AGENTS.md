@@ -6,6 +6,6 @@
 
 **SKILL AUTHORING GUIDELINES**:
 All root skills, user sub-skills (`sh-user-skills/`), and engineering knowledge base notes (`kb-engineering-notes/`) MUST strictly adhere to:
-`file://D:\Users\language_projects\.agents\skills\skill-authoring-rules\SKILL.md`
+`file://D:\Users\language_projects\.agents\skills\sh-skill-authoring-rules\SKILL.md`
 
 **ACTION REQUIRED**: Before executing any code changes or git commands, you MUST read and follow the conventions.
