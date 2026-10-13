@@ -77,6 +77,7 @@ kb-engineering-notes/
 ├── 56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md # [Stage 2: 专项排障] 针对 MCP 服务的 npx/uvx 包装层常驻进程与内存膨胀、profile patch 浅替换语义与直连入口改造
 ├── 57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md # [Stage 2: 专项流水线] 针对常驻 PowerShell 地板价与每 tick 开销、csc 现场编译原生 Win32 小程序与零 conhost 集成
 ├── 58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md # [Stage 2: 专项排障] 针对 Git 批量提交 Agent 高思考档长考、灰色资产微观考古与提交流水线分析瘫痪
+├── 59-百度网盘分享链接免客户端在线秒播与Alist聚合挂载及提速方案指南.md # [Stage 2: 专项流水线] 针对百度网盘免客户端原画秒播、Alist 本地部署与 OAuth 挂载、公开分享外链转存与后台 P2P 防驻留
 └── ...（后续顺次扩充）
 ```
 
@@ -172,6 +173,7 @@ kb-engineering-notes/
 | 想给 Windows 写个不装 SDK 的常驻小工具，或用 csc 现场编译 C# 却报语法错误 | [`57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md) | csc.exe, Framework64 v4.0.30319, C# 5 语法限制, 字符串插值报错, target:winexe, platform:x64, 编译缓存, sha256 指纹, OpenProcess, WaitForSingleObject |
 | 明明设了 `windowsHide` 还是多出 `conhost.exe`；或窗口几何恢复在缩放屏上位置错位 | [`57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md) | conhost 仍在, windowsHide 无效, SW_HIDE 不等于不分配控制台, GUI 子系统, DPI 虚拟化, dpiAware 错位, SetWindowPos, GetSystemMetrics 虚拟屏, EnumWindows GC.KeepAlive |
 | 用户下达批量提交/交付指令（如"提交全部代码"），Agent 在高思考档下陷入长达数分钟的长考停滞、反复反查非代码文件尺寸或把提交流水线当成全库重构审计 | [`58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md) | Git 批量提交, 分析瘫痪, Analysis Paralysis, 高思考档, 思考超时, 灰色资产, test_*.png, 运行时产物误判, 提交流水线, 深度审计混淆, 10秒收敛 |
+| 想查看或下载百度网盘视频/大文件，不想装官方客户端被偷跑 P2P 上行，或需用 PotPlayer/VLC 原画免下载秒播公开分享外链 | [`59-百度网盘分享链接免客户端在线秒播与Alist聚合挂载及提速方案指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/59-百度网盘分享链接免客户端在线秒播与Alist聚合挂载及提速方案指南.md) | 百度网盘, 百度云, 免客户端秒播, Alist, Alist 挂载, 百度网盘 OpenAPI, refresh_token, PotPlayer 秒播, HTTP Range, 偷跑上行, P2P 提速清理, 分享外链转存, errno -7 |
 
 
 
