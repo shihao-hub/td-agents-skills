@@ -76,6 +76,7 @@ kb-engineering-notes/
 ├── 55-Manggo划词工具快捷键盲发CtrlC误杀终端会话与Windows默认AltShift切语言排障指南.md # [Stage 2: 专项排障] 针对划词工具全局快捷键盲发 Ctrl+C 杀终端会话、黑名单作用域与进程别名陷阱、Windows 默认 Alt+Shift 切换语言注册表禁用
 ├── 56-DSH挂载MCP服务npx与uvx启动包装层进程内存膨胀治理与直连入口改造指南.md # [Stage 2: 专项排障] 针对 MCP 服务的 npx/uvx 包装层常驻进程与内存膨胀、profile patch 浅替换语义与直连入口改造
 ├── 57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md # [Stage 2: 专项流水线] 针对常驻 PowerShell 地板价与每 tick 开销、csc 现场编译原生 Win32 小程序与零 conhost 集成
+├── 58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md # [Stage 2: 专项排障] 针对 Git 批量提交 Agent 高思考档长考、灰色资产微观考古与提交流水线分析瘫痪
 └── ...（后续顺次扩充）
 ```
 
@@ -170,6 +171,7 @@ kb-engineering-notes/
 | 某个常驻 PowerShell 看护/轮询脚本吃 100MB+ 内存和几个点 CPU（窗口记忆、看门狗、状态监视），想换成原生小工具 | [`57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md) | 常驻 PowerShell, 内存 106MB, 每 tick 10ms, 4% 单核, Add-Type, cmdlet 反射开销, 换原生, 原生小程序 |
 | 想给 Windows 写个不装 SDK 的常驻小工具，或用 csc 现场编译 C# 却报语法错误 | [`57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md) | csc.exe, Framework64 v4.0.30319, C# 5 语法限制, 字符串插值报错, target:winexe, platform:x64, 编译缓存, sha256 指纹, OpenProcess, WaitForSingleObject |
 | 明明设了 `windowsHide` 还是多出 `conhost.exe`；或窗口几何恢复在缩放屏上位置错位 | [`57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/57-常驻PowerShell轮询助手替换为csc现场编译原生Win32小程序与零conhost集成指南.md) | conhost 仍在, windowsHide 无效, SW_HIDE 不等于不分配控制台, GUI 子系统, DPI 虚拟化, dpiAware 错位, SetWindowPos, GetSystemMetrics 虚拟屏, EnumWindows GC.KeepAlive |
+| 用户下达批量提交/交付指令（如"提交全部代码"），Agent 在高思考档下陷入长达数分钟的长考停滞、反复反查非代码文件尺寸或把提交流水线当成全库重构审计 | [`58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md) | Git 批量提交, 分析瘫痪, Analysis Paralysis, 高思考档, 思考超时, 灰色资产, test_*.png, 运行时产物误判, 提交流水线, 深度审计混淆, 10秒收敛 |
 
 
 
