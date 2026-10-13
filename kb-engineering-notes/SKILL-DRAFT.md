@@ -72,6 +72,8 @@ kb-engineering-notes/
 ├── 51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md # [Stage 2: 专项排障] 针对FastEmbed+LanceDB离线向量检索搭建、语义稀释漏检与混合重排加权
 ├── 52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md # [Stage 2: 专项排障] 针对独立版WT委托断层、aoci黑框弹窗与PE Subsystem 2 GUI无窗口镜像
 ├── 53-WindowsTerminal拆分窗格cd目录重启不保留与OSC99路径上报排障指南.md # [Stage 2: 专项排障] 针对 WT 拆分窗格与会话恢复 cd 目录丢失、ConPTY 隔离与 OSC 9;9 路径上报
+├── 54-Windows11豆包输入法任务栏输入指示图标隐藏与Windhawk运行时代码注入指南.md # [Stage 2: 专项排障] 针对 25H2 输入指示图标无法原生隐藏、TSF 语言栏项在 explorer 内绘制与 Windhawk 注入隐藏
+├── 55-Manggo划词工具快捷键盲发CtrlC误杀终端会话与Windows默认AltShift切语言排障指南.md # [Stage 2: 专项排障] 针对划词工具全局快捷键盲发 Ctrl+C 杀终端会话、黑名单作用域与进程别名陷阱、Windows 默认 Alt+Shift 切换语言注册表禁用
 └── ...（后续顺次扩充）
 ```
 
@@ -158,6 +160,9 @@ kb-engineering-notes/
 | 本地文档/技能库离线语义检索搭建（FastEmbed+LanceDB+Watchdog）、专有技术词检索遭遇语义稀释漏检、切块挤占或前端 SyntaxError 假死 | [51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/51-本地离线Markdown向量检索系统搭建与混合检索专有词漏检排障指南.md) | 本地语义检索, FastEmbed, LanceDB, bge-small-zh, 混合检索, Hybrid Search, 语义稀释, Lexical Boost, 关键词加权, Watchdog 防抖, Group-by-File, 默认折叠, WinError 10048, 离线 RAG |
 | 使用独立定制版 Windows Terminal 时启动 Agent 强弹微软原版 WT、绕过后弹黑框 conhost 窗口、或原生 PE 二进制 MCP 服务无窗口运行架构 | [52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md) | 控制台委托, DefTerm 断层, 原版 WT 弹窗, conhost 黑框, aoci.exe 弹窗, aociw.exe, PE Subsystem 2 GUI, 便携版终端断层, MSIX COM CLSID, 孤儿控制台 |
 | Windows Terminal 拆分窗格或会话恢复在 cd 切换目录后，重启依然记不住新目录（退回初始路径），或拆分新窗格无法继承当前目录 | [`53-WindowsTerminal拆分窗格cd目录重启不保留与OSC99路径上报排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/53-WindowsTerminal拆分窗格cd目录重启不保留与OSC99路径上报排障指南.md) | Windows Terminal 拆分选项卡, 记不住目录, cd 重启还原, persistedWindowLayout, state.json, OSC 9;9, OSC 99, prompt, startingDirectory, CWD 上报, 拆分继承目录 |
+| Windows 11 任务栏常驻「输入指示」图标（豆包输入法头像、`英` 语言栏）删不掉：设置里没有「输入指示器」、改 CTF\LangBar 注册表无效、杀输入法进程无效，按 Win+Space 后还会自己长回来 | [`54-Windows11豆包输入法任务栏输入指示图标隐藏与Windhawk运行时代码注入指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/54-Windows11豆包输入法任务栏输入指示图标隐藏与Windhawk运行时代码注入指南.md) | 任务栏输入指示, 豆包头像图标, 英 图标删不掉, 输入指示器 找不到, 25H2 语言栏, CTF\LangBar, ShowStatus 被改回, tsf-oime.dll, TSF 语言栏项, explorer 内绘制, Win+Space 出现, Windhawk, taskbar-tray-system-icon-tweaks, hideLanguageBar, hideLanguageSupplementaryIcons |
+| 终端按快捷键被当成 Ctrl+C 杀会话或清行、划词工具（Manggo等）黑名单失效、或按完快捷键系统静默切为纯英文美式键盘打不出中文 | [`55-Manggo划词工具快捷键盲发CtrlC误杀终端会话与Windows默认AltShift切语言排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/55-Manggo划词工具快捷键盲发CtrlC误杀终端会话与Windows默认AltShift切语言排障指南.md) | Manggo, 划词翻译, 盲发 Ctrl+C, SendInput, 终端中断, SIGINT, Resume with -c, 黑名单失效, wt.exe 别名陷阱, WindowsTerminal.exe, Alt+Shift, 切语言, 纯英文键盘, HKL 0x4090409, 语言热键禁用, Keyboard Layout Toggle, 00000070 |
+
 
 
 ---
