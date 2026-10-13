@@ -53,6 +53,7 @@ import psutil
 # -----------------------------------------------------------------------------
 # 模块常量与开关配置
 # -----------------------------------------------------------------------------
+VERSION = "1.0.0"
 LOCALAPPDATA = os.environ.get("LOCALAPPDATA", "")
 USERPROFILE = os.environ.get("USERPROFILE", "")
 
@@ -401,6 +402,12 @@ GUARD_PID_FILE = WT_STATE_DIR / "session_guard.pid"
 GUARD_LOG_FILE = WT_STATE_DIR / "session_guard.log"
 
 
+def is_compiled() -> bool:
+    """判断当前进程是否已编译为独立二进制 exe"""
+    exe_name = Path(sys.executable).name.lower()
+    return "__compiled__" in globals() or getattr(sys, "frozen", False) or ("python" not in exe_name and "uv" not in exe_name)
+
+
 def get_daemon_pid() -> Optional[int]:
     """检查后台守护进程是否正在运行"""
     if GUARD_PID_FILE.exists():
@@ -409,7 +416,7 @@ def get_daemon_pid() -> Optional[int]:
             if psutil.pid_exists(pid):
                 p = psutil.Process(pid)
                 pname = (p.name() or "").lower()
-                if "python" in pname or "uv" in pname:
+                if "python" in pname or "uv" in pname or "wt_session_guard" in pname:
                     return pid
         except Exception:
             pass
@@ -436,14 +443,17 @@ def start_daemon() -> None:
 
     import subprocess
 
-    script_path = str(Path(__file__).resolve())
+    if is_compiled():
+        # 已编译为独立 exe：直接拉起自身二进制
+        cmd = [sys.executable, "guard", "--foreground", "--headless"]
+    else:
+        # 单脚本运行：优先使用同虚拟环境下的 pythonw.exe
+        script_path = str(Path(__file__).resolve())
+        py_exec = Path(sys.executable)
+        pyw_exec = py_exec.parent / "pythonw.exe"
+        target_exec = str(pyw_exec) if pyw_exec.exists() else str(py_exec)
+        cmd = [target_exec, script_path, "guard", "--foreground", "--headless"]
 
-    # 优先使用同虚拟环境下的 pythonw.exe（GUI 子系统，PE 头原生声明无控制台，Windows 绝不弹窗）
-    py_exec = Path(sys.executable)
-    pyw_exec = py_exec.parent / "pythonw.exe"
-    target_exec = str(pyw_exec) if pyw_exec.exists() else str(py_exec)
-
-    cmd = [target_exec, script_path, "guard", "--foreground", "--headless"]
     # DETACHED_PROCESS = 0x00000008, CREATE_NO_WINDOW = 0x08000000
     creationflags = 0x00000008 | 0x08000000
     try:
@@ -462,7 +472,7 @@ def start_daemon() -> None:
         else:
             print(f"[+] 守护进程已发起启动 (Launcher PID: {proc.pid})。")
         print(f"    日志文件: {GUARD_LOG_FILE}")
-        print("    可通过 `uv run wt_session_guard.py status` 查看状态，`stop-guard` 停止。")
+        print("    可通过 `status` 查看状态，`stop-guard` 停止。")
     except Exception as e:
         print(f"[-] 启动后台守护进程失败: {e}")
 
@@ -603,6 +613,7 @@ def main() -> None:
         description="Windows Terminal (wt) 与 agy CLI 会话保持与恢复双保险守卫引擎",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
     subparsers = parser.add_subparsers(dest="subcommand", help="子命令")
 
     # scan
@@ -619,7 +630,7 @@ def main() -> None:
     p_patch.add_argument("--dry-run", action="store_true", help="仅预览拟追加的恢复文本，不实际落盘")
 
     # guard
-    p_guard = subparsers.add_parser("guard", help="启动常驻守护模式（WT 关闭时全自动补写保证 100% 还原）")
+    p_guard = subparsers.add_parser("guard", help="启动常驻守护模式（WT 关闭时全自动补写保证 100%% 还原）")
     p_guard.add_argument("--daemon", action="store_true", help="以无窗口后台守护模式运行")
     p_guard.add_argument("--foreground", action="store_true", help="显式前台运行（守护进程内部使用）")
     p_guard.add_argument("--headless", action="store_true", help="无窗口静默运行（自动隐藏控制台窗口）")
