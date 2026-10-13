@@ -280,22 +280,24 @@ def send_ctrl_c_to_pid(pid: int) -> bool:
 
 
 def is_patch_needed(content: str, conversation_id: str) -> bool:
-    """精准判断当前会话对应的终端尾部是否已存在恢复提示"""
+    """精准判断终端缓冲区末尾是否已存在本会话的恢复命令。
+
+    防御规则：
+    1. 严禁全量搜索或回溯过多行：会话聊天历史或模型回复中极易出现教学用的
+       'Resume with -c' 或 '[已还原' 文本，若回溯过多会导致严重误判（假阴性），
+       误以为终端已具备恢复命令而漏补；
+    2. 仅检查文件最后 6 行有效非空文本：只有当真正的恢复命令块紧贴文件尾部时，
+       才判定无需重复追加。
+    """
     lines = [line.strip() for line in content.splitlines() if line.strip()]
     if not lines:
         return True
 
-    # 寻找最后一个 "[已还原" 标记（若有）
-    last_restore_idx = -1
-    for idx, line in enumerate(lines):
-        if "[已还原" in line:
-            last_restore_idx = idx
+    tail_lines = lines[-6:]
+    tail_text = "\n".join(tail_lines)
 
-    # 仅检测最近一个生命周期周期（还原标记之后或最后 25 行）
-    active_lines = lines[last_restore_idx + 1 :] if last_restore_idx != -1 else lines[-25:]
-    tail_text = "\n".join(active_lines)
-
-    if "Resume with -c" in tail_text or f"agy --conversation={conversation_id}" in tail_text:
+    target_cmd = f"agy --conversation={conversation_id}"
+    if target_cmd in tail_text and "Resume with -c" in tail_text:
         return False
     return True
 
@@ -618,7 +620,13 @@ def cmd_guard(args: argparse.Namespace) -> None:
                             log_guard(info)
                             patched_count += 1
                         else:
-                            print(f"    [*] 标签页 {guid} 已具备恢复命令，跳过")
+                            skip_info = f"标签页 {guid} 尾部已具备有效恢复命令，跳过补写"
+                            print(f"    [*] {skip_info}")
+                            log_guard(skip_info)
+                    else:
+                        missing_info = f"标签页 {guid} 的 buffer 文件不存在 ({buf_file.name})，跳过"
+                        print(f"    [-] {missing_info}")
+                        log_guard(missing_info)
 
                 summary = f"会话还原保底完成，共修补 {patched_count} 个标签页。下次打开 WT 即可直接复制恢复。"
                 print(f"[+] {summary}\n")
