@@ -1,21 +1,52 @@
-import os, shutil, glob
+import os, shutil, glob, re, argparse, sys
 
-def build_standalone_mod(workshop_content_dir, dst_mods_dir, local_mod_name="quem", staging_dir=None, clean_client_save=True):
+try:
+    from dst_detect_env import detect_dst_paths, detect_klei_save_dir
+except ImportError:
+    sys.path.append(os.path.dirname(__file__))
+    from dst_detect_env import detect_dst_paths, detect_klei_save_dir
+
+def parse_modinfo(modinfo_path):
+    """自适应解析原版 modinfo.lua 中的 name, version, author。"""
+    meta = {"name": "Mod_Standalone", "version": "1.0.0", "author": "Unknown"}
+    if not os.path.exists(modinfo_path):
+        return meta
+    with open(modinfo_path, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+    
+    m_name = re.search(r'name\s*=\s*["\']([^"\']+)["\']', content)
+    m_ver = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
+    m_auth = re.search(r'author\s*=\s*["\']([^"\']+)["\']', content)
+    if m_name: meta["name"] = m_name.group(1)
+    if m_ver: meta["version"] = m_ver.group(1)
+    if m_auth: meta["author"] = m_auth.group(1)
+    return meta
+
+def build_standalone_mod(src_mod_dir, dst_mods_dir, local_mod_name=None, staging_dir=None, clean_client_save=True):
     """
-    全自动完成：
-    1. 组装 100% 独立可运行的本地模组目录 (mods/<local_mod_name>)；
-    2. 目录命名强制为纯本地模组（严禁 workshop-* 前缀），彻底免疫 Steam 创意工坊退订自动删除机制；
-    3. 清理并修正 modinfo.lua，写入纯正 UTF-8（无 BOM）标识；
-    4. 规范化归档：将逆向过程中的中间产物 (staging 字节码、提取脚本、环境配置) 自动打包移入
-       mods/<local_mod_name>/_archive_reverse_tools/，并生成详尽的 README.md 说明文档；
-    5. 自动化环境整洁：清理 staging 临时目录、清理 client_save/mod_config_data/ 中的 hex 碎片，
-       确保游戏目录与用户项目绝对纯净，零残留污染。
+    通用自适应组装：
+    1. 动态生成纯本地命名（脱离 workshop-* 标识，防止 Steam 启动删除）；
+    2. 复制全部原始静态资源；
+    3. 自适应修改 modinfo.lua（纯 UTF-8，增加免订阅标识）；
+    4. 自动归档 staging 中的逆向工程资产到 _archive_reverse_tools/ 并生成说明文档；
+    5. 自动清理 staging 临时目录与 client_save 中的 Hex 碎片。
     """
+    src_mod_dir = os.path.normpath(src_mod_dir)
+    dst_mods_dir = os.path.normpath(dst_mods_dir)
+    
+    modinfo_src = os.path.join(src_mod_dir, "modinfo.lua")
+    meta = parse_modinfo(modinfo_src)
+    
+    if not local_mod_name:
+        # 基于原文件夹名或名称自动生成无 workshop- 前缀的本地目录名
+        base_folder = os.path.basename(src_mod_dir).replace("workshop-", "")
+        local_mod_name = f"local_{base_folder}" if base_folder.isdigit() else base_folder
+        
     dest_path = os.path.join(dst_mods_dir, local_mod_name)
     archive_path = os.path.join(dest_path, "_archive_reverse_tools")
-    print(f"[*] Assembling standalone mod at: {dest_path}")
+    print(f"[*] Assembling standalone mod: '{meta['name']}' -> '{dest_path}'")
     
-    # 保留原有的归档内容（如果存在）
+    # 临时备份已有归档
     backup_archive = None
     if os.path.exists(archive_path):
         backup_archive = os.path.join(dst_mods_dir, f"_temp_archive_{local_mod_name}")
@@ -23,29 +54,32 @@ def build_standalone_mod(workshop_content_dir, dst_mods_dir, local_mod_name="que
         
     if os.path.exists(dest_path):
         shutil.rmtree(dest_path)
-    shutil.copytree(workshop_content_dir, dest_path)
+    shutil.copytree(src_mod_dir, dest_path)
     
-    # 修正 modinfo.lua 为独立免订阅版
-    modinfo_file = os.path.join(dest_path, "modinfo.lua")
-    if os.path.exists(modinfo_file):
-        with open(modinfo_file, "r", encoding="utf-8", errors="replace") as f:
+    # 自适应修正 modinfo.lua
+    dest_modinfo = os.path.join(dest_path, "modinfo.lua")
+    if os.path.exists(dest_modinfo):
+        with open(dest_modinfo, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
             
-        content = content.replace('name = "奎姆"', f'name = "奎姆 (独立免订阅版)"')
-        content = content.replace('description = ""', 'description = "奎姆独立运行版 (免Steam创意工坊订阅，可离线独立运行)"')
-        content = content.replace('version = "7.8"', 'version = "7.8.0_Standalone"')
+        old_name = meta["name"]
+        new_name = f"{old_name} (独立免订阅版)"
+        new_ver = f"{meta['version']}_Standalone"
         
-        with open(modinfo_file, "w", encoding="utf-8") as f:
+        content = re.sub(r'name\s*=\s*["\'][^"\']+["\']', f'name = "{new_name}"', content)
+        content = re.sub(r'version\s*=\s*["\'][^"\']+["\']', f'version = "{new_ver}"', content)
+        
+        with open(dest_modinfo, "w", encoding="utf-8") as f:
             f.write(content)
-            
-    # 创建规范化过程归档目录
+        print(f"[+] Updated modinfo.lua: '{new_name}' (v{new_ver})")
+        
     os.makedirs(archive_path, exist_ok=True)
     if backup_archive and os.path.exists(backup_archive):
         for item in os.listdir(backup_archive):
             shutil.move(os.path.join(backup_archive, item), os.path.join(archive_path, item))
         shutil.rmtree(backup_archive)
         
-    # 将 staging 中的中间逆向产物归档进去
+    # 归档 staging 中的逆向数据
     if staging_dir and os.path.exists(staging_dir):
         print(f"[*] Archiving staging artifacts from {staging_dir} to {archive_path}...")
         for item in os.listdir(staging_dir):
@@ -56,51 +90,52 @@ def build_standalone_mod(workshop_content_dir, dst_mods_dir, local_mod_name="que
                 else: os.remove(d_item)
             shutil.move(s_item, d_item)
         shutil.rmtree(staging_dir, ignore_errors=True)
-        print(f"[+] Cleaned staging directory: {staging_dir}")
+        print(f"[+] Staging directory cleaned.")
         
-    # 生成归档文档
+    # 生成归档自说明文档
     readme_path = os.path.join(archive_path, "README.md")
     if not os.path.exists(readme_path):
         with open(readme_path, "w", encoding="utf-8") as f:
-            f.write(f"""# {local_mod_name} 模组逆向工程与活体脱壳归档资产说明
+            f.write(f"""# {meta['name']} 模组逆向工程与活体脱壳资产归档
 
-本目录 `_archive_reverse_tools/` 是在对本模组进行脱壳、解密和逆向分析过程中，产生的全套**提取脚本、中间解码数据与辅助工程文件**的专用归档区。
-
----
-
-## 一、归档资产清单
-* `dump_memory.lua`：活体内存导出工具，在游戏完全加载后抓取 Prefabs、Brains、Components 函数。
-* `quem_extracted/`：从 Hex 文本还原的 Lua 5.1 x64 .luac 二进制字节码块。
-* `zzz_quem_exporter/`：低优先级挂载辅助模组。
+本目录 `_archive_reverse_tools/` 归档了对原模组进行脱壳解密时使用的全套**提取脚本、中间解码数据与辅助工程文件**。
 
 ---
 
-## 二、中间环节作用与原理
-1. **解决静态反调试与自校验**：DaxSg 外壳含有文件大小自校验与反调试逻辑炸弹，静态修改触发死锁，故改走内存活体导出。
-2. **解决 Klei 引擎空字节截断**：内存导出的二进制包含大量 `\\0`，Klei 引擎内部作为 C 字符串处理会截断，故在 Lua 层转为十六进制文本再由 Python 反解。
-3. **隔离防删**：本独立模组采用纯英文名 `{local_mod_name}`，脱离 Steam 创意工坊退订自动删除机制。
+## 一、资产说明
+* 提取脚本与预编译字节码保存在本目录下；
+* 独立主模组运行不依赖本目录（游戏引擎仅读取 `modmain.lua` 与 `scripts/`）；
+* 独立模组采用本地无 `workshop-` 前缀命名，彻底杜绝 Steam 退订静默删除。
 """)
 
-    # 清理客户端存档中的临时 Hex 文件
+    # 清理客户端存档中的 hex 碎片
     if clean_client_save:
-        user_home = os.path.expanduser("~")
-        save_base = os.path.join(user_home, "Documents", "Klei", "DoNotStarveTogether")
-        if os.path.exists(save_base):
-            for sub in os.listdir(save_base):
-                hex_dir = os.path.join(save_base, sub, "client_save", "mod_config_data")
-                if os.path.exists(hex_dir):
-                    hex_files = glob.glob(os.path.join(hex_dir, "q_*.hex"))
-                    for hf in hex_files:
-                        try: os.remove(hf)
-                        except: pass
-                    if hex_files:
-                        print(f"[+] Cleaned {len(hex_files)} temporary hex dump files from {hex_dir}")
+        save_base, _ = detect_klei_save_dir()
+        if save_base and os.path.exists(save_base):
+            hex_files = glob.glob(os.path.join(save_base, "q_*.hex"))
+            for hf in hex_files:
+                try: os.remove(hf)
+                except: pass
+            if hex_files:
+                print(f"[+] Cleaned {len(hex_files)} temporary hex dump files from client_save.")
 
     total_files = len([os.path.join(r, f) for r, d, fs in os.walk(dest_path) for f in fs])
-    print(f"[+] Done! Standalone mod assembled with {total_files} files ready to play in DST.")
+    print(f"[+] Standalone mod assembly complete with {total_files} files at: {dest_path}")
+    return dest_path
 
 if __name__ == "__main__":
-    import sys
-    ws_dir = sys.argv[1] if len(sys.argv) > 1 else r"D:\Program Files (x86)\Steam\steamapps\workshop\content\322330\3152990521"
-    mods_dir = sys.argv[2] if len(sys.argv) > 2 else r"D:\Program Files (x86)\Steam\steamapps\common\Don't Starve Together\mods"
-    build_standalone_mod(ws_dir, mods_dir, "quem")
+    parser = argparse.ArgumentParser(description="Assemble a clean, independent standalone DST mod with zero workshop dependencies.")
+    parser.add_argument("src_mod_dir", help="Path to original workshop mod directory.")
+    parser.add_argument("--mods-dir", help="Destination DST mods directory. Auto-detected if omitted.")
+    parser.add_argument("--name", help="Local mod directory name (without workshop- prefix).")
+    parser.add_argument("--staging-dir", help="Staging directory to archive and clean up.")
+    args = parser.parse_args()
+
+    dst_mods = args.mods_dir
+    if not dst_mods:
+        _, dst_mods, _ = detect_dst_paths()
+        if not dst_mods:
+            print("[!] Could not auto-detect DST mods directory. Please specify --mods-dir.")
+            sys.exit(1)
+
+    build_standalone_mod(args.src_mod_dir, dst_mods, args.name, args.staging_dir)

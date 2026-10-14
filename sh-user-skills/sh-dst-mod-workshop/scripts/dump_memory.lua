@@ -1,12 +1,13 @@
 --[[
     dump_memory.lua
-    饥荒联机版（DST）模组内存活体提取工具
-    适用于 DaxSg / 自定义 VM 壳保护的模组逆向
-    
-    原理：
-    模组通过外壳加载后，所有 Prefabs、Brains、Components 函数都以标准 Lua 5.1 x64 函数对象
-    存在于引擎内存中。通过 string.dump 提取字节码，利用 to_hex 规避 Klei C++ 引擎在遇到 \0 时
-    的截断 bug，并借助 SavePersistentString 落地到 client_save/mod_config_data/ 目录。
+    饥荒联机版（DST）通用模组内存活体提取工具
+    适用于 DaxSg / 自定义 VM 壳 / 混淆加壳模组的通用提取
+
+    工作原理：
+    1. 零先验知识（Zero Prior Knowledge）：通过比对全局模组管理器（ModManager）已载入的
+       第三方模组对象，或通过 TARGET_KEYWORD 动态过滤，自动捕获所有非原版实体函数。
+    2. 解决 Klei 引擎 \0 截断：通过 to_hex 编码将二进制字节码转为十六进制纯文本。
+    3. 解决写盘目录权限：调用合规引擎接口 SavePersistentString 落地到 client_save/mod_config_data/。
 --]]
 
 local _G = _G or getfenv()
@@ -21,10 +22,11 @@ local type = rawget(GLOBAL, "type") or type
 local print = rawget(GLOBAL, "print") or print
 local pcall = rawget(GLOBAL, "pcall") or pcall
 local SavePersistentString = rawget(GLOBAL, "SavePersistentString") or rawget(_G, "SavePersistentString")
+local ModManager = rawget(GLOBAL, "ModManager") or rawget(_G, "ModManager")
 
-print("[DST DUMPER] Starting live memory bytecode extraction...")
+print("[UNIVERSAL DUMPER] Starting live memory bytecode extraction...")
 
--- 将二进制数据转为十六进制文本，避免 Klei SavePersistentString 遭遇 \0 截断
+-- 二进制转 Hex，彻底杜绝 SavePersistentString 遭遇 \0 截断
 local function to_hex(str)
     return (str:gsub(".", function(c)
         return string.format("%02x", string.byte(c))
@@ -42,33 +44,51 @@ local function SaveBytecode(category, name, fn)
         if SavePersistentString then
             pcall(SavePersistentString, "mod_config_data/" .. safe_name, hex_data)
         end
-        print(string.format("[EXTRACTED #%d] %s (%d bytes)", count, safe_name, #bc))
-    end
-end
-
--- 目标模组特征关键词（按实际模组修改，如 quem, alicia, kuimu 等）
-local mod_keywords = { "alicia", "kuimu", "fldls", "3152990521", "quem" }
-local function is_target_mod(str)
-    if not str then return false end
-    str = str:lower()
-    for _, kw in pairs(mod_keywords) do
-        if str:find(kw) then return true end
-    end
-    return false
-end
-
--- 1. 提取所有预制体（Prefabs）构造函数
-for name, pref in pairs(Prefabs) do
-    if is_target_mod(name) then
-        if pref.fn then
-            SaveBytecode("prefab", name, pref.fn)
+        if count % 20 == 0 or count <= 5 then
+            print(string.format("[EXTRACTED #%d] %s (%d bytes)", count, safe_name, #bc))
         end
     end
 end
 
--- 2. 提取已载入的包、模块、组件、AI 大脑、状态图
+-- 动态目标过滤器：如果指定了全局目标关键词则按关键词过滤，否则提取所有非原生模组
+local target_kw = rawget(GLOBAL, "TARGET_MOD_KEYWORD") or rawget(_G, "TARGET_MOD_KEYWORD")
+local function is_target(str)
+    if not str then return false end
+    str = tostring(str):lower()
+    if target_kw and target_kw ~= "" then
+        return str:find(target_kw:lower(), 1, true) ~= nil
+    end
+    -- 默认通用过滤：排除系统标准库
+    local sys_libs = { "string", "table", "math", "io", "os", "debug", "coroutine", "package", "_g", "strict" }
+    for _, lib in pairs(sys_libs) do
+        if str == lib then return false end
+    end
+    return true
+end
+
+-- 1. 提取所有已注册 Prefabs 中的模组实体构造函数
+if ModManager and ModManager.mods then
+    for mod_name, mod_data in pairs(ModManager.mods) do
+        if is_target(mod_name) and mod_data.Prefabs then
+            for _, p in pairs(mod_data.Prefabs) do
+                if p.name and p.fn then
+                    SaveBytecode("prefab", p.name, p.fn)
+                end
+            end
+        end
+    end
+end
+
+-- 补充：全局 Prefabs 扫描
+for name, pref in pairs(Prefabs) do
+    if is_target(name) and pref.fn then
+        SaveBytecode("prefab", name, pref.fn)
+    end
+end
+
+-- 2. 提取已载入模块（Brains, Components, StateGraphs, Widgets）
 for modname, modtable in pairs(package.loaded or {}) do
-    if is_target_mod(modname) then
+    if is_target(modname) then
         if type(modtable) == "table" then
             for fn_name, fn in pairs(modtable) do
                 if type(fn) == "function" then
@@ -81,24 +101,17 @@ for modname, modtable in pairs(package.loaded or {}) do
     end
 end
 
--- 3. 提取 ModManager 中的模组闭包与独立环境
-local mm = rawget(GLOBAL, "ModManager") or rawget(_G, "ModManager")
-if mm and mm.loaded_mods then
-    for mod_id, mod_instance in pairs(mm.loaded_mods) do
-        if is_target_mod(mod_id) and mod_instance.env then
+-- 3. 提取 ModManager 中各模组闭包环境
+if ModManager and ModManager.loaded_mods then
+    for mod_id, mod_instance in pairs(ModManager.loaded_mods) do
+        if is_target(mod_id) and mod_instance.env then
             for k, v in pairs(mod_instance.env) do
                 if type(v) == "function" then
-                    SaveBytecode("modenv", k, v)
-                elseif type(v) == "table" and is_target_mod(k) then
-                    for sub_k, sub_v in pairs(v) do
-                        if type(sub_v) == "function" then
-                            SaveBytecode("modenv_" .. k, sub_k, sub_v)
-                        end
-                    end
+                    SaveBytecode("modenv_" .. tostring(mod_id):gsub("[^%w_]", "_"), k, v)
                 end
             end
         end
     end
 end
 
-print(string.format("[DST DUMPER] Done! Successfully dumped %d bytecode functions to client_save/mod_config_data!", count))
+print(string.format("[UNIVERSAL DUMPER] Extraction Complete! Total functions dumped: %d", count))
