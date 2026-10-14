@@ -48,7 +48,7 @@ updated: 2026-10-13
 | 写 PRD／技术方案／排期 | `sh-tech-doc-writing` |
 | 复盘一下你刚才定为排障的过程 | `sh-troubleshooting-recap` |
 | 换一个 agent 接着做／交接 | `sh-agent-handoff` |
-| 饥荒mod下载／创意工坊解密／DaxSg脱壳／DST模组反编译／下载3152990521 | `sh-dst-mod-workshop` |
+| 饥荒mod下载/脱壳/解密/反编译/DaxSg脱壳/奎姆/3152990521/内存提取/独立运行 | `sh-dst-mod-workshop` |
 | 提交并推送这个 monorepo／submodule | `sh-monorepo-commit-push` |
 | GitHub 仓库太多要清理/备份 | `sh-github-repo-cleanup` |
 | 把本地服务改成独立窗口应用/PWA | `sh-localhost-pwa` |
@@ -89,7 +89,7 @@ updated: 2026-10-13
 | `sh-oop-refactor` | 运用 OOP 思想与设计模式重构项目：代码坏味道诊断、接缝测试、架构方案到小步执行。点名使用 |
 | `sh-sql-query-builder` | 重构 SOP：把 SQLAlchemy Core 嵌套只读查询抽取为文本 SQL 模板+builder。点名使用 |
 | `sh-cluacpp-build` | C/C++/Lua 项目工具链与构建手册：LLVM/Ninja/MSVC、CMake Presets、FetchContent 集成 Lua。点名使用 |
-| `sh-dst-mod-workshop` | 饥荒联机版（DST）创意工坊模组下载、DaxSg/混淆壳解密与逆向实战SOP。点名使用 |
+| `sh-dst-mod-workshop` | 饥荒联机版（DST）创意工坊模组下载、DaxSg脱壳、内存Hex导出、字节码逆向与独立模组组装。点名使用 |
 | `sh-localhost-pwa` | 本地 Web/CLI 服务改造为 Chrome/Edge 独立应用窗口（--app 模式）与 PWA 规范面板。点名使用 |
 | `sh-frontend-deai` | 前端去 AI 味：反蓝紫渐变、暗底霓虹与模板化套路，场景导向设计界面。点名使用 |
 | `sh-bruno-collection` | 为 HTTP 接口生成 Bruno API 测试集合（.bru）。点名使用 |
