@@ -9,7 +9,7 @@ description: |
   另有飞书、Redis/Iris、antigravity 三个族路由器；用户直接点名 `sh-*` 子技能（含拼写近似）时也由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
 version: 1.3.0
 created: 2026-10-07
-updated: 2026-10-14
+updated: 2026-10-17
 ---
 
 # sh-user-skills：个人技能库总目录与分流导航
@@ -61,7 +61,7 @@ updated: 2026-10-14
 | 把这个能力沉淀成 skill／书转 skill | `sh-book2skill-sop`（书/文档）或 `skill-creator` |
 | Windows Terminal换图标／修改终端图标／WT定制／右键在终端中打开修改 | `sh-wt-customizer` |
 | 制定实施计划／只读规划方案／探索比选 | `sh-plan-driven-development`（支持默认交付 plans/ 与 --claude 探索规划） |
-| agy会话标题批量治理／汉化agy对话标题／修改会话为中文／批量重命名agy会话 | `sh-agy-session-governance` |
+| agy会话标题批量治理／汉化agy对话标题／修改会话为中文／批量重命名agy会话／antigravity app会话改中文／桌面版会话汉化／侧边栏会话标题中文化 | `sh-agy-session-governance` |
 | WT关闭全部标签页会话恢复／Windows Terminal关闭会话保持／agy会话恢复守护／关闭WT拦截保存／wt会话守卫／开启开机自启守卫 | `sh-wt-session-guard` |
 | 编写技能规范／新建技能规则／技能创作规则／知识库沉淀规范／子技能回填闭环／技能提级暴露 | `sh-skill-authoring-rules`（已提级暴露为根级技能，可直接点名） |
 
@@ -98,7 +98,7 @@ updated: 2026-10-14
 | `sh-nuitka-pack` | uv 单脚本+Nuitka 打包 Windows 单文件 exe 与启动加速缓存。点名使用 |
 | `sh-wt-customizer` | Windows Terminal (wt) 独立版定制：PE 图标注入、任务栏守卫、右键菜单与 Win+R 全链路接管及一键原生复原。点名使用 |
 | `sh-wt-session-guard` | Windows Terminal (wt) 与 agy CLI 会话恢复守卫：右上角关闭全部标签页时双保险保底追加恢复命令、无窗口静默守护与开机自启动治理。点名使用 |
-| `sh-agy-session-governance` | agy CLI 会话标题批量治理与汉化：导出待治理英文会话、AI 协同智能翻译生成中文标题、事务双写更新 SQLite 与 annotations 文件、自动前置快照备份与一键还原。点名使用 |
+| `sh-agy-session-governance` | Antigravity (App 与 CLI 双端) 会话标题批量治理与汉化：支持导出待治理会话、AI 协同生成中文标题、SQLite/Protobuf/annotations 四重原子双写、常驻 language_server 进程 ConnectRPC 实时热推送、自动前置快照与一键还原。点名使用 |
 | `sh-monorepo-commit-push` | Monorepo 与 git submodule 项目逐项审查、提交并推送。点名使用 |
 | `sh-github-repo-cleanup` | GitHub 仓库大扫除：审计→fork 转 Star→mirror 备份→批量删除/归档。点名使用 |
 
