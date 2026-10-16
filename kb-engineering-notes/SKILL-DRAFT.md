@@ -1,6 +1,6 @@
 ---
 name: kb-engineering-notes
-description: 开发者通用工程实战手记、自动化流水线与硬核排障知识库。兼具「疑难排障（Windows 文件锁、进程池堆积、闪窗、网络代理）」与「工程实现/生成流水线（文档与试卷自动化排版、脚手架、复杂脚本设计）」两翼实战 SOP。当遇到疑难报错或需要落地工程自动化流水线时查阅本指南。
+description: 开发者通用工程实战手记、自动化流水线与硬核排障知识库。兼具「疑难排障（Windows 文件锁、进程池堆积、闪窗、网络代理、前端覆层残留与视图分叉、本机 Web GUI 真机取证）」与「工程实现/生成流水线（文档与试卷自动化排版、脚手架、复杂脚本设计）」两翼实战 SOP。当遇到疑难报错或需要落地工程自动化流水线时查阅本指南。
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -84,6 +84,8 @@ kb-engineering-notes/
 ├── 63-Windows无窗口服务一键启动快捷方式与Web服务自重启机制及PowerShell5.1静默失败链路排障指南.md # [Stage 2: 专项流水线] 针对快捷方式无窗口启动常驻服务、端口反查幂等仲裁、WMI 脱离进程树自重启与页面自动重载，及 PS 5.1 六类静默失败链路
 ├── 64-Windows单按Alt激活Chrome三点菜单抢焦点与豆包输入法右Alt语音透传AutoHotkey排障指南.md # [Stage 2: 专项排障] 针对 Windows 单按 Alt 激活 Chrome 三点菜单抢焦点、豆包输入法长按右 Alt 语音识别上屏中断与 AutoHotkey vkE8 无害掩码静默拆弹
 ├── 65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md # [Stage 2: 专项排障] 针对原子替换被句柄/映射拒绝、EMPER/Win32 5、上层设置静默丢失与 Restart Manager 反查持有者
+├── 66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南.md # [Stage 2: 专项排障] 针对宿主 API 同步 publish 重入、旧 disposer no-op、覆盖层残留擦不掉、presenter 晚一拍撤回 inline 变量与三方对照取证
+├── 67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md # [Stage 2: 专项取证] 针对只认签名 cookie/启动令牌的本机 Web GUI、独立 profile 浏览器进不去时，只读存档密钥自签 cookie 取证与回收
 └── ...（后续顺次扩充）
 ```
 
@@ -195,6 +197,10 @@ kb-engineering-notes/
 | 应用设置点了没反应/自动跳回原值、刷新后不生效，日志里是 `EPERM ... rename *.tmp -> <配置文件>`，而文件"明明能写" | [`65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md) | EPERM operation not permitted, rename tmp, win32 5 Access is denied, 原子替换失败, MoveFileEx REPLACE_EXISTING, 设置静默丢失, revision 不变, HTTP 200 但没落盘, 临时文件+rename |
 | 文件被谁占着完全看不出来（编辑器无标签、任务管理器无句柄），关标签页与重启程序都没用，想按文件反查持有进程 | [`65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md) | 谁占着文件, 文件锁, 句柄反查, Restart Manager, RmGetList, handle.exe 替代, 看不到占用, 关标签页无效, 重启又回来, last_session |
 | Agent/编辑器会话把配置目录（`~/.dsh`、`~/.config`）当上下文长期持有，导致该目录下配置文件的写入持续失败 | [`65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md) | ACP agent 会话, acp_thread opening file, 上下文占用文件, 删除会话, Zed db.sqlite editors 表, 孤儿 editor 行, opencode 会话, 配置目录别交给 agent |
+| 主题/皮肤/覆盖层切回浅色后页面仍是旧样式，行内提示却说"当前基座是浅色"，刷新偶尔好、一旦触发就再点也不回来 | [`66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南.md) | 切主题不生效, 覆盖层擦不掉, overrideTokens, 旧 disposer no-op, 同步 publish 重入, 视图与渲染分叉, inline CSS 变量残留, presenter 晚一拍, 受限擦除, 在途守卫 |
+| 页面配色半套：面板是深色、个别卡片仍是浅灰，属性标记与计算变量互相矛盾，控制台无任何报错 | [`66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南.md) | 半套主题, dark token 叠浅色结构, data-ds-dark-theme 缺失, 静态色与别名色分叉, getComputedStyle 取证, Maximum call stack size exceeded, 死循环自激 |
+| 本机 Web GUI 只回 `authentication required; reopen the URL printed by …`，自动化浏览器（独立 profile）没有登录态，进不去看真实 DOM | [`67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md) | 401, dsh web authentication required, launch token, ?token=, 签名 cookie, HMAC, 凭据库 secret, base64url, authority, 真机取证 |
+| 想把自动化浏览器的会话搬进目标站点：只有磁盘上的存档密钥，横幅里的令牌已经滚没了 | [`67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md) | document.cookie 自签, HttpOnly 只挡读取, cookie 按 host 不按端口, 跨源脚本注入, CORS, 密钥不回显, 取证后回收 cookie |
 
 
 
