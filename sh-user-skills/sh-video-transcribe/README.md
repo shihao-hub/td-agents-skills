@@ -76,6 +76,7 @@ uv run "<skill目录>/scripts/transcribe.py" "<媒体文件>" --model small
 
 - **把画面上的字幕当可提取的字幕流**：ffprobe 没有 subtitle 流就必须 ASR，没有捷径
 - **首次运行卡在下载**：是模型在下载（460MB 起），不是挂了；镜像走 hf-mirror，已设则勿覆盖
+- **报 `TypeError: open() got an unexpected keyword argument 'metadata_errors'`**：faster-whisper 1.2.x 与 av 15+ 不兼容（该参数已被 av 移除）。脚本依赖已钉 `av==14.0.1`，**不要删这个钉版**；若被改回 `av<15` 会退化成源码编译并因缺 wheel 失败（要用 `av==14.0.1` 这种精确版号）
 - **控制台中文乱码**：脚本内部已强制 UTF-8；若用其他方式打印中文乱码，是 GBK 控制台问题，文件本身正常
 - **超时被杀**：长视频转写时间按 CPU 实时 ×4（small）预估，timeout 给足余量
 - **Windows 路径含中文/空格**：PowerShell 下统一用双引号包裹完整路径

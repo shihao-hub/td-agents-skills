@@ -1,9 +1,12 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["faster-whisper"]
+# dependencies = ["faster-whisper", "av==14.0.1"]  # av 必须钉在 <15：faster-whisper 1.2.x 仍传 metadata_errors 参数，av 15+ 已移除该参数，直连会 TypeError
 # ///
 # 媒体文件语音转文字：faster-whisper 本地转写，输出 SRT 与纯文本
 # 用法: uv run transcribe.py <媒体文件> [--model small] [--lang auto] [--outdir 输出目录]
+# 依赖钉版说明：av 15+ 移除了 container.open 的 metadata_errors 参数，
+# faster-whisper 1.2.x 的 decode_audio 仍在传它 → 未钉版（uv 默认装 av 18/19）时
+# 报 "TypeError: open() got an unexpected keyword argument 'metadata_errors'"。
 import argparse
 import os
 import sys
