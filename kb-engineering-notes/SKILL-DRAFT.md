@@ -83,6 +83,7 @@ kb-engineering-notes/
 ├── 62-WindowsGUI自动化能力阶梯与UIA元素点击及窗口截图验证指南.md # [Stage 2: 专项流水线] 针对 GUI 自动化能力阶梯（UIA/键盘/鼠标/OCR）、各技术栈无障碍树对照、最小化启动与 DPI 虚拟化及首次点击被吃三大坑
 ├── 63-Windows无窗口服务一键启动快捷方式与Web服务自重启机制及PowerShell5.1静默失败链路排障指南.md # [Stage 2: 专项流水线] 针对快捷方式无窗口启动常驻服务、端口反查幂等仲裁、WMI 脱离进程树自重启与页面自动重载，及 PS 5.1 六类静默失败链路
 ├── 64-Windows单按Alt激活Chrome三点菜单抢焦点与豆包输入法右Alt语音透传AutoHotkey排障指南.md # [Stage 2: 专项排障] 针对 Windows 单按 Alt 激活 Chrome 三点菜单抢焦点、豆包输入法长按右 Alt 语音识别上屏中断与 AutoHotkey vkE8 无害掩码静默拆弹
+├── 65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md # [Stage 2: 专项排障] 针对原子替换被句柄/映射拒绝、EMPER/Win32 5、上层设置静默丢失与 Restart Manager 反查持有者
 └── ...（后续顺次扩充）
 ```
 
@@ -191,6 +192,9 @@ kb-engineering-notes/
 | 生成的 `.bat`/`.cmd` 内容看起来对但执行毫无反应；或 `Set-Content` 写数组被分号连成一行、`rem` 注释吞掉命令 | [`63-Windows无窗口服务一键启动快捷方式与Web服务自重启机制及PowerShell5.1静默失败链路排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/63-Windows无窗口服务一键启动快捷方式与Web服务自重启机制及PowerShell5.1静默失败链路排障指南.md) | Set-Content 数组分号连接, rem 吞命令, bat 不执行, 退出码 1 无输出, WriteAllText CRLF, 反引号续行误判 |
 | 脚本"完全没执行"、连第一行日志都没有，但调用方看到进程创建成功；或日志文件被占用导致新服务起不来 | [`63-Windows无窗口服务一键启动快捷方式与Web服务自重启机制及PowerShell5.1静默失败链路排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/63-Windows无窗口服务一键启动快捷方式与Web服务自重启机制及PowerShell5.1静默失败链路排障指南.md) | NamedParameterNotFound, 参数名不匹配, 参数绑定阶段终止, 无任何日志, WMI 返回 0 不代表成功, 重定向到文件抓错, 日志文件被占用, being used by another process, 日志按端口隔离 |
 | 单按或松开 Alt / 右 Alt 键导致 Chrome 右上角三点菜单被高亮选中、打字光标丢失、或豆包输入法长按右 Alt 语音识别松手后无法正常上屏 | [`64-Windows单按Alt激活Chrome三点菜单抢焦点与豆包输入法右Alt语音透传AutoHotkey排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/64-Windows单按Alt激活Chrome三点菜单抢焦点与豆包输入法右Alt语音透传AutoHotkey排障指南.md) | Chrome 三点菜单, 自定义及控制 Google Chrome, 按 Alt 选中, 抢焦点, 光标丢失, 豆包输入法, 右 Alt, RAlt, 语音输入上屏失败, AutoHotkey, AHK vkE8, SC_KEYMENU, 菜单激活屏蔽 |
+| 应用设置点了没反应/自动跳回原值、刷新后不生效，日志里是 `EPERM ... rename *.tmp -> <配置文件>`，而文件"明明能写" | [`65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md) | EPERM operation not permitted, rename tmp, win32 5 Access is denied, 原子替换失败, MoveFileEx REPLACE_EXISTING, 设置静默丢失, revision 不变, HTTP 200 但没落盘, 临时文件+rename |
+| 文件被谁占着完全看不出来（编辑器无标签、任务管理器无句柄），关标签页与重启程序都没用，想按文件反查持有进程 | [`65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md) | 谁占着文件, 文件锁, 句柄反查, Restart Manager, RmGetList, handle.exe 替代, 看不到占用, 关标签页无效, 重启又回来, last_session |
+| Agent/编辑器会话把配置目录（`~/.dsh`、`~/.config`）当上下文长期持有，导致该目录下配置文件的写入持续失败 | [`65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md) | ACP agent 会话, acp_thread opening file, 上下文占用文件, 删除会话, Zed db.sqlite editors 表, 孤儿 editor 行, opencode 会话, 配置目录别交给 agent |
 
 
 
