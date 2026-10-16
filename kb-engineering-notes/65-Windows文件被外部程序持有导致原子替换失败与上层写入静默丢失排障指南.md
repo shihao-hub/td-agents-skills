@@ -168,6 +168,36 @@ Add-Type -TypeDefinition $code -Language CSharp | Out-Null
 | **自身/宿主进程**（自杀式占用） | 反查出来是自己的服务进程 | 检查应用是否正确关闭文件句柄 |
 | **安全软件扫描/索引器** | 占用**时有时无**，采样可见 | 加白名单；或应用侧做有限重试 |
 
+### Step 2b · 先量清楚"被挡的到底是写还是替换"（决定能不能不关对方就修好）
+
+被持有 ≠ 内容写不进去。同一刻对目标分别测四件事：
+
+```powershell
+$p = "$env:USERPROFILE\.dsh\profiles\web\cordis.patch.yml"; $d = Split-Path $p
+# ① 独占打开（能开 = 完全没人持有）
+try { [IO.File]::Open($p,'Open','ReadWrite','None').Close(); 'share-none : free' } catch { 'share-none : HELD' }
+# ② 只请求写权限（能开 = 内容本身写得进去）
+try { [IO.File]::Open($p,'Open','Write','ReadWrite').Close(); 'open-write : OK' } catch { 'open-write : DENIED' }
+# ③ 上层真实动作：temp -> rename 覆盖目标
+$t = Join-Path $d ('p-'+[guid]::NewGuid().ToString('N').Substring(0,8)+'.tmp'); Copy-Item $p $t
+cmd /c move /Y "$t" "$p"; "replace    : exit=$LASTEXITCODE"
+# ④ 同一动作换成新名字（对照：证明目录/ACL 没问题，问题只在那一个目标）
+Copy-Item $p $t; cmd /c move /Y "$t" "$d\fresh-$(Get-Random).tmp"; "fresh-name : exit=$LASTEXITCODE"
+Remove-Item $t -Force -ErrorAction SilentlyContinue
+```
+
+（还要 `DELETE` 那一格时用 `CreateFileW(path, DELETE=0x00010000, FILE_SHARE_READ|WRITE|DELETE, …)` 探测；
+完整探针与实测矩阵见 `dsh-local-plugins/docs/dsh-settings-document-lock.md` 第八节。）
+
+| ② 写权限 | ③ 替换 | 结论 | 处置 |
+|---|---|---|---|
+| OK | 失败 | 对方只是**打开/映射**着，并没有禁止写入（本类问题最常见的形态） | **不必关对方**：让写入路径退化为"原地覆写 + 写前备份"，见 Step 4 第 2 条 |
+| DENIED | 失败 | 连内容都进不去 | 只能先解除占用（Step 2），或把存储挪到别的路径 |
+| OK | OK | 不是持有问题 | 查 ACL / 只读属性 / 磁盘错误 / 上层逻辑 |
+
+> 这一格实测的价值：它把"必须让用户关掉编辑器"从**前提**降级成**可选项**。
+> 上层若坚持"原子替换不可退化"，那就等于要求用户为一次设置修改关掉整个 IDE —— 这本身是 bug。
+
 ### Step 3 · 端到端验证（别只看"文件能打开"）
 
 ```powershell
@@ -187,6 +217,15 @@ settings/describe → revision 必须 +1，user 里必须出现刚写的字段
 
 1. **失败必须可见**：把 `settings/rejected` / `EPERM` 冒泡到 UI（toast 或行内提示），禁止静默回滚；
 2. **写入退化**：rename 遇 `EPERM/EACCES` 时退化为"直接覆写 + 写前备份"，或做有限重试后给出明确错误；
+   - **"有限重试"救不了持续占用**：重试预算是给瞬时干扰（索引器、杀软）的，8 次 / ~1.3s 对一个
+     **整场会话都不松手**的句柄毫无意义 —— 必须有"重试耗尽之后"的那条路，否则每次写入都从头重试再失败；
+   - **参考实现**（本机已验证 17/17）：仅在"Windows 替换类拒绝（`EACCES/EBUSY/EPERM`）+ 重试耗尽"时，
+     写 `<file>.bak`（存原字节）→ `r+` 打开目标、偏移 0 写入 → `truncate` 到新长度 → `fsync`
+     → 按调用方 `mode` 做 `chmod` → 成功即返回；任一步失败则抛出**原错误**
+     （不把"确实写不进去"伪装成成功，保持原行为）；
+   - **退化必须可见**：`process.emitWarning(…, { code: 'DSH_ATOMIC_WRITE_INPLACE_FALLBACK' })` 报出文件名，
+     并留一个环境变量开关关掉它 —— 因为这一步**放弃了原子性**（读方可能看到半份文件）；
+   - **别把退化写进主路径**：无人占用时必须仍走 rename（否则平白降低原子性），4.1 有专门断言盯这个。
 3. **别让客户端"假装成功"**：本地乐观更新后必须有一次"文档回读确认"，否则用户永远分不清"生效了没有"；
 4. **客户端自保**（当配置本身写不进去时）：把关键渲染改成"本地断言"，例如主题把深色基座在客户端自行维持，只把"设置没保存"如实告知用户；
 5. **存储分离**：用户设置（随时被程序改写）不要和"交给外部编辑器打开的配置文件"是同一份 —— 这是本例的**根因**而非诱因。
@@ -204,6 +243,8 @@ settings/describe → revision 必须 +1，user 里必须出现刚写的字段
 - [ ] 上层 RPC：`revision` 递增、`user` 出现新字段；
 - [ ] **重启对方程序后仍然 free**（这一步才能证明"不是靠关掉程序临时绕开"）；
 - [ ] 界面侧：改动**刷新后仍保持**。
+- [ ] 若走了"写入退化"兜底：**无人占用时必须仍走 rename，且不产生 `.bak`**；被占用时内容逐字节不变、
+      `.bak` 与写入前原文一致、退化有告警（`DSH_ATOMIC_WRITE_INPLACE_FALLBACK`）。
 
 ### 4.2 防复发清单
 
