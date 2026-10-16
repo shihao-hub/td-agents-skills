@@ -86,6 +86,8 @@ kb-engineering-notes/
 ├── 65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南.md # [Stage 2: 专项排障] 针对原子替换被句柄/映射拒绝、EMPER/Win32 5、上层设置静默丢失与 Restart Manager 反查持有者
 ├── 66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南.md # [Stage 2: 专项排障] 针对宿主 API 同步 publish 重入、旧 disposer no-op、覆盖层残留擦不掉、presenter 晚一拍撤回 inline 变量与三方对照取证
 ├── 67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md # [Stage 2: 专项取证] 针对只认签名 cookie/启动令牌的本机 Web GUI、独立 profile 浏览器进不去时，只读存档密钥自签 cookie 取证与回收
+├── 68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md # [Stage 2: 专项排障] 针对 Antigravity Manager 切换环境失败弹窗、target-conflict 进程误判冲突、汉化工具排查与 App/CLI 独立凭据体系
+├── 69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md # [Stage 2: 专项排障] 针对 Antigravity 桌面端后台常驻 language_server.exe 内存缓存定时刷盘覆写离线修改、raw_summary Protobuf BLOB 优先级与官方 ConnectRPC 端口及 CSRF 鉴权热推送
 └── ...（后续顺次扩充）
 ```
 
@@ -201,6 +203,10 @@ kb-engineering-notes/
 | 页面配色半套：面板是深色、个别卡片仍是浅灰，属性标记与计算变量互相矛盾，控制台无任何报错 | [`66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南.md) | 半套主题, dark token 叠浅色结构, data-ds-dark-theme 缺失, 静态色与别名色分叉, getComputedStyle 取证, Maximum call stack size exceeded, 死循环自激 |
 | 本机 Web GUI 只回 `authentication required; reopen the URL printed by …`，自动化浏览器（独立 profile）没有登录态，进不去看真实 DOM | [`67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md) | 401, dsh web authentication required, launch token, ?token=, 签名 cookie, HMAC, 凭据库 secret, base64url, authority, 真机取证 |
 | 想把自动化浏览器的会话搬进目标站点：只有磁盘上的存档密钥，横幅里的令牌已经滚没了 | [`67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md) | document.cookie 自签, HttpOnly 只挡读取, cookie 按 host 不按端口, 跨源脚本注入, CORS, 密钥不回显, 取证后回收 cookie |
+| Antigravity Manager 切换环境报错“切换账号失败：操作失败，请查看诊断详情后重试”；日志报 `target-conflict`、`ANTIGRAVITY_PROCESS_FAILED`、`stage: client-selection` | [`68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md) | Antigravity Manager, 切换账号失败, 操作失败请查看诊断详情后重试, target-conflict, ANTIGRAVITY_PROCESS_FAILED, client-selection, launch-preflight, antigravity-hans-gui, 汉化工具, 切换到 Antigravity, 共享账号, agy cli 凭据, gemini:antigravity |
+| 疑问 Antigravity App 桌面版与 Antigravity CLI 是否共享登录账号；想了解 Manager 中 classic/ide/agy 三端凭据存储机制与多设备登录风控 | [`68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md) | antigravity app 共享账号, agy cli 账号, Windows 凭据管理器, state.vscdb, 多设备登录, 多网络登录, 五小时限额, Five Hour Limit, 账号风控 |
+| Antigravity 桌面端会话改名不生效、离线改写 SQLite 数据库后被后台定时覆写回滚英文；或侧边栏标题看着依然是旧英文 | [`69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md) | Antigravity 桌面端改名, 会话标题汉化, language_server.exe, background reconciliation, 幽灵覆写, raw_summary BLOB, Protobuf Wire, ConnectRPC, UpdateConversationAnnotations, csrf_token, 侧边栏没刷新, Ctrl+R 重载 |
+| 逆向 Antigravity 核心服务与动态端口通信：如何从运行中常驻进程提取 CSRF Token 并调用官方 RPC 实时热推送数据 | [`69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md) | Antigravity 逆向, language_server 端口, WMI 提取 csrf_token, Exa LanguageServerService, UpdateConversationAnnotations, StreamCascadeSummariesReactiveUpdates, 动态端口探测 |
 
 
 
