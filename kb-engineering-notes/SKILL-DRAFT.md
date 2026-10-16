@@ -79,6 +79,7 @@ kb-engineering-notes/
 ├── 58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md # [Stage 2: 专项排障] 针对 Git 批量提交 Agent 高思考档长考、灰色资产微观考古与提交流水线分析瘫痪
 ├── 59-百度网盘分享链接免客户端在线秒播与Alist聚合挂载及提速方案指南.md # [Stage 2: 专项流水线] 针对百度网盘免客户端原画秒播、Alist 本地部署与 OAuth 挂载、公开分享外链转存与后台 P2P 防驻留
 ├── 60-Zed终端无会话恢复agy历史ID丢失排障与PowerShell交互选号恢复指南.md # [Stage 2: 专项排障] 针对 Zed 终端无会话恢复机制、agy 历史会话 ID 丢失、PowerShell 传参展开陷阱与交互式选号恢复器
+├── 61-WindowsTerminal定制版PE图标注入签名破损触发Defender启发式木马Bearfoos误杀排障指南.md # [Stage 2: 专项排障] 针对 WT 定制版 PE 图标注入签名破损、触发 Defender 启发式木马 Bearfoos.A!ml 误杀与白名单排除
 └── ...（后续顺次扩充）
 ```
 
@@ -176,6 +177,7 @@ kb-engineering-notes/
 | 用户下达批量提交/交付指令（如"提交全部代码"），Agent 在高思考档下陷入长达数分钟的长考停滞、反复反查非代码文件尺寸或把提交流水线当成全库重构审计 | [`58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/58-Git批量提交代码Agent高思考档分析瘫痪根因排障与灰色资产判决指南.md) | Git 批量提交, 分析瘫痪, Analysis Paralysis, 高思考档, 思考超时, 灰色资产, test_*.png, 运行时产物误判, 提交流水线, 深度审计混淆, 10秒收敛 |
 | 想查看或下载百度网盘视频/大文件，不想装官方客户端被偷跑 P2P 上行，或需用 PotPlayer/VLC 原画免下载秒播公开分享外链 | [`59-百度网盘分享链接免客户端在线秒播与Alist聚合挂载及提速方案指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/59-百度网盘分享链接免客户端在线秒播与Alist聚合挂载及提速方案指南.md) | 百度网盘, 百度云, 免客户端秒播, Alist, Alist 挂载, 百度网盘 OpenAPI, refresh_token, PotPlayer 秒播, HTTP Range, 偷跑上行, P2P 提速清理, 分享外链转存, errno -7 |
 | Zed 重启后终端空白丢失上一轮 agy 会话 ID，或在 PowerShell 脚本传参时报 `conversation "@{Id=...}.Id" not found`，想按项目查看带业务标题的会话清单并交互式选号秒恢复 | [`60-Zed终端无会话恢复agy历史ID丢失排障与PowerShell交互选号恢复指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/60-Zed终端无会话恢复agy历史ID丢失排障与PowerShell交互选号恢复指南.md) | Zed终端, 会话恢复, Session Restoration, 屏幕清空, agy, agy -c, conversationId, 传参展开陷阱, agy-list, agl, history.jsonl, conversation_summaries.db, AI标题提取, 交互选号 |
+| 定制版 Windows Terminal 突然消失、桌面/任务栏快捷方式提示“WindowsTerminal.exe 已经更改或移动”、Defender 报毒 Trojan:Win32/Bearfoos.A!ml | [`61-WindowsTerminal定制版PE图标注入签名破损触发Defender启发式木马Bearfoos误杀排障指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/61-WindowsTerminal定制版PE图标注入签名破损触发Defender启发式木马Bearfoos误杀排障指南.md) | WindowsTerminal.exe 已经更改或移动, 是否删除该快捷方式, Trojan:Win32/Bearfoos.A!ml, Defender误杀, 隔离区还原, ExclusionPath, PE图标签名损坏 |
 
 
 
