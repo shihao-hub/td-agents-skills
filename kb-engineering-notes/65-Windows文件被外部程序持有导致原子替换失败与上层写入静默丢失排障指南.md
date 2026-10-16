@@ -198,6 +198,30 @@ Remove-Item $t -Force -ErrorAction SilentlyContinue
 > 这一格实测的价值：它把"必须让用户关掉编辑器"从**前提**降级成**可选项**。
 > 上层若坚持"原子替换不可退化"，那就等于要求用户为一次设置修改关掉整个 IDE —— 这本身是 bug。
 
+### Step 2c · 想连占用一起摘掉：换文件对象，而不是动对方句柄
+
+若"写入退化"还不够（例如你希望这个路径彻底不再被占），可以在**不关对方程序、不改它任何配置**的前提下
+解开占用 —— 前提是对方的句柄**共享了删除权限**（Step 2b 里 `delete-access open: GRANTED` 就是判据）：
+
+| 原语 | 说明 |
+|---|---|
+| `ReplaceFileW(target, staged, NULL, REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0)` | Windows 专为"替换被别人打开着的文件"提供的 API；实测在被持有的文件上 OK |
+| `DeleteFile(target)` → `MoveFile(staged, target)` | 先摘名、再落名；Node 里就是 `fs.rmSync` + `fs.renameSync` |
+
+两者的本质都是**换掉路径指向的文件对象**：对方那个句柄退化为"指向一个已无名的旧文件"，不再占住这个路径，
+而写进去的内容逐字节不变。实测解锁后路径 `free`、普通 rename 恢复、20 秒采样仍为 free。
+
+注意事项（都要写进工具里）：
+
+- **内容必须逐字节保真**；"摘名"与"落名"之间若失败，必须立刻用内存里的原字节把名字补回来，否则文件会消失；
+- 对方的句柄**没有**共享删除权限时 `DeleteFile` 会失败 —— 此时不要硬来，退回 Step 4 的写入退化；
+- 这是"路径级解锁"，不是"让对方松手"：对方下次重新打开该路径，占用就回来，再跑一次即可；
+- 参考实现与端到端测试：`dsh-local-plugins/patches/unlock-settings-document.mjs`。
+
+> 顺带修正一个常见猜测：这类占用**不是**内存映射的特权。受控四臂实验里，"普通句柄 + share=读|写|删"
+> 与线上签名完全一致；而"只有映射、文件句柄已关"时替换反而是成功的。真正顽固的是
+> `MoveFileEx(REPLACE_EXISTING)` 要求"目标没人开着"—— 它与共享模式无关，Node 的 `fs.rename` 走的正是这条路。
+
 ### Step 3 · 端到端验证（别只看"文件能打开"）
 
 ```powershell
