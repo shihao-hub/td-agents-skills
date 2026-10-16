@@ -212,17 +212,19 @@ function agy-list {
 
                 $showTitle = if ($item.Title) { $item.Title } elseif ($item.Preview) { $item.Preview } else { "无标题会话" }
 
-                $promptList = if ($promptsMap.ContainsKey($item.Id)) {
-                    $list = $promptsMap[$item.Id]
-                    $takeCount = [Math]::Min(3, $list.Count)
-                    @($list.GetRange($list.Count - $takeCount, $takeCount))
-                } elseif ($item.Preview) {
-                    $p = ($item.Preview -replace '[\r\n]+', ' ').Trim()
-                    if ($p.Length -gt 45) { $p = $p.Substring(0, 42) + '...' }
-                    @($p)
-                } else {
-                    @($showTitle)
-                }
+                $promptList = @(
+                    if ($promptsMap.ContainsKey($item.Id)) {
+                        $list = $promptsMap[$item.Id]
+                        $takeCount = [Math]::Min(3, $list.Count)
+                        $list.GetRange($list.Count - $takeCount, $takeCount)
+                    } elseif ($item.Preview) {
+                        $p = ($item.Preview -replace '[\r\n]+', ' ').Trim()
+                        if ($p.Length -gt 45) { $p = $p.Substring(0, 42) + '...' }
+                        $p
+                    } else {
+                        $showTitle
+                    }
+                )
 
                 Write-Host "    Title  : $showTitle" -ForegroundColor Green
                 for ($pIdx = 0; $pIdx -lt $promptList.Count; $pIdx++) {
@@ -296,11 +298,13 @@ function agy-list {
             }
         }
         $takeCount = [Math]::Min(3, $pList.Count)
-        $recentPrompts = if ($pList.Count -gt 0) {
-            @($pList.GetRange($pList.Count - $takeCount, $takeCount))
-        } else {
-            @('无输入记录')
-        }
+        $recentPrompts = @(
+            if ($pList.Count -gt 0) {
+                $pList.GetRange($pList.Count - $takeCount, $takeCount)
+            } else {
+                '无输入记录'
+            }
+        )
 
         $firstPrompt = ($firstItem.display -replace "[\r\n]+", " ").Trim()
         if ($firstPrompt.Length -gt 38) { $firstPrompt = $firstPrompt.Substring(0, 35) + "..." }
