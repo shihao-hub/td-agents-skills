@@ -173,8 +173,8 @@ function agy-list {
         }
 
         if ($dbList.Count -gt 0) {
-            # 辅助提取：从 history.jsonl 获取最新 Prompt（若有）
-            $lastPrompts = @{}
+            # 辅助提取：从 history.jsonl 获取最新 3 条 Prompt（若有）
+            $promptsMap = @{}
             if (Test-Path $histFile) {
                 try {
                     $targetIds = [System.Collections.Generic.HashSet[string]]::new([string[]]($dbList | ForEach-Object { $_.Id }))
@@ -183,9 +183,17 @@ function agy-list {
                         if ([string]::IsNullOrWhiteSpace($line)) { continue }
                         $obj = $line | ConvertFrom-Json
                         if ($obj.conversationId -and $targetIds.Contains($obj.conversationId)) {
-                            $p = ($obj.display -replace "[\r\n]+", " ").Trim()
-                            if ($p.Length -gt 42) { $p = $p.Substring(0, 39) + "..." }
-                            $lastPrompts[$obj.conversationId] = $p
+                            $p = ($obj.display -replace '[\r\n]+', ' ').Trim()
+                            if (-not [string]::IsNullOrWhiteSpace($p)) {
+                                if ($p.Length -gt 45) { $p = $p.Substring(0, 42) + '...' }
+                                if (-not $promptsMap.ContainsKey($obj.conversationId)) {
+                                    $promptsMap[$obj.conversationId] = [System.Collections.Generic.List[string]]::new()
+                                }
+                                $list = $promptsMap[$obj.conversationId]
+                                if ($list.Count -eq 0 -or $list[$list.Count - 1] -ne $p) {
+                                    $list.Add($p)
+                                }
+                            }
                         }
                     }
                 } catch {}
@@ -203,10 +211,29 @@ function agy-list {
                 Write-Host "[$($i + 1)] $($item.Time) ($itemWs$curTag)" -ForegroundColor Yellow
 
                 $showTitle = if ($item.Title) { $item.Title } elseif ($item.Preview) { $item.Preview } else { "无标题会话" }
-                $showPrompt = if ($lastPrompts.ContainsKey($item.Id)) { $lastPrompts[$item.Id] } elseif ($item.Preview) { $item.Preview } else { $showTitle }
+
+                $promptList = if ($promptsMap.ContainsKey($item.Id)) {
+                    $list = $promptsMap[$item.Id]
+                    $takeCount = [Math]::Min(3, $list.Count)
+                    @($list.GetRange($list.Count - $takeCount, $takeCount))
+                } elseif ($item.Preview) {
+                    $p = ($item.Preview -replace '[\r\n]+', ' ').Trim()
+                    if ($p.Length -gt 45) { $p = $p.Substring(0, 42) + '...' }
+                    @($p)
+                } else {
+                    @($showTitle)
+                }
 
                 Write-Host "    Title  : $showTitle" -ForegroundColor Green
-                Write-Host "    Prompt : $showPrompt" -ForegroundColor White
+                for ($pIdx = 0; $pIdx -lt $promptList.Count; $pIdx++) {
+                    $pText = $promptList[$pIdx]
+                    if ($promptList.Count -eq 1) {
+                        Write-Host "    Prompt : $pText" -ForegroundColor White
+                    } else {
+                        $prefix = if ($pIdx -eq 0) { "    Prompt : 1. " } else { "             $($pIdx + 1). " }
+                        Write-Host "$prefix$pText" -ForegroundColor White
+                    }
+                }
                 Write-Host "    ID     : $($item.Id)" -ForegroundColor DarkGray
                 if ($i -lt ($top.Count - 1)) { Write-Host "" }
             }
@@ -258,8 +285,22 @@ function agy-list {
         $lastItem = $sorted[-1]
         $time = [DateTimeOffset]::FromUnixTimeMilliseconds($lastItem.timestamp).LocalDateTime.ToString("yyyy-MM-dd HH:mm")
         
-        $lastPrompt = ($lastItem.display -replace "[\r\n]+", " ").Trim()
-        if ($lastPrompt.Length -gt 38) { $lastPrompt = $lastPrompt.Substring(0, 35) + "..." }
+        $pList = [System.Collections.Generic.List[string]]::new()
+        foreach ($subItem in $sorted) {
+            $p = ($subItem.display -replace '[\r\n]+', ' ').Trim()
+            if (-not [string]::IsNullOrWhiteSpace($p)) {
+                if ($p.Length -gt 45) { $p = $p.Substring(0, 42) + '...' }
+                if ($pList.Count -eq 0 -or $pList[$pList.Count - 1] -ne $p) {
+                    $pList.Add($p)
+                }
+            }
+        }
+        $takeCount = [Math]::Min(3, $pList.Count)
+        $recentPrompts = if ($pList.Count -gt 0) {
+            @($pList.GetRange($pList.Count - $takeCount, $takeCount))
+        } else {
+            @('无输入记录')
+        }
 
         $firstPrompt = ($firstItem.display -replace "[\r\n]+", " ").Trim()
         if ($firstPrompt.Length -gt 38) { $firstPrompt = $firstPrompt.Substring(0, 35) + "..." }
@@ -268,7 +309,7 @@ function agy-list {
             Id          = $g.Name
             Time        = $time
             Workspace   = $lastItem.workspace
-            LastPrompt  = $lastPrompt
+            PromptList  = $recentPrompts
             FirstPrompt = $firstPrompt
             RawTime     = $lastItem.timestamp
         }
@@ -302,7 +343,18 @@ function agy-list {
         $isCurrent = if ($item.Workspace -and ($item.Workspace.TrimEnd('\', '/') -eq $currentDir)) { " [当前项目]" } else { "" }
         Write-Host "[$($i + 1)] $($item.Time) ($itemWs$isCurrent)" -ForegroundColor Yellow
         Write-Host "    Title  : $($item.FirstPrompt)" -ForegroundColor Green
-        Write-Host "    Prompt : $($item.LastPrompt)" -ForegroundColor White
+
+        $pList = @($item.PromptList)
+        for ($pIdx = 0; $pIdx -lt $pList.Count; $pIdx++) {
+            $pText = $pList[$pIdx]
+            if ($pList.Count -eq 1) {
+                Write-Host "    Prompt : $pText" -ForegroundColor White
+            } else {
+                $prefix = if ($pIdx -eq 0) { "    Prompt : 1. " } else { "             $($pIdx + 1). " }
+                Write-Host "$prefix$pText" -ForegroundColor White
+            }
+        }
+
         Write-Host "    ID     : $($item.Id)" -ForegroundColor DarkGray
         if ($i -lt ($top.Count - 1)) { Write-Host "" }
     }
