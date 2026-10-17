@@ -124,7 +124,7 @@ for t in tabs:
         ...  # 命中含厂商名/key 的行，逐列脱敏输出
 ```
 
-- `mode=ro`：绝不写库；`immutable=1`：避开应用正在写入时的锁争用（参照本库 `29-cc-switch配置SQLite直接读写与跨应用模型迁移指南.md`）；
+- `mode=ro`：绝不写库；`immutable=1`：避开应用正在写入时的锁争用（参照本库 `agent_flow_029_cc-switch直接读写SQLite模型迁移.md`）；
 - 表名/列名先 `sqlite_master` + `pragma table_info` 探测，**不要猜 schema**；
 - 命中后要区分"配置行"（`user_provider.api_keys`）与"日志行"（`ai_usage_record`、`proxy_request_logs`）——后者是统计噪音。
 
@@ -249,7 +249,7 @@ opencode models | grep -i <厂商>   # 模型列表是否已摘除（注意中�
 
 ## 附：与相邻条目的关系
 
-- `29-cc-switch配置SQLite直接读写与跨应用模型迁移指南.md` —— 数据库层读写规范与锁规避；
-- `21-opencode连接GLM模型401鉴权失败与端点排障指南.md` —— key 优先级与端点映射；
-- `43-OpenCodeGo访问DeepSeekV4.1Flash提速实测与关闭思考reasoningEffort指南.md` —— 官方直连与中继通道的区别；
-- `42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南.md` —— 多 Agent 配置生效性验证方法论。
+- `agent_flow_029_cc-switch直接读写SQLite模型迁移.md` —— 数据库层读写规范与锁规避；
+- `agent_fix_021_opencode连接GLM鉴权401与端点排障.md` —— key 优先级与端点映射；
+- `agent_fix_043_OpenCodeGo模型提速与关闭思考reasoningEffort.md` —— 官方直连与中继通道的区别；
+- `agent_fix_042_多Agent全局规则生效与CLI管道防挂起.md` —— 多 Agent 配置生效性验证方法论。

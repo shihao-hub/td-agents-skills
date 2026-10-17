@@ -1,4 +1,4 @@
-# Plan: Windows平铺知识库文件名元数据规范升级与时间序解耦演进设计
+﻿# Plan: Windows平铺知识库文件名元数据规范升级与时间序解耦演进设计
 
 📋 Plan for: "针对 kb-engineering-notes 平铺知识库条目生长至 72+ 篇的现状，落实方案 A 极简双轨规范（fix/flow 收敛），集成时间顺序感知方案，置顶 SKILL-DRAFT.md 首屏契约，升级 50 号架构文档并预留零成本子目录物理分层迁移能力。"
 
@@ -94,7 +94,7 @@ flowchart TD
 
 ## 任务分解
 
-- [ ] Task 1: 升级 50 号架构手记正文规范
+- [x] Task 1: 升级 50 号架构手记正文规范
   - 文件：`D:\Users\language_projects\.agents\skills\kb-engineering-notes\50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范.md`
   - 实现：
     1. 将类型枚举从 4 种（fix/flow/cfg/guide）彻底收敛为 2 种（fix/flow 双轨制）；
@@ -104,7 +104,7 @@ flowchart TD
   - 验证：文件通过规范审计，正则表达式完全匹配，无语法冲突。
   - Demo：打开 50 号文档可清晰查阅极简双轨定义与时间序解决方案。
 
-- [ ] Task 2: 改造 `SKILL-DRAFT.md` 首屏契约与时间线索引
+- [x] Task 2: 改造 `SKILL-DRAFT.md` 首屏契约与时间线索引
   - 文件：`D:\Users\language_projects\.agents\skills\kb-engineering-notes\SKILL-DRAFT.md`
   - 实现：
     1. 在文件首屏（YAML 下方）置顶嵌入 20 行《知识库文件命名规范与元数据契约（AI 与开发者速查）》；
@@ -113,7 +113,7 @@ flowchart TD
   - 验证：首屏包含完整契约代码块，末尾具备时序检索附录，内部相对链接 100% 连通。
   - Demo：外部 Agent 载入该文件后首屏即刻理解命名协议，无需阅读全量正文。
 
-- [ ] Task 3: 编写时序辅助与分层演进双向脚本
+- [x] Task 3: 编写时序辅助与分层演进双向脚本
   - 文件：`D:\Users\language_projects\.agents\skills\kb-engineering-notes\scripts\kb_timeline.ps1`
   - 文件：`D:\Users\language_projects\.agents\skills\kb-engineering-notes\scripts\organize_subdirs.ps1`
   - 实现：
@@ -122,13 +122,13 @@ flowchart TD
   - 验证：在终端执行 `-DryRun` 预览无报错，路径计算准确。
   - Demo：开发者运行 `./scripts/kb_timeline.ps1 -Top 5` 秒级获取最新 5 篇笔记。
 
-- [ ] Task 4: 联动更新 `sh-skill-authoring-rules` 卷三
+- [x] Task 4: 联动更新 `sh-skill-authoring-rules` 卷三
   - 文件：`D:\Users\language_projects\.agents\skills\sh-skill-authoring-rules\SKILL.md`
   - 实现：在卷三中固化“平铺分面槽位命名规范（Faceted Kebab-Snake）”与“平铺虚拟路径契约”，锁定 fix/flow 双轨标准。
   - 验证：字数校验严格 ≤1024 字符（如果触碰 description），正文更新精准对齐。
   - Demo：查阅规范卷三可看到明确的槽位命名规则与分层前向兼容约定。
 
-- [ ] Task 5: 验证与交付汇报
+- [x] Task 5: 验证与交付汇报
   - 文件：全库检查
   - 实现：全流程无破坏验证，确保既有 72 篇条目完好无损，新规范与脚本全部就绪。
   - 验证：git status 确认变动仅限于计划声明的文件范围。

@@ -1,0 +1,99 @@
+﻿<#
+.SYNOPSIS
+    kb_timeline.ps1 - kb-engineering-notes 时序演进感知辅助脚本
+.DESCRIPTION
+    利用 ID 逻辑时钟（001~999 绝对单调递增）或物理修改时间，秒级输出条目时序列表。
+.PARAMETER Top
+    仅展示最新的前 N 条（默认展示全部）
+.PARAMETER Domain
+    按领域过滤 (win, git, ide, agent, browser, dev, media)
+.PARAMETER Type
+    按形态过滤 (fix, flow)
+.PARAMETER SortBy
+    排序字段: Id (默认), LastWriteTime, Created
+.PARAMETER Descending
+    降序排列（ID 最大 / 最新创建排在最前）
+.EXAMPLE
+    .\kb_timeline.ps1 -Top 5 -Descending
+    .\kb_timeline.ps1 -Domain git
+#>
+param(
+    [int]$Top = 0,
+    [string]$Domain,
+    [ValidateSet('fix', 'flow')][string]$Type,
+    [ValidateSet('Id', 'LastWriteTime', 'Created')][string]$SortBy = 'Id',
+    [switch]$Descending
+)
+
+$kbDir = Split-Path $PSScriptRoot -Parent
+
+# 收集所有笔记文件（兼容平铺新规范与旧版 0N-*.md）
+$allFiles = Get-ChildItem -Path $kbDir -Recurse -Filter "*.md" | Where-Object {
+    $_.Name -ne "SKILL-DRAFT.md" -and $_.Name -ne "SKILL.md" -and $_.Name -ne "README.md" -and
+    ($_.Name -match '^\d{2}-' -or $_.Name -match '^[a-z]+_(fix|flow)_\d{3}_')
+}
+
+$records = [System.Collections.Generic.List[PSCustomObject]]::new()
+
+foreach ($file in $allFiles) {
+    $name = $file.Name
+    $id = 0
+    $dom = "-"
+    $typ = "-"
+    $slug = ""
+    $created = $file.CreationTime.ToString("yyyy-MM-dd")
+
+    if ($name -match '^(?<dom>[a-z]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+        $id = [int]$Matches['id']
+        $dom = $Matches['dom']
+        $typ = $Matches['typ']
+        $slug = $Matches['slug']
+    } elseif ($name -match '^(?<num>\d{2})-(?<title>.+)\.md$') {
+        $id = [int]$Matches['num']
+        $slug = $Matches['title']
+        $head = Get-Content -LiteralPath $file.FullName -TotalCount 20 -Encoding UTF8 -ErrorAction SilentlyContinue
+        foreach ($line in $head) {
+            if ($line -match '^created:\s*(\d{4}-\d{2}-\d{2})') {
+                $created = $Matches[1]
+                break
+            }
+        }
+    } else {
+        continue
+    }
+
+    if ($Domain -and $dom -ne "-" -and $dom -ne $Domain.ToLower()) {
+        continue
+    }
+
+    if ($Type -and $typ -ne "-" -and $typ -ne $Type.ToLower()) {
+        continue
+    }
+
+    $records.Add([PSCustomObject]@{
+        Id            = ("{0:D3}" -f $id)
+        IdNum         = $id
+        Domain        = $dom
+        Type          = $typ
+        Title         = $slug
+        Created       = $created
+        LastModified  = $file.LastWriteTime.ToString("yyyy-MM-dd HH:mm")
+        FileName      = $name
+        RelativePath  = (Resolve-Path -Path $file.FullName -Relative)
+    })
+}
+
+if ($SortBy -eq 'Id') {
+    $sorted = $records | Sort-Object -Property IdNum -Descending:$Descending
+} elseif ($SortBy -eq 'LastWriteTime') {
+    $sorted = $records | Sort-Object -Property LastModified -Descending:$Descending
+} elseif ($SortBy -eq 'Created') {
+    $sorted = $records | Sort-Object -Property Created, IdNum -Descending:$Descending
+}
+
+if ($Top -gt 0) {
+    $sorted = $sorted | Select-Object -First $Top
+}
+
+Write-Host "=== kb-engineering-notes 条目时序感知视图 (共 $($sorted.Count) 篇) ===" -ForegroundColor Cyan
+$sorted | Format-Table -Property Id, Domain, Type, Title, LastModified -AutoSize

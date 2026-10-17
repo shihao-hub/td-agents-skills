@@ -225,6 +225,6 @@ $targets = Get-CimInstance Win32_Process | Where-Object {
 
 ### 5. 相关条目
 
-- `37-opencode集成chrome-devtools-mcp浏览器控制调试配置指南.md`：chrome-devtools-mcp 在另一套客户端的接入与调试；
-- `52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南.md`：MCP 服务自身的无窗口化（PE Subsystem 2 GUI）；
-- `19-Windows内存防死机与Pagefile提交内存归因优化指南.md`：内存归因与提交内存分析方法。
+- `browser_flow_037_opencode集成chrome-devtools-mcp浏览器控制.md`：chrome-devtools-mcp 在另一套客户端的接入与调试；
+- `win_fix_052_PE控制台委托DefTerm断层与MCP无窗口镜像.md`：MCP 服务自身的无窗口化（PE Subsystem 2 GUI）；
+- `win_fix_019_Win内存防死机与Pagefile提交归因优化.md`：内存归因与提交内存分析方法。
