@@ -5,7 +5,7 @@ description: 把全机 Python 统一到 uv：多来源治理、`uv_shim` 全局 
 
 # 07-uv统一全机Python环境与新电脑一键引导复现指南
 
-> **归档位置**：`kb-engineering-notes/dev_flow_007_uv统一全机Python与新机引导复现.md`  
+> **归档位置**：`kb-engineering-notes/dev_uv_flow_007_uv统一全机Python与新机引导复现.md`  
 > **实战源起**：全机 Python 环境统一迁移（2026-10-07 卸载 anaconda3 与 python312，统一 uv 3.12.5；完整过程见 `docs/plans/46-python-env-uv-unified.md`）  
 > **核心议题**：多 Python 来源并存的治理架构、全局 `python`/`pip` 经 shim 转发到 uv 专用全局环境、新电脑一键复现同一配置  
 > **姊妹条目**：面向装机的可执行操作卡见 `sh-user-skills/sh-uv-python-env/`（skill 形态，含 torch/CUDA 大依赖方案）

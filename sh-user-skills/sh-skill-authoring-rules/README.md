@@ -1,8 +1,8 @@
 ﻿---
 name: sh-skill-authoring-rules
 description: |
-  技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/分面槽位命名与时序解耦/Type A与Type B极简双轨/虚拟路径分层契约/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
-version: 2.3.0
+  技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/五段式分面槽位命名与时序解耦/Type A与Type B极简双轨/虚拟路径分层契约/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
+version: 2.4.0
 created: 2026-10-07
 updated: 2026-10-17
 ---
@@ -34,7 +34,7 @@ updated: 2026-10-17
 2. **这是个人高频业务 SOP 或专属工作流，但无需污染每个日常会话吗？**  
    👉 **是**：进入 **卷二**，收敛在 `sh-user-skills/<name>/README.md`，并在总分流器登记。
 3. **这是针对特定报错、环境底层机制或自动化排版流水线的实战手记/避坑指南吗？**  
-   👉 **是**：进入 **卷三**，按 `0N-*.md` 规整入 `kb-engineering-notes/`，绝不常驻全局。
+   👉 **是**：进入 **卷三**，按分面槽位规范规整入 `kb-engineering-notes/`，绝不常驻全局。
 
 ---
 
@@ -126,23 +126,26 @@ uv run expose_user_skill.py <name>           # 实跑
 1. **第一级（权威路由）**：`kb-engineering-notes/SKILL-DRAFT.md`，维护唯一的「问题/症状/报错关键词 -> 对应编号条目」映射表。
 2. **第二级（专项条目）**：编号条目文件，每个条目针对单点技术痛点，AI 命中后使用 `view_file` 单篇加载。
 
-### 2. 双轨条目结构与极简双轨分面槽位命名（Faceted Kebab-Snake）
-知识库条目采用**极简双轨分面槽位命名（Faceted Kebab-Snake）**，兼容历史 `0N-*.md` 渐进式平滑演进：
+### 2. 双轨条目结构与五段式分面槽位命名（Faceted Kebab-Snake）
+知识库条目采用**五段式分面槽位命名（Faceted Kebab-Snake）**，兼容历史 `0N-*.md` 渐进式平滑演进：
 
 ```text
-语法结构：<domain>_<type>_<id>_<slug>.md
-正则校验：^(?<domain>[a-z]{2,8})_(?<type>fix|flow)_(?<id>\d{3})_(?<slug>[^_\/\\:\*\?"<>\|]+)\.md$
+语法结构：<domain>_<scope>_<type>_<id>_<slug>.md
+正则校验：^(?<domain>[a-z]{2,8})_(?<scope>[a-z0-9]{2,8})_(?<type>fix|flow)_(?<id>\d{3})_(?<slug>[^_\/\\:\*\?"<>\|]+)\.md$
 ```
 
-- **槽位 1 `<domain>`（受控领域，严格 7 枚举，对齐未来物理子目录）**：
-  `win`（Windows底层/软链接/注册表）、`git`（版本控制/变基/Worktree/提交）、`ide`（编辑器/终端/Sublime/Zed/Cursor/WT）、`agent`（AI客户端/CLI/模型供应商/密钥）、`browser`（浏览器/扩展/DevTools）、`dev`（语言/构建/uv/OOP/排版流水线）、`media`（音视频/下载/声学）。
-- **槽位 2 `<type>`（极简双轨制收敛，彻底废除 guide/cfg 等弱词）**：
+- **槽位 1 `<domain>`（受控领域，严格 7 枚举，对齐未来一级物理子目录）**：
+  `win`（Windows底层/软链接/注册表）、`git`（版本控制/变基/Worktree/提交）、`ide`（编辑器/终端/Sublime/Zed/Cursor/WT）、`agent`（AI客户端/CLI/模型供应商/密钥）、`browser`（浏览器/扩展/DevTools）、`dev`（语言/构建/uv/OOP/排版流水线/daemon）、`media`（音视频/下载/声学）。
+- **槽位 2 `<scope>`（受控软件实体/技术范围，严禁留空，使同款软件局部自动聚类）**：
+  - **受控兜底词**：`sys`（Windows系统功能）、`core`（跨软件基础模式/设计哲学）、`fs`（文件系统/Junction软链接/C盘空间/文件锁）、`cli`（通用命令行管道/守护进程）。
+  - **常见软件实体**：`zed`、`cursor`、`vscode`、`sublime`、`smerge`、`terminal`、`terminus`、`atuin`、`pi`、`ahk`、`windhawk`、`everything`、`conhost`、`ps`、`uwp`、`mem`、`audio`、`uv`、`docx`、`wails`、`web`、`rebase`、`worktree`、`ssh`、`chrome`、`firefox`、`devtools`、`opencode`、`agy`、`agyman`、`dsh`、`ccswitch`、`yolo`、`alist` 等。
+- **槽位 3 `<type>`（极简双轨制收敛，彻底废除 guide/cfg 等弱词）**：
   - **`fix`**：**Type A 疑难排障型条目**（报错直击、底层根因、抢救 SOP、防复发闭环验证）；
   - **`flow`**：**Type B 方案与流水线型条目**（业务场景输入输出、核心技术剖析、完整自动化脚本实现、交付验收断言）。原偏排错排障归 `fix`，偏全新自动化配置与生成流水线归 `flow`。
-- **槽位 3 `<id>`（逻辑时钟与唯一 UID）**：
+- **槽位 4 `<id>`（逻辑时钟与唯一 UID）**：
   `001` ~ `999` 定长 3 位，全局单调递增，永不回收复用。**ID 越大等价于条目创建时间越新**。
-- **槽位 4 `<slug>`（自解释主题短语）**：
-  `[核心问题/技术词] + [解决动作/交付物]`，剔除“指南/实战”等空洞后缀，中文 ≤25 字符。
+- **槽位 5 `<slug>`（自解释主题短语）**：
+  `[核心问题/技术词] + [解决动作/交付物]`，剔除“指南/实战”等空洞后缀，中文 $\le 25$ 字符。
 
 正文严格执行双轨四段论：
 - **Type A：疑难排障型条目**：
@@ -158,12 +161,12 @@ uv run expose_user_skill.py <name>           # 实跑
 
 ### 3. 平铺虚拟路径契约与四维时间顺序感知体系
 1. **平铺虚拟路径契约**：
-   - 平铺文件名 `<domain>_<type>_<id>_<slug>.md` 实质为序列化的虚拟相对路径，与未来物理分层路径 `<domain>/<type>_<id>_<slug>.md` 1:1 双向无损映射。
-   - **分层演进触发阈值**：当条目总规模达到 150+ 篇或单一领域条目 ≥30 篇时触发物理下沉分层。
+   - 平铺文件名 `<domain>_<scope>_<type>_<id>_<slug>.md` 实质为序列化的虚拟相对路径，与未来物理分层路径 `<domain>/<scope>_<type>_<id>_<slug>.md` 1:1 双向无损映射。
+   - **分层演进触发阈值**：当条目总规模达到 150+ 篇或单一领域条目 $\ge 30$ 篇时触发物理下沉分层。
    - 配套工具 `scripts/organize_subdirs.ps1` 支持 `-ToSubdirs` 与 `-ToFlat` 双向秒级无损转换，自动全局替换 `SKILL-DRAFT.md` 超链接，Git blame 完整保留，0 代码断裂、0 引用重构成本。
 2. **四维时间顺序感知体系**：
    - **维 1：ID 逻辑时钟**：`<id>` 全局单调递增，数值大小 100% 等价于创建时间先后；
-   - **维 2：Explorer 视窗切换**：想看领域聚合按“名称”排序，想看时间流按“修改日期”排序；
+   - **维 2：Explorer 视窗切换**：想看领域与软件聚类按“名称”排序，想看时间流按“修改日期”排序；
    - **维 3：YAML Frontmatter 时间锚点**：每篇条目固化 `created: YYYY-MM-DD` 与 `updated: YYYY-MM-DD`，跨机 checkout 物理防漂移；
    - **维 4：SKILL-DRAFT 时间线索引**：总控文件文末维护《条目时序演进检索表》，一屏通览生命周期。
 
@@ -185,7 +188,7 @@ uv run expose_user_skill.py <name>           # 实跑
 
 新建或修改任何技能/手记前，逐项勾选确认：
 - [ ] 属于哪一类？（卷一根级 / 卷二个人子技能 / 卷三知识库手记）
-- [ ] 命名是否符合对应正则？（根级 `^[a-z0-9-]+$`；用户技能 `^sh-[a-z0-9-]+$`；知识库 `<domain>_<type>_<id>_<slug>.md` 或历史 `0N-*.md`）
+- [ ] 命名是否符合对应正则？（根级 `^[a-z0-9-]+$`；用户技能 `^sh-[a-z0-9-]+$`；知识库 `<domain>_<scope>_<type>_<id>_<slug>.md` 或历史 `0N-*.md`）
 - [ ] 引导文件名是否正确？（根级 `SKILL.md`；个人技能 `README.md`；知识库 `SKILL-DRAFT.md`）
 - [ ] description 是否存在军备竞赛词或对抗性触发语？（路由器/知识库入口的关键词集群不视为“冗余列表”）
 - [ ] 顶层 `sh-user-skills/SKILL.md` 的 description 字符数是否严格 `≤ 1024`？

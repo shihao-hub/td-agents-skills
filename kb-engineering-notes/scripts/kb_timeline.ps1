@@ -7,6 +7,8 @@
     仅展示最新的前 N 条（默认展示全部）
 .PARAMETER Domain
     按领域过滤 (win, git, ide, agent, browser, dev, media)
+.PARAMETER Scope
+    按受控实体/软件范围过滤 (zed, cursor, sublime, terminal, ahk, ps, docx, uv, wails, etc.)
 .PARAMETER Type
     按形态过滤 (fix, flow)
 .PARAMETER SortBy
@@ -16,10 +18,12 @@
 .EXAMPLE
     .\kb_timeline.ps1 -Top 5 -Descending
     .\kb_timeline.ps1 -Domain git
+    .\kb_timeline.ps1 -Scope zed
 #>
 param(
     [int]$Top = 0,
     [string]$Domain,
+    [string]$Scope,
     [ValidateSet('fix', 'flow')][string]$Type,
     [ValidateSet('Id', 'LastWriteTime', 'Created')][string]$SortBy = 'Id',
     [switch]$Descending
@@ -27,10 +31,10 @@ param(
 
 $kbDir = Split-Path $PSScriptRoot -Parent
 
-# 收集所有笔记文件（兼容平铺新规范与旧版 0N-*.md）
+# 收集所有笔记文件（支持五段式 <domain>_<scope>_<type>_<id>_<slug>.md、四段式及历史 0N-*.md）
 $allFiles = Get-ChildItem -Path $kbDir -Recurse -Filter "*.md" | Where-Object {
     $_.Name -ne "SKILL-DRAFT.md" -and $_.Name -ne "SKILL.md" -and $_.Name -ne "README.md" -and
-    ($_.Name -match '^\d{2}-' -or $_.Name -match '^[a-z]+_(fix|flow)_\d{3}_')
+    ($_.Name -match '^\d{2}-' -or $_.Name -match '^[a-z]+_([a-z0-9]+_)?(fix|flow)_\d{3}_')
 }
 
 $records = [System.Collections.Generic.List[PSCustomObject]]::new()
@@ -39,11 +43,18 @@ foreach ($file in $allFiles) {
     $name = $file.Name
     $id = 0
     $dom = "-"
+    $scp = "-"
     $typ = "-"
     $slug = ""
     $created = $file.CreationTime.ToString("yyyy-MM-dd")
 
-    if ($name -match '^(?<dom>[a-z]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+    if ($name -match '^(?<dom>[a-z]+)_(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+        $id = [int]$Matches['id']
+        $dom = $Matches['dom']
+        $scp = $Matches['scp']
+        $typ = $Matches['typ']
+        $slug = $Matches['slug']
+    } elseif ($name -match '^(?<dom>[a-z]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
         $id = [int]$Matches['id']
         $dom = $Matches['dom']
         $typ = $Matches['typ']
@@ -66,6 +77,10 @@ foreach ($file in $allFiles) {
         continue
     }
 
+    if ($Scope -and $scp -ne "-" -and $scp -ne $Scope.ToLower()) {
+        continue
+    }
+
     if ($Type -and $typ -ne "-" -and $typ -ne $Type.ToLower()) {
         continue
     }
@@ -74,6 +89,7 @@ foreach ($file in $allFiles) {
         Id            = ("{0:D3}" -f $id)
         IdNum         = $id
         Domain        = $dom
+        Scope         = $scp
         Type          = $typ
         Title         = $slug
         Created       = $created
@@ -96,4 +112,4 @@ if ($Top -gt 0) {
 }
 
 Write-Host "=== kb-engineering-notes 条目时序感知视图 (共 $($sorted.Count) 篇) ===" -ForegroundColor Cyan
-$sorted | Format-Table -Property Id, Domain, Type, Title, LastModified -AutoSize
+$sorted | Format-Table -Property Id, Domain, Scope, Type, Title, LastModified -AutoSize

@@ -2,12 +2,12 @@
 .SYNOPSIS
     organize_subdirs.ps1 - kb-engineering-notes 平铺与子目录物理分层双向切换工具
 .DESCRIPTION
-    依据虚拟路径契约：<domain>_<type>_<id>_<slug>.md <-> <domain>/<type>_<id>_<slug>.md
+    依据虚拟路径契约：<domain>_<scope>_<type>_<id>_<slug>.md <-> <domain>/<scope>/<type>_<id>_<slug>.md（或 <domain>/<type>_<id>_<slug>.md）
     支持平铺下沉分层 (-ToSubdirs) 与分层逆向上浮平铺 (-ToFlat)，并自动同步更新 SKILL-DRAFT.md 链接。
 .PARAMETER ToSubdirs
-    将平铺文件按领域归入对应子目录：<domain>/<type>_<id>_<slug>.md
+    将平铺文件按领域归入对应子目录：<domain>/<scope>_<type>_<id>_<slug>.md
 .PARAMETER ToFlat
-    将子目录文件逆向恢复为根目录平铺：<domain>_<type>_<id>_<slug>.md
+    将子目录文件逆向恢复为根目录平铺：<domain>_<scope>_<type>_<id>_<slug>.md
 .PARAMETER Execute
     显式指定此开关才实际执行文件移动与链接写入；默认仅试跑预览 (DryRun)
 .PARAMETER DryRun
@@ -47,58 +47,45 @@ if ($ToSubdirs) {
 
     foreach ($file in $rootFiles) {
         $name = $file.Name
-        if ($name -match '^(?<dom>[a-z]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+        if ($name -match '^(?<dom>[a-z]+)_(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
             $dom = $Matches['dom'].ToLower()
+            $scp = $Matches['scp']
             $typ = $Matches['typ']
             $id = $Matches['id']
             $slug = $Matches['slug']
             if ($validDomains -contains $dom) {
-                $subName = "$($typ)_$($id)_$($slug).md"
+                $subName = "$($scp)_$($typ)_$($id)_$($slug).md"
                 $targetDir = Join-Path $kbDir $dom
                 $targetPath = Join-Path $targetDir $subName
                 $plan.Add([PSCustomObject]@{
                     Direction  = "ToSubdirs"
-                    Domain     = $dom
-                    SourcePath = $file.FullName
-                    TargetPath = $targetPath
-                    OldRel     = $name
-                    NewRel     = "$dom/$subName"
+                    SourceFile = $file.FullName
+                    TargetFile = $targetPath
+                    TargetDir  = $targetDir
+                    OldRelLink = "$name"
+                    NewRelLink = "$dom/$subName"
                 })
             }
         }
     }
 } elseif ($ToFlat) {
-    # 模式 2: 从子目录逆向平铺到根目录
+    # 模式 2: 子目录逆向上浮到根目录
     foreach ($dom in $validDomains) {
         $subDir = Join-Path $kbDir $dom
-        if (Test-Path $subDir) {
+        if (Test-Path -LiteralPath $subDir) {
             $subFiles = Get-ChildItem -Path $subDir -File -Filter "*.md"
             foreach ($file in $subFiles) {
                 $name = $file.Name
-                if ($name -match '^(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
-                    $typ = $Matches['typ']
-                    $id = $Matches['id']
-                    $slug = $Matches['slug']
-                    $flatName = "$($dom)_$($typ)_$($id)_$($slug).md"
+                if ($name -match '^(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+                    $flatName = "$($dom)_$name"
                     $targetPath = Join-Path $kbDir $flatName
                     $plan.Add([PSCustomObject]@{
                         Direction  = "ToFlat"
-                        Domain     = $dom
-                        SourcePath = $file.FullName
-                        TargetPath = $targetPath
-                        OldRel     = "$dom/$name"
-                        NewRel     = $flatName
-                    })
-                } elseif ($name -match '^(?<dom>[a-z]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
-                    # 子目录下已经是完整前缀命名的兼容情况
-                    $targetPath = Join-Path $kbDir $name
-                    $plan.Add([PSCustomObject]@{
-                        Direction  = "ToFlat"
-                        Domain     = $dom
-                        SourcePath = $file.FullName
-                        TargetPath = $targetPath
-                        OldRel     = "$dom/$name"
-                        NewRel     = $name
+                        SourceFile = $file.FullName
+                        TargetFile = $targetPath
+                        TargetDir  = $kbDir
+                        OldRelLink = "$dom/$name"
+                        NewRelLink = "$flatName"
                     })
                 }
             }
@@ -106,55 +93,43 @@ if ($ToSubdirs) {
     }
 }
 
-if ($plan.Count -eq 0) {
-    Write-Host "未检测到符合条件的迁移条目（可能已是目标结构，或尚未重命名为规范分面命名）。" -ForegroundColor Yellow
-    exit 0
+Write-Host "=== organize_subdirs.ps1 计划清单 (共 $($plan.Count) 个动作) ===" -ForegroundColor Cyan
+if ($isDryRun) {
+    Write-Host "[DryRun 模式] 未进行任何磁盘写入与文件移动。如需执行，请追加 -Execute 参数。" -ForegroundColor Yellow
+} else {
+    Write-Host "[Execute 模式] 开始执行文件物理移动并同步 SKILL-DRAFT.md 链接..." -ForegroundColor Green
 }
 
-if ($isDryRun) {
-    Write-Host "=== organize_subdirs.ps1 试跑模式 (DryRun) - 计划操作 $($plan.Count) 个条目 ===" -ForegroundColor Cyan
-    Write-Host "方向: $(if ($ToSubdirs) {'平铺 -> 子目录物理分层'} else {'子目录物理分层 -> 根目录平铺'})" -ForegroundColor Cyan
-    $plan | Format-Table -Property Domain, OldRel, NewRel -AutoSize
-    Write-Host "提示：如需物理执行迁移，请运行: .\organize_subdirs.ps1 $(if ($ToSubdirs) {'-ToSubdirs'} else {'-ToFlat'}) -Execute" -ForegroundColor Yellow
-} else {
-    Write-Host "=== organize_subdirs.ps1 开始执行物理迁移 ($($plan.Count) 个条目) ===" -ForegroundColor Green
-    $draftContent = if (Test-Path $draftFile) { [System.IO.File]::ReadAllText($draftFile, [System.Text.Encoding]::UTF8) } else { $null }
+$plan | Format-Table -Property Direction, OldRelLink, NewRelLink -AutoSize
 
+if (-not $isDryRun -and $plan.Count -gt 0) {
+    # 1. 执行文件物理移动
     foreach ($item in $plan) {
-        $parent = Split-Path $item.TargetPath -Parent
-        if (-not (Test-Path $parent)) {
-            New-Item -ItemType Directory -Path $parent -Force | Out-Null
+        if (-not (Test-Path -LiteralPath $item.TargetDir)) {
+            New-Item -ItemType Directory -Path $item.TargetDir -Force | Out-Null
         }
-        Move-Item -LiteralPath $item.SourcePath -Destination $item.TargetPath -Force
-        Write-Host "已移动: $($item.OldRel) -> $($item.NewRel)" -ForegroundColor Green
-
-        if ($draftContent) {
-            # 同步更新 SKILL-DRAFT.md 中的路径引用
-            $draftContent = $draftContent.Replace($item.OldRel, $item.NewRel)
-            $oldUrl = $item.OldRel -replace '\\', '/'
-            $newUrl = $item.NewRel -replace '\\', '/'
-            $draftContent = $draftContent.Replace($oldUrl, $newUrl)
-        }
+        Move-Item -LiteralPath $item.SourceFile -Destination $item.TargetFile -Force
     }
 
-    if ($draftContent) {
-        [System.IO.File]::WriteAllText($draftFile, $draftContent, [System.Text.Encoding]::UTF8)
-        Write-Host "SKILL-DRAFT.md 链接已全量同步更新。" -ForegroundColor Green
+    # 2. 同步更新 SKILL-DRAFT.md 超链接
+    if (Test-Path -LiteralPath $draftFile) {
+        $content = [System.IO.File]::ReadAllText($draftFile, [System.Text.Encoding]::UTF8)
+        foreach ($item in $plan) {
+            $content = $content.Replace($item.OldRelLink, $item.NewRelLink)
+        }
+        [System.IO.File]::WriteAllText($draftFile, $content, [System.Text.Encoding]::UTF8)
+        Write-Host "已同步更新 SKILL-DRAFT.md 中的相对引用链接。" -ForegroundColor Green
     }
 
-    # 如果是 ToFlat 且子目录已空，清理空目录
+    # 3. 清理可能变空的空目录
     if ($ToFlat) {
         foreach ($dom in $validDomains) {
             $subDir = Join-Path $kbDir $dom
-            if (Test-Path $subDir) {
-                $rem = Get-ChildItem -Path $subDir
-                if ($rem.Count -eq 0) {
-                    Remove-Item -Path $subDir -Force
-                    Write-Host "已清理空目录: $dom" -ForegroundColor Gray
-                }
+            if ((Test-Path -LiteralPath $subDir) -and (Get-ChildItem -Path $subDir).Count -eq 0) {
+                Remove-Item -LiteralPath $subDir -Force
             }
         }
     }
 
-    Write-Host "物理迁移执行完毕！" -ForegroundColor Green
+    Write-Host "操作全部完成！" -ForegroundColor Green
 }
