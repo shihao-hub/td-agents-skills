@@ -89,6 +89,7 @@ kb-engineering-notes/
 ├── 68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md # [Stage 2: 专项排障] 针对 Antigravity Manager 切换环境失败弹窗、target-conflict 进程误判冲突、汉化工具排查与 App/CLI 独立凭据体系
 ├── 69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md # [Stage 2: 专项排障] 针对 Antigravity 桌面端后台常驻 language_server.exe 内存缓存定时刷盘覆写离线修改、raw_summary Protobuf BLOB 优先级与官方 ConnectRPC 端口及 CSRF 鉴权热推送
 ├── 70-AnswerMeWithHTML单页可视化技能全景架构与DarkReader暗黑冲突排障及新环境配置指南.md # [Stage 2: 专项架构与排障] 针对 Answer me with HTML 可视化技能全景架构、Dark Reader 等暗黑插件导致 SVG 矢量节点纯白刺眼与白底白字反色断层排障，及跨设备 Dark/Auto 模式决策与新机环境配置 SOP
+├── 71-WailsV3与WebView2桌面小工具常驻高内存治理与关窗按需生命周期重构指南.md # [Stage 2: 专项排障与架构重构] 针对 Go + Wails v3 (WebView2) 桌面小工具托盘常驻闲置内存高达 350MB 根因剖析、Chromium 参数剪枝、关窗销毁释放 WebView2 堆内存归还与按需毫秒级重建，闲置常驻内存暴降 88.5% (至 40MB 级)
 └── ...（后续顺次扩充）
 ```
 
@@ -209,6 +210,7 @@ kb-engineering-notes/
 | Antigravity 桌面端会话改名不生效、离线改写 SQLite 数据库后被后台定时覆写回滚英文；或侧边栏标题看着依然是旧英文 | [`69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md) | Antigravity 桌面端改名, 会话标题汉化, language_server.exe, background reconciliation, 幽灵覆写, raw_summary BLOB, Protobuf Wire, ConnectRPC, UpdateConversationAnnotations, csrf_token, 侧边栏没刷新, Ctrl+R 重载 |
 | 逆向 Antigravity 核心服务与动态端口通信：如何从运行中常驻进程提取 CSRF Token 并调用官方 RPC 实时热推送数据 | [`69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md) | Antigravity 逆向, language_server 端口, WMI 提取 csrf_token, Exa LanguageServerService, UpdateConversationAnnotations, StreamCascadeSummariesReactiveUpdates, 动态端口探测 |
 | Answer me with HTML 可视化技能生成的页面与 Dark Reader 等暗黑插件冲突，流程图方块/时序图角色出现纯白刺眼大方块、白底白字看不清；或想了解该技能架构与跨电脑新环境如何配置 | [`70-AnswerMeWithHTML单页可视化技能全景架构与DarkReader暗黑冲突排障及新环境配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/70-AnswerMeWithHTML单页可视化技能全景架构与DarkReader暗黑冲突排障及新环境配置指南.md) | Answer me with HTML, am.mjs, Dark Reader, 暗黑插件冲突, SVG 反色失败, 白底白字, 刺眼白块, flow 节点发白, am config set mode dark, config.json, 新电脑配环境, 跨环境配置决策, mode dark, mode auto, 离线单文件 HTML, Dagre 布局 |
+| Go + Wails v3 (WebView2) 桌面小工具托盘常驻闲置内存高达 350MB+；关闭窗口（点 X）仅 Hide 导致 6 个 Chromium 子进程全量驻留；想进行 Chromium 启动参数剪枝并重构关窗销毁与按需重建生命周期实现闲置内存降至 40MB 级 | [`71-WailsV3与WebView2桌面小工具常驻高内存治理与关窗按需生命周期重构指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/71-WailsV3与WebView2桌面小工具常驻高内存治理与关窗按需生命周期重构指南.md) | Wails v3, WebView2, msedgewebview2, 常驻内存高, 托盘小工具, 关窗 Hide, 销毁 WebView2, DisableQuitOnLastWindowClosed, AdditionalBrowserArgs, --disable-gpu, 内存暴降, 按需重建, isWindowAlive, FreeOSMemory, --hidden 静默自启冷启动, 纯 Go 40MB |
 
 
 
