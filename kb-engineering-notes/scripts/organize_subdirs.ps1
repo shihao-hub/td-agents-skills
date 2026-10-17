@@ -2,12 +2,12 @@
 .SYNOPSIS
     organize_subdirs.ps1 - kb-engineering-notes 平铺与子目录物理分层双向切换工具
 .DESCRIPTION
-    依据虚拟路径契约：<domain>_<scope>_<type>_<id>_<slug>.md <-> <domain>/<scope>/<type>_<id>_<slug>.md（或 <domain>/<type>_<id>_<slug>.md）
+    依据虚拟路径契约：<id>_<domain>_<scope>_<type>_<slug>.md <-> <domain>/<id>_<scope>_<type>_<slug>.md
     支持平铺下沉分层 (-ToSubdirs) 与分层逆向上浮平铺 (-ToFlat)，并自动同步更新 SKILL-DRAFT.md 链接。
 .PARAMETER ToSubdirs
-    将平铺文件按领域归入对应子目录：<domain>/<scope>_<type>_<id>_<slug>.md
+    将平铺文件按领域归入对应子目录：<domain>/<id>_<scope>_<type>_<slug>.md
 .PARAMETER ToFlat
-    将子目录文件逆向恢复为根目录平铺：<domain>_<scope>_<type>_<id>_<slug>.md
+    将子目录文件逆向恢复为根目录平铺：<id>_<domain>_<scope>_<type>_<slug>.md
 .PARAMETER Execute
     显式指定此开关才实际执行文件移动与链接写入；默认仅试跑预览 (DryRun)
 .PARAMETER DryRun
@@ -40,21 +40,20 @@ $plan = [System.Collections.Generic.List[PSCustomObject]]::new()
 
 if ($ToSubdirs) {
     # 模式 1: 平铺下沉到子目录
-    # 扫描根目录下的 .md 文件
     $rootFiles = Get-ChildItem -Path $kbDir -File -Filter "*.md" | Where-Object {
         $_.Name -ne "SKILL-DRAFT.md" -and $_.Name -ne "SKILL.md" -and $_.Name -ne "README.md"
     }
 
     foreach ($file in $rootFiles) {
         $name = $file.Name
-        if ($name -match '^(?<dom>[a-z]+)_(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+        if ($name -match '^(?<id>\d{3})_(?<dom>[a-z]+)_(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<slug>.+)\.md$') {
+            $id = $Matches['id']
             $dom = $Matches['dom'].ToLower()
             $scp = $Matches['scp']
             $typ = $Matches['typ']
-            $id = $Matches['id']
             $slug = $Matches['slug']
             if ($validDomains -contains $dom) {
-                $subName = "$($scp)_$($typ)_$($id)_$($slug).md"
+                $subName = "$($id)_$($scp)_$($typ)_$($slug).md"
                 $targetDir = Join-Path $kbDir $dom
                 $targetPath = Join-Path $targetDir $subName
                 $plan.Add([PSCustomObject]@{
@@ -76,8 +75,12 @@ if ($ToSubdirs) {
             $subFiles = Get-ChildItem -Path $subDir -File -Filter "*.md"
             foreach ($file in $subFiles) {
                 $name = $file.Name
-                if ($name -match '^(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
-                    $flatName = "$($dom)_$name"
+                if ($name -match '^(?<id>\d{3})_(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<slug>.+)\.md$') {
+                    $id = $Matches['id']
+                    $scp = $Matches['scp']
+                    $typ = $Matches['typ']
+                    $slug = $Matches['slug']
+                    $flatName = "$($id)_$($dom)_$($scp)_$($typ)_$($slug).md"
                     $targetPath = Join-Path $kbDir $flatName
                     $plan.Add([PSCustomObject]@{
                         Direction  = "ToFlat"

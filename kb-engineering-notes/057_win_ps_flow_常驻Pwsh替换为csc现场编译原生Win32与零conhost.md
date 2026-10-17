@@ -236,7 +236,7 @@ child.unref();
 
 ### 4. 相关条目
 
-- `win_conhost_fix_011_计划任务控制台委托闪窗与conhost注册.md`：conhost 与控制台委托的另一条战线（计划任务闪窗）；
-- `win_conhost_fix_052_PE控制台委托DefTerm断层与MCP无窗口镜像.md`：PE Subsystem 2（GUI 子系统）实现无窗口运行的同源机制；
-- `win_mem_fix_019_Win内存防死机与Pagefile提交归因优化.md`：内存归因与提交内存分析方法；
-- `agent_dsh_fix_056_DSH挂载MCP包装层内存膨胀治理与直连改造.md`：同一轮内存治理里的 MCP 进程数侧。
+- `011_win_conhost_fix_计划任务控制台委托闪窗与conhost注册.md`：conhost 与控制台委托的另一条战线（计划任务闪窗）；
+- `052_win_conhost_fix_PE控制台委托DefTerm断层与MCP无窗口镜像.md`：PE Subsystem 2（GUI 子系统）实现无窗口运行的同源机制；
+- `019_win_mem_fix_Win内存防死机与Pagefile提交归因优化.md`：内存归因与提交内存分析方法；
+- `056_agent_dsh_fix_DSH挂载MCP包装层内存膨胀治理与直连改造.md`：同一轮内存治理里的 MCP 进程数侧。

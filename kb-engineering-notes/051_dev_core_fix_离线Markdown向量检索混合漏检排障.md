@@ -11,7 +11,7 @@ description: 本地离线 Markdown 与技能库轻量级语义检索系统搭建
 
 1. **精确技术词与模糊意图并存时，目标文档遭遇“语义稀释”并漏检**：
    - 用户输入带有明确技术专有名词的模糊查询（例如 `设置 sublime open terminal here`），心智预期是找到配置侧边栏拉起终端的手记；
-   - 检索结果中前排充斥着全篇泛谈 Terminal 启动参数的通用规范（如 `design.md`），而正文明确包含 `Sublime`、`Open Terminus here`、`PowerShell` 的目标核心文件 [`16-SublimeTextTerminus...`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/ide_terminus_fix_016_SublimeTerminus退格失效与原生终端集成.md) 却被挤到了第 31 位甚至完全未在前排出现。
+   - 检索结果中前排充斥着全篇泛谈 Terminal 启动参数的通用规范（如 `design.md`），而正文明确包含 `Sublime`、`Open Terminus here`、`PowerShell` 的目标核心文件 [`16-SublimeTextTerminus...`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/016_ide_terminus_fix_SublimeTerminus退格失效与原生终端集成.md) 却被挤到了第 31 位甚至完全未在前排出现。
 2. **多切块挤占候选名额（Top-K 截断陷阱）**：
    - 接口如果仅向向量库索取前 15 条切块（`top_k=15`），而排名前两位的文件各命中 4~6 处切块，导致仅有的 15 个切块名额被 2~3 个文件完全霸占；
    - 排在第 20~30 位的其余优质文件因“切块平铺截断”被物理丢失，页面呈现出单一文件反复刷屏的大卡片，信息密度极低。

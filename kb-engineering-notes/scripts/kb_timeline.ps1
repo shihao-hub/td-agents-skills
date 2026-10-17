@@ -31,10 +31,10 @@ param(
 
 $kbDir = Split-Path $PSScriptRoot -Parent
 
-# 收集所有笔记文件（支持五段式 <domain>_<scope>_<type>_<id>_<slug>.md、四段式及历史 0N-*.md）
+# 收集所有笔记文件（兼容五段式 ID置顶 <id>_<dom>_<scp>_<typ>_<slug>.md、历史前置 <dom>_... 及 0N-*.md）
 $allFiles = Get-ChildItem -Path $kbDir -Recurse -Filter "*.md" | Where-Object {
     $_.Name -ne "SKILL-DRAFT.md" -and $_.Name -ne "SKILL.md" -and $_.Name -ne "README.md" -and
-    ($_.Name -match '^\d{2}-' -or $_.Name -match '^[a-z]+_([a-z0-9]+_)?(fix|flow)_\d{3}_')
+    ($_.Name -match '^\d{2,3}_' -or $_.Name -match '^\d{2}-' -or $_.Name -match '^[a-z]+_([a-z0-9]+_)?(fix|flow)_\d{3}_')
 }
 
 $records = [System.Collections.Generic.List[PSCustomObject]]::new()
@@ -48,18 +48,28 @@ foreach ($file in $allFiles) {
     $slug = ""
     $created = $file.CreationTime.ToString("yyyy-MM-dd")
 
-    if ($name -match '^(?<dom>[a-z]+)_(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+    if ($name -match '^(?<id>\d{3})_(?<dom>[a-z]+)_(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<slug>.+)\.md$') {
+        # 新标准：ID 置顶五段式
+        $id = [int]$Matches['id']
+        $dom = $Matches['dom']
+        $scp = $Matches['scp']
+        $typ = $Matches['typ']
+        $slug = $Matches['slug']
+    } elseif ($name -match '^(?<dom>[a-z]+)_(?<scp>[a-z0-9]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+        # 兼容：ID 在中间五段式
         $id = [int]$Matches['id']
         $dom = $Matches['dom']
         $scp = $Matches['scp']
         $typ = $Matches['typ']
         $slug = $Matches['slug']
     } elseif ($name -match '^(?<dom>[a-z]+)_(?<typ>fix|flow)_(?<id>\d{3})_(?<slug>.+)\.md$') {
+        # 兼容：旧四段式
         $id = [int]$Matches['id']
         $dom = $Matches['dom']
         $typ = $Matches['typ']
         $slug = $Matches['slug']
     } elseif ($name -match '^(?<num>\d{2})-(?<title>.+)\.md$') {
+        # 兼容：历史 0N-*.md
         $id = [int]$Matches['num']
         $slug = $Matches['title']
         $head = Get-Content -LiteralPath $file.FullName -TotalCount 20 -Encoding UTF8 -ErrorAction SilentlyContinue
