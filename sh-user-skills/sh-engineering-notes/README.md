@@ -1,10 +1,10 @@
----
+﻿---
 name: sh-engineering-notes
 description: |
   工程实战手记与避坑知识库入口（kb-engineering-notes 两级渐进式检索分流器）：用户报出底层报错、系统/IDE/终端异常或环境配置疑难时优先查阅。覆盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、任务栏输入法图标删不掉与 Windhawk 代码注入等。检索协议：先读知识库总路由表，再按命中条目查看全文；条目持续生长，全量索引以总路由表为准；遇到上述报错或疑难、或用户点名查阅避坑知识库时使用本入口。
 version: 1.2.0
 created: 2026-10-10
-updated: 2026-10-13
+updated: 2026-10-17
 ---
 
 # sh-engineering-notes：工程实战手记与避坑知识库导航
@@ -23,7 +23,7 @@ updated: 2026-10-13
      [kb-engineering-notes/SKILL-DRAFT.md](file:///D:/Users/language_projects/.agents/skills/kb-engineering-notes/SKILL-DRAFT.md)
    - 该文件维护了完整的 现象/报错关键词 到 对应编号条目 的映射表。
 2. **第二级（按需读取编号实战条目）**：
-   - 查阅 `SKILL-DRAFT.md` 命中对应条目后，使用 `view_file` **仅读取具体的 `0N-*.md` 文件**。
+   - 查阅 `SKILL-DRAFT.md` 命中对应条目后，使用 `view_file` **仅读取具体的分面命名条目文件（如 `<domain>_<type>_<id>_<slug>.md`）**。
    - 每个条目均遵循「现象直击 -> 底层根因 -> 抢救 SOP -> 验证防复发」的标准四段论结构。
 
 ---
@@ -45,5 +45,5 @@ updated: 2026-10-13
 
 当用户通过 `sh-engineering-notes` 或口语模糊需求呼叫排障手记时，AI 严格执行以下步骤：
 1. 第一步：使用 `view_file` 读取 `D:\Users\language_projects\.agents\skills\kb-engineering-notes\SKILL-DRAFT.md`；
-2. 第二步：比对用户的具体报错或诉求，匹配命中具体的 `0N-*.md` 文档；
+2. 第二步：比对用户的具体报错或诉求，匹配命中具体的分面槽位命名文档（`<domain>_<type>_<id>_<slug>.md`）；
 3. 第三步：使用 `view_file` 读取该目标条目全文，并按照其标准 SOP 步骤向用户提供解决方案或执行操作。
