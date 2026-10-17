@@ -88,6 +88,7 @@ kb-engineering-notes/
 ├── 67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南.md # [Stage 2: 专项取证] 针对只认签名 cookie/启动令牌的本机 Web GUI、独立 profile 浏览器进不去时，只读存档密钥自签 cookie 取证与回收
 ├── 68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md # [Stage 2: 专项排障] 针对 Antigravity Manager 切换环境失败弹窗、target-conflict 进程误判冲突、汉化工具排查与 App/CLI 独立凭据体系
 ├── 69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md # [Stage 2: 专项排障] 针对 Antigravity 桌面端后台常驻 language_server.exe 内存缓存定时刷盘覆写离线修改、raw_summary Protobuf BLOB 优先级与官方 ConnectRPC 端口及 CSRF 鉴权热推送
+├── 70-AnswerMeWithHTML单页可视化技能全景架构与DarkReader暗黑冲突排障及新环境配置指南.md # [Stage 2: 专项架构与排障] 针对 Answer me with HTML 可视化技能全景架构、Dark Reader 等暗黑插件导致 SVG 矢量节点纯白刺眼与白底白字反色断层排障，及跨设备 Dark/Auto 模式决策与新机环境配置 SOP
 └── ...（后续顺次扩充）
 ```
 
@@ -207,6 +208,7 @@ kb-engineering-notes/
 | 疑问 Antigravity App 桌面版与 Antigravity CLI 是否共享登录账号；想了解 Manager 中 classic/ide/agy 三端凭据存储机制与多设备登录风控 | [`68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/68-AntigravityManager切换客户端失败target-conflict根因排障与汉化工具进程冲突解决指南.md) | antigravity app 共享账号, agy cli 账号, Windows 凭据管理器, state.vscdb, 多设备登录, 多网络登录, 五小时限额, Five Hour Limit, 账号风控 |
 | Antigravity 桌面端会话改名不生效、离线改写 SQLite 数据库后被后台定时覆写回滚英文；或侧边栏标题看着依然是旧英文 | [`69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md) | Antigravity 桌面端改名, 会话标题汉化, language_server.exe, background reconciliation, 幽灵覆写, raw_summary BLOB, Protobuf Wire, ConnectRPC, UpdateConversationAnnotations, csrf_token, 侧边栏没刷新, Ctrl+R 重载 |
 | 逆向 Antigravity 核心服务与动态端口通信：如何从运行中常驻进程提取 CSRF Token 并调用官方 RPC 实时热推送数据 | [`69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/69-Antigravity桌面端会话持久化覆写机制逆向与官方ConnectRPC热推送实战指南.md) | Antigravity 逆向, language_server 端口, WMI 提取 csrf_token, Exa LanguageServerService, UpdateConversationAnnotations, StreamCascadeSummariesReactiveUpdates, 动态端口探测 |
+| Answer me with HTML 可视化技能生成的页面与 Dark Reader 等暗黑插件冲突，流程图方块/时序图角色出现纯白刺眼大方块、白底白字看不清；或想了解该技能架构与跨电脑新环境如何配置 | [`70-AnswerMeWithHTML单页可视化技能全景架构与DarkReader暗黑冲突排障及新环境配置指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/70-AnswerMeWithHTML单页可视化技能全景架构与DarkReader暗黑冲突排障及新环境配置指南.md) | Answer me with HTML, am.mjs, Dark Reader, 暗黑插件冲突, SVG 反色失败, 白底白字, 刺眼白块, flow 节点发白, am config set mode dark, config.json, 新电脑配环境, 跨环境配置决策, mode dark, mode auto, 离线单文件 HTML, Dagre 布局 |
 
 
 
