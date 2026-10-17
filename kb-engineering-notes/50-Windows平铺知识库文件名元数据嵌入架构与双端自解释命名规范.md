@@ -160,10 +160,11 @@ Get-ChildItem -Filter "*_flow_*"
 
 ## 五、全库批量平滑迁移与安全回滚 SOP
 
-为了在不破坏知识库正常运行的前提下完成 50 篇历史文档的升级，提供带 **试跑（DryRun）** 与 **一键回滚（Rollback）** 的安全迁移脚本。
+为了在不破坏知识库正常运行的前提下完成历史文档的升级，提供带 **试跑（DryRun）** 与 **一键回滚（Rollback）** 的安全迁移脚本参考实现。
 
-### 自动化迁移脚本：`migrate_kb_filenames.ps1`
-保存于 `kb-engineering-notes/scripts/migrate_kb_filenames.ps1`：
+### 自动化迁移脚本参考实现（按需创建临时脚本执行）
+
+> 💡 **设计说明**：为保持单目录平铺知识库的干净纯粹，避免在知识库子目录下存放非持久化运行的代码资产，本迁移脚本作为**随需即用（On-demand）的 SOP 代码块**内置归档于本文档中。如未来需执行物理批量迁移，只需在知识库根目录下临时创建 `migrate_kb_filenames.ps1` 执行，跑完并验证映射后即可随时删除。
 
 ```powershell
 param(
@@ -173,10 +174,16 @@ param(
 
 $kbDir = Split-Path $PSScriptRoot -Parent
 $mapFile = Join-Path $PSScriptRoot "rename_mapping.json"
+$draftFile = Join-Path $kbDir "SKILL-DRAFT.md"
 
 if ($Rollback) {
-    if (-not (Test-Path $mapFile)) { Write-Error "未找到回滚映射表 $mapFile"; exit 1 }
-    $map = Get-Content $mapFile -Raw | ConvertFrom-Json
+    if (-not (Test-Path $mapFile)) {
+        Write-Error "未找到回滚映射表 $mapFile"
+        exit 1
+    }
+    $map = Get-Content $mapFile -Raw -Encoding UTF8 | ConvertFrom-Json
+    $draftContent = if (Test-Path $draftFile) { [System.IO.File]::ReadAllText($draftFile, [System.Text.Encoding]::UTF8) } else { $null }
+
     foreach ($item in $map) {
         $oldPath = Join-Path $kbDir $item.NewName
         $origPath = Join-Path $kbDir $item.OldName
@@ -184,6 +191,13 @@ if ($Rollback) {
             Rename-Item -Path $oldPath -NewName $item.OldName -Force
             Write-Host "已恢复: $($item.NewName) -> $($item.OldName)" -ForegroundColor Yellow
         }
+        if ($draftContent) {
+            $draftContent = $draftContent.Replace($item.NewName, $item.OldName)
+        }
+    }
+    if ($draftContent) {
+        [System.IO.File]::WriteAllText($draftFile, $draftContent, [System.Text.Encoding]::UTF8)
+        Write-Host "SKILL-DRAFT.md 链接已同步回滚。" -ForegroundColor Yellow
     }
     exit 0
 }
@@ -263,13 +277,21 @@ foreach ($f in $files) {
 if (-not $Execute) {
     Write-Host "=== 试跑模式 (DryRun) - 共计划转换 $($plan.Count) 个文件 ===" -ForegroundColor Cyan
     $plan | Format-Table -Property OldName, NewName -AutoSize
-    Write-Host "提示：确认无误后追加 -Execute 参数执行正式迁移。" -ForegroundColor Yellow
+    Write-Host "提示：如需物理执行迁移，请运行: .\migrate_kb_filenames.ps1 -Execute" -ForegroundColor Yellow
 } else {
-    # 备份映射表供回滚
     $plan | ConvertTo-Json -Depth 3 | Set-Content -Path $mapFile -Encoding UTF8
+    $draftContent = if (Test-Path $draftFile) { [System.IO.File]::ReadAllText($draftFile, [System.Text.Encoding]::UTF8) } else { $null }
+
     foreach ($p in $plan) {
         Rename-Item -Path $p.OldPath -NewName $p.NewName -Force
         Write-Host "已重命名: $($p.OldName) -> $($p.NewName)" -ForegroundColor Green
+        if ($draftContent) {
+            $draftContent = $draftContent.Replace($p.OldName, $p.NewName)
+        }
+    }
+    if ($draftContent) {
+        [System.IO.File]::WriteAllText($draftFile, $draftContent, [System.Text.Encoding]::UTF8)
+        Write-Host "SKILL-DRAFT.md 链接已全量同步替换。" -ForegroundColor Green
     }
     Write-Host "全量迁移完毕，映射已保存至 $mapFile" -ForegroundColor Green
 }
