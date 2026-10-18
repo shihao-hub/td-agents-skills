@@ -12,10 +12,10 @@ updated: 2026-10-18
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
 
-> **注意（隔离与转正说明）**：
-> 本文件当前命名为 `SKILL.md`，用于确保在草稿与沉淀阶段**不被外部 Agent 自动注册为活跃技能**。
-> 本文件架构完全遵循 `/skill-creator` 规范，未来转正只需执行：
-> `git mv SKILL.md SKILL.md`
+> **注意（转正状态说明）**：
+> 本知识库已转正为**根级活跃技能**（文件名 `SKILL.md`），可被 harness 自动注册，并支持以 `/kb-engineering-notes` 点名调用。
+> 本文件架构完全遵循 `/skill-creator` 规范；若要退回草稿隔离态（不被自动注册），只需执行：
+> `git mv SKILL.md _SKILL.md`
 
 ---
 
@@ -130,20 +130,20 @@ kb-engineering-notes/
 - **排障与工程实现双翼**：
   - **Type A（疑难排障型）**：解决踩坑、文件锁、底层冲突，包含精准排查命令、界面现象对照和确定性操作 SOP；
   - **Type B（方案与生成流水线型）**：解决端到端工程实现、内容/试卷/文档自动化生成、样式排版引擎落地，包含业务输入输出、底层技术剖析、代码实现与交付验证模板。
-- **条目即技能（隐形技能约定）**：每个 `0N-*.md` 条目在元数据上都视为一个独立 skill，必须带 skill-creator 规范的 frontmatter（`name` + `description`），正文保持单文件 ≤500 行、以 SOP 体为主。
+- **条目即技能（隐形技能约定）**：每个 `<id>_<domain>_<scope>_<type>_<slug>.md` 条目在元数据上都视为一个独立 skill，必须带 skill-creator 规范的 frontmatter（`name` + `description`），正文保持单文件 ≤500 行、以 SOP 体为主。
 
-### 条目即技能：为什么“是技能”却检测不到
+### 条目即技能：为什么条目本身不被注册
 
 靠的是两条命名约束，别去动它们：
 
-- harness 在子目录里只认名为 `SKILL.md` 的文件；本目录条目一律用 `0N-主题.md`，因此永不注册（实测：同层的 `SKILL.md` 带完备 frontmatter，也从未出现在技能目录里）；
-- 总控文件用 `SKILL.md` 而非 `SKILL.md`，将来转正只需改这一个文件名。
+- harness 只把名为 `SKILL.md` 的文件注册为技能；本目录条目一律用五段式 `<id>_<domain>_<scope>_<type>_<slug>.md`（如 `001_git_smerge_fix_...md`），因此条目永不单独注册；
+- 注册入口只有总控文件 `SKILL.md` 一个（即当前可用 `/kb-engineering-notes` 点名的本技能），条目始终藏在它背后，由路由表按需索引。
 
 ### 条目元数据规范
 
 - `name` 取 `kb-<英文主题短横线>`（如 `kb-docx-practice-generator`），**不带编号**：编号只是排序外壳，`name` 才是将来独立成 skill 时沿用的稳定标识，定了就别改，免得引用失效；
-- `description` 按 skill-creator 写法：一句话功能语义 + \"何时查阅\"的触发场景，控制在 200 字符内，关键词尽量用用户真会说的症状词、技术词或目标交付词；
-- 本目录的 description 面向**路由与检索**。若某条目将来真要转正为全局技能，除改名建目录外，还必须按 `SKILL-AUTHORING-RULES.md` 把 description 重写成点名触发式（≤70 字符、结尾 `点名使用`）。
+- `description` 按 skill-creator 写法：一句话功能语义 + “何时查阅”的触发场景，控制在 200 字符内，关键词尽量用用户真会说的症状词、技术词或目标交付词；
+- 本目录的 description 面向**路由与检索**（根级技能与族路由器的预算为 1–1024 字符，故本文件采用长描述）。若某条目将来真要转正为全局技能，除改名建目录外，还必须按 `sh-skill-authoring-rules` 把 description 重写成点名触发式（≤70 字符、结尾 `点名使用`）。
 
 ---
 
