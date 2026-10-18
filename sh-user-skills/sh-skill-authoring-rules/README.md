@@ -23,9 +23,9 @@ updated: 2026-10-17
 |---|:---:|---|---|
 | `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`） | **卷一** |
 | `~/.agents/skills/sh-user-skills/<name>/README.md` | ❌ | **个人沉淀类子技能**：通过 `README.md` 命名避开全局自动扫描，由 `sh-user-skills` 按需通过 `view_file` 调入 | **卷二** |
-| `~/.agents/skills/<name>/`（junction 链出，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的子技能**：需进全局清单的高频/关键入口（如 `sh-plan-driven-development`、`sh-engineering-notes`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，链接产物不入库 | **卷二·4** |
-| `~/.agents/skills/<kb-dir>/<name>.md`（分面槽位/历史0N知识库条目） | ❌ | **隐形技能 / 实战手记**：单点深度排障或工程实现，自带合规 frontmatter 但不命名为 `SKILL.md`，靠 `SKILL-DRAFT.md` 动态索引 | **卷三** |
-| `<kb-dir>/SKILL-DRAFT.md` | ❌ | **知识库母版 / 动态路由表**：草稿与二级分流器，转正时 `git mv` 为 `SKILL.md` | **卷三** |
+| `~/.agents/skills/<name>/`（junction 链出，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的子技能**：需进全局清单的高频/关键入口（如 `sh-plan-driven-development`、`kb-engineering-notes`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，链接产物不入库 | **卷二·4** |
+| `~/.agents/skills/<kb-dir>/<name>.md`（分面槽位/历史0N知识库条目） | ❌ | **隐形技能 / 实战手记**：单点深度排障或工程实现，自带合规 frontmatter 但不命名为 `SKILL.md`，靠 `SKILL.md` 动态索引 | **卷三** |
+| `<kb-dir>/SKILL.md` | ❌ | **知识库母版 / 动态路由表**：草稿与二级分流器，转正时 `git mv` 为 `SKILL.md` | **卷三** |
 | 根目录下无 frontmatter 的 `.md`（`GUIDE-*`、`plans-*`） | ❌ | **纯文档与历史规划记事**：不参与任何技能注册 | - |
 
 ### 🎯 落位三步分诊法
@@ -52,7 +52,7 @@ updated: 2026-10-17
 - **结构**：一句话功能语义（≤70 字符）+ 领域/性质前缀（如 `装机：`、`配置：`、`排障：`、`路由器：`）+ 核心关键词 + 结尾固定 `点名使用`。
 - **反军备竞赛红线**：严禁出现“必须调用本技能”、“即使只说 X 也要使用”等对抗性提示词；严禁穷举同义词堆砌字数。
 - **主动触发类（Auto）例外**：极少数需要 AI 自主根据上下文介入的方法论技能（如 `sh-backend-design`），不写“点名使用”，但必须显式划清正反边界（“用户需要 X 时使用；Y 场景不使用”）。
-- **路由器与知识库入口例外（关键词集群形态）**：`sh-user-skills`、族路由器与知识库入口（如 `sh-engineering-notes`）不适用首款模板（显式豁免“≤70 字符 + 点名使用”结尾）；其 description 允许并鼓励采用「定位语 + 用户真实会说的症状词/报错词/工具名关键词集群 + 触发或兜底说明」形态，用于启发式分流与主动查阅，**不视为“同义词堆砌”**；反军备竞赛红线仍然有效（禁对抗性触发语、禁无信息量重复）。此类 description 还须满足：
+- **路由器与知识库入口例外（关键词集群形态）**：`sh-user-skills`、族路由器与知识库入口（如 `kb-engineering-notes`）不适用首款模板（显式豁免“≤70 字符 + 点名使用”结尾）；其 description 允许并鼓励采用「定位语 + 用户真实会说的症状词/报错词/工具名关键词集群 + 触发或兜底说明」形态，用于启发式分流与主动查阅，**不视为“同义词堆砌”**；反军备竞赛红线仍然有效（禁对抗性触发语、禁无信息量重复）。此类 description 还须满足：
   - 关键词密度优先，不写长句铺陈，只写用户可能原样说出的词；
   - 分流器保留“点名 `sh-*` 子技能（含拼写近似）兜底解析”条款；知识库入口写明“报出症状即优先查阅”的触发语（属主动触发类，不写“点名使用”）；
   - 严格 ≤1024 字符，并按卷二第 3 节命令实测校验；
@@ -102,7 +102,7 @@ updated: YYYY-MM-DD
 
 ### 4. 提级暴露机制（expose_user_skill）
 
-子技能默认隐形；当某技能需要进入全局技能清单（高频点名，或需要常驻关键词钩子，如知识库入口 `sh-engineering-notes`）时，在仓库根执行：
+子技能默认隐形；当某技能需要进入全局技能清单（高频点名，或需要常驻关键词钩子，如知识库入口 `kb-engineering-notes`）时，在仓库根执行：
 
 ```powershell
 uv run expose_user_skill.py <name> --check   # 预演
@@ -113,7 +113,7 @@ uv run expose_user_skill.py <name>           # 实跑
 
 - 该技能 description 进入全局 prompt，此后遵守卷一对根级技能的全部约束（≤1024、关键词集群规范等）；
 - 真身仍在 `sh-user-skills/<name>/`，**一切修改只动真身**；改后重跑脚本（`--check` 探测链接失联）；
-- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`sh-engineering-notes`、`sh-skill-authoring-rules`。
+- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`kb-engineering-notes`、`sh-skill-authoring-rules`。
 
 ---
 
@@ -123,7 +123,7 @@ uv run expose_user_skill.py <name>           # 实跑
 
 ### 1. 两级渐进式感知架构
 为防止数十篇长篇排障文档撑爆上下文，知识库实行两级感知：
-1. **第一级（权威路由）**：`kb-engineering-notes/SKILL-DRAFT.md`，维护唯一的「问题/症状/报错关键词 -> 对应编号条目」映射表。
+1. **第一级（权威路由）**：`kb-engineering-notes/SKILL.md`，维护唯一的「问题/症状/报错关键词 -> 对应编号条目」映射表。
 2. **第二级（专项条目）**：编号条目文件，每个条目针对单点技术痛点，AI 命中后使用 `view_file` 单篇加载。
 
 ### 2. 双轨条目结构与 ID 置顶五段式分面槽位命名（ID-First Faceted Pattern）
@@ -163,7 +163,7 @@ uv run expose_user_skill.py <name>           # 实跑
 1. **平铺虚拟路径契约**：
    - 平铺文件名 `<id>_<domain>_<scope>_<type>_<slug>.md` 实质为序列化的虚拟相对路径，与未来物理分层路径 `<domain>/<id>_<scope>_<type>_<slug>.md` 1:1 双向无损映射。
    - **分层演进触发阈值**：当条目总规模达到 150+ 篇或单一领域条目 $\ge 30$ 篇时触发物理下沉分层。
-   - 配套工具 `scripts/organize_subdirs.ps1` 支持 `-ToSubdirs` 与 `-ToFlat` 双向秒级无损转换，自动全局替换 `SKILL-DRAFT.md` 超链接，Git blame 完整保留，0 代码断裂、0 引用重构成本。
+   - 配套工具 `scripts/organize_subdirs.ps1` 支持 `-ToSubdirs` 与 `-ToFlat` 双向秒级无损转换，自动全局替换 `SKILL.md` 超链接，Git blame 完整保留，0 代码断裂、0 引用重构成本。
 2. **四维时间顺序感知体系**：
    - **维 1：侧边栏与文件系统原生排序（ID 置顶）**：任何工具按名称升序排列即绝对等价于按创建时间顺序排列，列表最底部即最新条目；
    - **维 2：Explorer 视窗切换**：想看最近修改按“修改日期”列头排序；
@@ -171,16 +171,16 @@ uv run expose_user_skill.py <name>           # 实跑
    - **维 4：SKILL-DRAFT 时间线索引**：总控文件文末维护《条目时序演进检索表》，一屏通览生命周期。
 
 ### 4. 外部自治与解耦原则（核心契约）
-- **独立生长**：知识库为**完全自洽索引**体系，全量索引唯一维护在内部 `SKILL-DRAFT.md`。
-- **严禁向外耦合**：外部路由器（如 `sh-engineering-notes` 及顶层 `sh-user-skills`）统一采用领域定性描述，**严禁绑定条目总数或静态区间（如禁止写“38项”、“01~38”）**。
-- **新增条目免更新父级**：日常开发追加条目时，只需更新内部 `SKILL-DRAFT.md` 路由表与时序演进检索表，无需向上修改任何父级技能文件。
+- **独立生长**：知识库为**完全自洽索引**体系，全量索引唯一维护在内部 `SKILL.md`。
+- **严禁向外耦合**：外部路由器（如 `kb-engineering-notes` 及顶层 `sh-user-skills`）统一采用领域定性描述，**严禁绑定条目总数或静态区间（如禁止写“38项”、“01~38”）**。
+- **新增条目免更新父级**：日常开发追加条目时，只需更新内部 `SKILL.md` 路由表与时序演进检索表，无需向上修改任何父级技能文件。
 
 ### 5. 转正清单（条目独立为正式全局技能时）
 当某篇手记被频繁呼叫，需要转正为全局可调用的独立技能时：
 1. 新建 `<name>/` 目录，将条目改名为该目录下的 `SKILL.md`；
 2. 按卷一规范重写 description（≤70 字符，点名触发式）；
-3. 从知识库 `SKILL-DRAFT.md` 路由表中摘除该条目；
-4. 若整库转正，执行 `git mv kb-engineering-notes/SKILL-DRAFT.md kb-engineering-notes/SKILL.md`。
+3. 从知识库 `SKILL.md` 路由表中摘除该条目；
+4. 若整库转正，执行 `git mv kb-engineering-notes/SKILL.md kb-engineering-notes/SKILL.md`。
 
 ---
 
@@ -189,7 +189,7 @@ uv run expose_user_skill.py <name>           # 实跑
 新建或修改任何技能/手记前，逐项勾选确认：
 - [ ] 属于哪一类？（卷一根级 / 卷二个人子技能 / 卷三知识库手记）
 - [ ] 命名是否符合对应正则？（根级 `^[a-z0-9-]+$`；用户技能 `^sh-[a-z0-9-]+$`；知识库 `<id>_<domain>_<scope>_<type>_<slug>.md` 或历史 `0N-*.md`）
-- [ ] 引导文件名是否正确？（根级 `SKILL.md`；个人技能 `README.md`；知识库 `SKILL-DRAFT.md`）
+- [ ] 引导文件名是否正确？（根级 `SKILL.md`；个人技能 `README.md`；知识库 `SKILL.md`）
 - [ ] description 是否存在军备竞赛词或对抗性触发语？（路由器/知识库入口的关键词集群不视为“冗余列表”）
 - [ ] 顶层 `sh-user-skills/SKILL.md` 的 description 字符数是否严格 `≤ 1024`？
 - [ ] 是否违反了知识库外部解耦原则（有无写死条目数）？

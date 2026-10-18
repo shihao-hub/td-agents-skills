@@ -1,6 +1,8 @@
 ---
 name: kb-windowless-service-launcher
 description: Windows 一键无窗口启动常驻服务的落地骨架（快捷方式 + 幂等启动器 + 自重启 helper），及 PowerShell 5.1 静默失败链路排障。当要双击启动本地 Web 服务、消除黑框 conhost、给服务加重启按钮，或遇到 Start-Process NO_PROXY 重复键、EnvironmentVariables 为 null、参数名不匹配致脚本静默终止时查阅。
+created: 2026-10-16
+updated: 2026-10-18
 ---
 
 # Windows 一键无窗口启动服务与自重启机制及 PowerShell 5.1 静默失败链路
@@ -128,7 +130,6 @@ const port = portFromHost(req.headers.host);   // "127.0.0.1:11111" -> 11111
 承载页面的那个进程自杀了，**没有任何实体能回来通知页面**。而且新实例的会话 token 通常重新随机生成，旧页面手里的 token 已失效，用旧 token 问任何东西都会 403。所以「等待重启」不能靠外部通知，只能**页面自我轮询 + 自动重载**：
 
 ```js
-// 前端：重启后在 web 模式下自己探测服务是否归来
 async function waitForWebRestart(port) {
   const deadline = Date.now() + 90000;
   while (Date.now() < deadline) {
@@ -138,7 +139,7 @@ async function waitForWebRestart(port) {
       if (!res.ok) continue;
       const next = await res.json();
       if (next && next.ok === true && (typeof port !== 'number' || next.port === port)) {
-        window.location.reload();      // 服务已回归
+        window.location.reload();
         return;
       }
     } catch { /* 仍不可达，继续等 */ }
@@ -146,7 +147,7 @@ async function waitForWebRestart(port) {
 }
 ```
 
-注意两点：轮询期间的连接失败是**预期**（catch 静默继续，不弹错误）；桌面模式下窗口本身会被关掉，所以该分支只在 web 模式启用。
+注意三点：轮询期间的连接失败是**预期**（catch 静默继续，不弹错误）；桌面模式下窗口本身会被关掉，所以该分支只在 web 模式启用；**`/quit` 绝不能轮询** —— 它同样杀掉服务却不再拉起，轮询的前提（目标会自行回到同一可观测状态）不成立，只会白转 90 秒，必须按 `action === 'restart'` 区分。
 ---
 
 ## 三、标准实现流水线与代码骨架
@@ -179,7 +180,7 @@ param([int]$Port = 11111, [int]$TimeoutSec = 60)
 $ErrorActionPreference = 'Stop'
 $LogDir     = Join-Path $env:TEMP 'dsh-web-launcher'
 $LogFile    = Join-Path $LogDir 'launcher.log'
-# 服务日志必须按端口隔离（见 §4.7 的争用坑）
+# 服务日志必须按端口隔离（见 §4.6 的争用坑）
 $SvcLogFile = Join-Path $LogDir ('dsh-web.p' + $Port + '.log')
 
 function Write-Diag([string]$Message) {
@@ -189,7 +190,6 @@ function Write-Diag([string]$Message) {
         Add-Content -LiteralPath $LogFile -Value ('[' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + '] ' + $Message) -Encoding utf8
     } catch { }
 }
-
 # 分支一：已在运行 → 只开界面，绝不重启（保护用户当前会话）
 if ([bool](Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)) {
     Write-Diag ('port ' + $Port + ' already listening; reuse, no restart')
@@ -427,7 +427,7 @@ $cmdLine = 'cmd.exe /d /s /c "' + $psLine + ' > "' + $rawLog + '" 2>&1"'
 
 **修复**：调用方与被调用方的参数名**逐字对齐**，并把"返回值为 0"与"真的干活了"当作两件事验证。
 
-### 4.7 日志文件被服务句柄长期占用 → 新服务重定向失败
+### 4.6 日志文件被服务句柄长期占用 → 新服务重定向失败
 
 **现象**：跨端口/跨实例冷启动时，新服务**静默起不来**，cmd 退出码 1：
 
@@ -445,7 +445,7 @@ $SvcLogFile = Join-Path $LogDir ('dsh-web.p' + $Port + '.log')
 
 并且**启动器自身日志与服务日志分开两个文件**——否则 `Add-Content` 也会撞上同一句柄。
 
-### 4.8 一个反面模式：运行中的热重载脚本 ≠ 冷启动脚本
+### 4.7 一个反面模式：运行中的热重载脚本 ≠ 冷启动脚本
 
 **现象**：同一份代码，**冷启动的实例一切正常，运行中被热重载的实例却静默失效**（`/status` 这类读路径正常，真正干活的写路径不执行）。
 

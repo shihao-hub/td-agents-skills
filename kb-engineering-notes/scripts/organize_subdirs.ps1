@@ -3,7 +3,7 @@
     organize_subdirs.ps1 - kb-engineering-notes 平铺与子目录物理分层双向切换工具
 .DESCRIPTION
     依据虚拟路径契约：<id>_<domain>_<scope>_<type>_<slug>.md <-> <domain>/<id>_<scope>_<type>_<slug>.md
-    支持平铺下沉分层 (-ToSubdirs) 与分层逆向上浮平铺 (-ToFlat)，并自动同步更新 SKILL-DRAFT.md 链接。
+    支持平铺下沉分层 (-ToSubdirs) 与分层逆向上浮平铺 (-ToFlat)，并自动同步更新 SKILL.md 链接。
 .PARAMETER ToSubdirs
     将平铺文件按领域归入对应子目录：<domain>/<id>_<scope>_<type>_<slug>.md
 .PARAMETER ToFlat
@@ -25,7 +25,7 @@ param(
 )
 
 $kbDir = Split-Path $PSScriptRoot -Parent
-$draftFile = Join-Path $kbDir "SKILL-DRAFT.md"
+$draftFile = Join-Path $kbDir "SKILL.md"
 $validDomains = @("win", "git", "ide", "agent", "browser", "dev", "media")
 
 if (-not $ToSubdirs -and -not $ToFlat) {
@@ -41,7 +41,7 @@ $plan = [System.Collections.Generic.List[PSCustomObject]]::new()
 if ($ToSubdirs) {
     # 模式 1: 平铺下沉到子目录
     $rootFiles = Get-ChildItem -Path $kbDir -File -Filter "*.md" | Where-Object {
-        $_.Name -ne "SKILL-DRAFT.md" -and $_.Name -ne "SKILL.md" -and $_.Name -ne "README.md"
+        $_.Name -ne "SKILL.md" -and $_.Name -ne "SKILL.md" -and $_.Name -ne "README.md"
     }
 
     foreach ($file in $rootFiles) {
@@ -100,7 +100,7 @@ Write-Host "=== organize_subdirs.ps1 计划清单 (共 $($plan.Count) 个动作)
 if ($isDryRun) {
     Write-Host "[DryRun 模式] 未进行任何磁盘写入与文件移动。如需执行，请追加 -Execute 参数。" -ForegroundColor Yellow
 } else {
-    Write-Host "[Execute 模式] 开始执行文件物理移动并同步 SKILL-DRAFT.md 链接..." -ForegroundColor Green
+    Write-Host "[Execute 模式] 开始执行文件物理移动并同步 SKILL.md 链接..." -ForegroundColor Green
 }
 
 $plan | Format-Table -Property Direction, OldRelLink, NewRelLink -AutoSize
@@ -114,14 +114,14 @@ if (-not $isDryRun -and $plan.Count -gt 0) {
         Move-Item -LiteralPath $item.SourceFile -Destination $item.TargetFile -Force
     }
 
-    # 2. 同步更新 SKILL-DRAFT.md 超链接
+    # 2. 同步更新 SKILL.md 超链接
     if (Test-Path -LiteralPath $draftFile) {
         $content = [System.IO.File]::ReadAllText($draftFile, [System.Text.Encoding]::UTF8)
         foreach ($item in $plan) {
             $content = $content.Replace($item.OldRelLink, $item.NewRelLink)
         }
         [System.IO.File]::WriteAllText($draftFile, $content, [System.Text.Encoding]::UTF8)
-        Write-Host "已同步更新 SKILL-DRAFT.md 中的相对引用链接。" -ForegroundColor Green
+        Write-Host "已同步更新 SKILL.md 中的相对引用链接。" -ForegroundColor Green
     }
 
     # 3. 清理可能变空的空目录

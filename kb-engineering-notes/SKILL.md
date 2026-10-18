@@ -1,14 +1,21 @@
 ---
 name: kb-engineering-notes
-description: 开发者通用工程实战手记、自动化流水线与硬核排障知识库。兼具「疑难排障（Windows 文件锁、进程池堆积、闪窗、网络代理、前端覆层残留与视图分叉、本机 Web GUI 真机取证）」与「工程实现/生成流水线（文档与试卷自动化排版、脚手架、复杂脚本设计）」两翼实战 SOP。当遇到疑难报错或需要落地工程自动化流水线时查阅本指南。
+description: |
+  开发者通用工程实战手记、疑难排障与自动化流水线知识库（两级渐进式检索总入口）：遇到系统/IDE/终端异常、底层报错或落地工程自动化时优先查阅。
+  【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突等。
+  【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查。
+  检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。
+version: 2.0.0
+created: 2026-10-07
+updated: 2026-10-18
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
 
 > **注意（隔离与转正说明）**：
-> 本文件当前命名为 `SKILL-DRAFT.md`，用于确保在草稿与沉淀阶段**不被外部 Agent 自动注册为活跃技能**。
+> 本文件当前命名为 `SKILL.md`，用于确保在草稿与沉淀阶段**不被外部 Agent 自动注册为活跃技能**。
 > 本文件架构完全遵循 `/skill-creator` 规范，未来转正只需执行：
-> `git mv SKILL-DRAFT.md SKILL.md`
+> `git mv SKILL.md SKILL.md`
 
 ---
 
@@ -43,7 +50,7 @@ description: 开发者通用工程实战手记、自动化流水线与硬核排�
 
 ```text
 kb-engineering-notes/
-├── SKILL-DRAFT.md                                    # [Stage 1: 元数据与路由总纲] 本文件，负责总览与场景分流
+├── SKILL.md                                          # [Stage 1: 元数据与路由总纲] 本文件，负责总览与场景分流
 ├── 001_git_smerge_fix_SublimeMerge非相邻提交Squash合并重排.md # [Stage 2: 专项实战] 针对 GUI 提交合并
 ├── 002_git_rebase_fix_变基PermissionDenied文件锁排障与安全恢复.md # [Stage 2: 专项排障] 针对权限锁与抢救
 ├── 003_git_rebase_fix_变基Rescheduled队列挂起与冲突解析.md # [Stage 2: 专项机制] 针对队列重调度与避坑
@@ -129,8 +136,8 @@ kb-engineering-notes/
 
 靠的是两条命名约束，别去动它们：
 
-- harness 在子目录里只认名为 `SKILL.md` 的文件；本目录条目一律用 `0N-主题.md`，因此永不注册（实测：同层的 `SKILL-DRAFT.md` 带完备 frontmatter，也从未出现在技能目录里）；
-- 总控文件用 `SKILL-DRAFT.md` 而非 `SKILL.md`，将来转正只需改这一个文件名。
+- harness 在子目录里只认名为 `SKILL.md` 的文件；本目录条目一律用 `0N-主题.md`，因此永不注册（实测：同层的 `SKILL.md` 带完备 frontmatter，也从未出现在技能目录里）；
+- 总控文件用 `SKILL.md` 而非 `SKILL.md`，将来转正只需改这一个文件名。
 
 ### 条目元数据规范
 
@@ -197,10 +204,10 @@ kb-engineering-notes/
 | 想查明 Windows 后台某个常驻程序（如 Everything）是谁在什么时间拉起的、排查后台驻留与闲置退出保护漏洞 | [`046_win_everything_fix_Win进程启动来源取证与Everything闲置保护.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/046_win_everything_fix_Win进程启动来源取证与Everything闲置保护.md) | 进程启动来源取证, 谁拉起的, UserAssist, Everything 驻留, idle_exit, 永生实例, 登录会话 |
 | Sublime Text 全局搜索速度暴跌扫描数十万文件、穿透 `.gitignore` / 非 Git 数据目录（如 AppData），或搜索 `--flag` 等符号参数遭遇 Whole Word 假阴性 0 匹配 | [`047_ide_sublime_fix_Sublime全局搜索穿透Gitignore慢查排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/047_ide_sublime_fix_Sublime全局搜索穿透Gitignore慢查排障.md) | Sublime Text, Find in Files, Use Gitignore, node_modules 慢查, Unable to open file, binary_file_patterns, project filters, folder_exclude_patterns, Whole Word, 单词边界, \b, 符号前缀, 假阴性 |
 | 一个 Windows Terminal 窗口里文字被竖/横线切成几块，不知道哪块能关、怕关掉连 agent 会话一起杀，或误触分屏键后想收场 | [`048_ide_terminal_fix_WinTerminal分屏窗格判定与关闭误触.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/048_ide_terminal_fix_WinTerminal分屏窗格判定与关闭误触.md) | Windows Terminal 分屏, 窗格 pane, 右侧窗格关不掉, Ctrl+Shift+W, ClosePane, 焦点窗格, alt+shift+plus 误触, SwitchToTab3, ctrl+alt+4, defaults.json, Move pane to new window, Toggle pane zoom |
-| Chrome 或 Firefox 自动静默安装迅雷下载插件、扩展删除了又死灰复燃，或需免迅雷客户端纯净下载种子/磁力链 | [browser_chrome_fix_049_Chrome与Firefox静默安装迅雷与BT替代.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/browser_chrome_fix_049_Chrome与Firefox静默安装迅雷与BT替代.md) | 迅雷插件, 自动安装, ChromeExtensionCache, xl_ext_chrome, NativeMessagingHosts, 注册表残留, 裸磁力链, qBittorrent, Tracker加速, 免迅雷下载 |
-| 知识库平铺文件越来越多（50+）、Windows Explorer 排序割裂无聚合、文件名太长被截断、机器无法直接提取分类元数据 | [win_sys_flow_050_平铺知识库文件名元数据规范与迁移SOP.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_050_平铺知识库文件名元数据规范与迁移SOP.md) | 平铺目录, 文件命名规范, 元数据嵌入, Explorer排序, 正则提取, 受控词典, 批量重命名, DryRun, 回滚SOP |
-| 本地文档/技能库离线语义检索搭建（FastEmbed+LanceDB+Watchdog）、专有技术词检索遭遇语义稀释漏检、切块挤占或前端 SyntaxError 假死 | [dev_core_fix_051_离线Markdown向量检索混合漏检排障.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/dev_core_fix_051_离线Markdown向量检索混合漏检排障.md) | 本地语义检索, FastEmbed, LanceDB, bge-small-zh, 混合检索, Hybrid Search, 语义稀释, Lexical Boost, 关键词加权, Watchdog 防抖, Group-by-File, 默认折叠, WinError 10048, 离线 RAG |
-| 使用独立定制版 Windows Terminal 时启动 Agent 强弹微软原版 WT、绕过后弹黑框 conhost 窗口、或原生 PE 二进制 MCP 服务无窗口运行架构 | [win_conhost_fix_052_PE控制台委托DefTerm断层与MCP无窗口镜像.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_conhost_fix_052_PE控制台委托DefTerm断层与MCP无窗口镜像.md) | 控制台委托, DefTerm 断层, 原版 WT 弹窗, conhost 黑框, aoci.exe 弹窗, aociw.exe, PE Subsystem 2 GUI, 便携版终端断层, MSIX COM CLSID, 孤儿控制台 |
+| Chrome 或 Firefox 自动静默安装迅雷下载插件、扩展删除了又死灰复燃，或需免迅雷客户端纯净下载种子/磁力链 | [049_browser_chrome_fix_Chrome与Firefox静默安装迅雷与BT替代.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/049_browser_chrome_fix_Chrome与Firefox静默安装迅雷与BT替代.md) | 迅雷插件, 自动安装, ChromeExtensionCache, xl_ext_chrome, NativeMessagingHosts, 注册表残留, 裸磁力链, qBittorrent, Tracker加速, 免迅雷下载 |
+| 知识库平铺文件越来越多（50+）、Windows Explorer 排序割裂无聚合、文件名太长被截断、机器无法直接提取分类元数据 | [050_win_sys_flow_平铺知识库文件名元数据规范与迁移SOP.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/050_win_sys_flow_平铺知识库文件名元数据规范与迁移SOP.md) | 平铺目录, 文件命名规范, 元数据嵌入, Explorer排序, 正则提取, 受控词典, 批量重命名, DryRun, 回滚SOP |
+| 本地文档/技能库离线语义检索搭建（FastEmbed+LanceDB+Watchdog）、专有技术词检索遭遇语义稀释漏检、切块挤占或前端 SyntaxError 假死 | [051_dev_core_fix_离线Markdown向量检索混合漏检排障.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/051_dev_core_fix_离线Markdown向量检索混合漏检排障.md) | 本地语义检索, FastEmbed, LanceDB, bge-small-zh, 混合检索, Hybrid Search, 语义稀释, Lexical Boost, 关键词加权, Watchdog 防抖, Group-by-File, 默认折叠, WinError 10048, 离线 RAG |
+| 使用独立定制版 Windows Terminal 时启动 Agent 强弹微软原版 WT、绕过后弹黑框 conhost 窗口、或原生 PE 二进制 MCP 服务无窗口运行架构 | [052_win_conhost_fix_PE控制台委托DefTerm断层与MCP无窗口镜像.md](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/052_win_conhost_fix_PE控制台委托DefTerm断层与MCP无窗口镜像.md) | 控制台委托, DefTerm 断层, 原版 WT 弹窗, conhost 黑框, aoci.exe 弹窗, aociw.exe, PE Subsystem 2 GUI, 便携版终端断层, MSIX COM CLSID, 孤儿控制台 |
 | Windows Terminal 拆分窗格或会话恢复在 cd 切换目录后，重启依然记不住新目录（退回初始路径），或拆分新窗格无法继承当前目录 | [`053_ide_terminal_fix_WinTerminal拆分窗格cd目录丢失与OSC99上报.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/053_ide_terminal_fix_WinTerminal拆分窗格cd目录丢失与OSC99上报.md) | Windows Terminal 拆分选项卡, 记不住目录, cd 重启还原, persistedWindowLayout, state.json, OSC 9;9, OSC 99, prompt, startingDirectory, CWD 上报, 拆分继承目录 |
 | Windows 11 任务栏常驻「输入指示」图标（豆包输入法头像、`英` 语言栏）删不掉：设置里没有「输入指示器」、改 CTF\LangBar 注册表无效、杀输入法进程无效，按 Win+Space 后还会自己长回来 | [`054_win_windhawk_fix_Win11任务栏输入指示图标隐藏与Windhawk代码注入.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/054_win_windhawk_fix_Win11任务栏输入指示图标隐藏与Windhawk代码注入.md) | 任务栏输入指示, 豆包头像图标, 英 图标删不掉, 输入指示器 找不到, 25H2 语言栏, CTF\LangBar, ShowStatus 被改回, tsf-oime.dll, TSF 语言栏项, explorer 内绘制, Win+Space 出现, Windhawk, taskbar-tray-system-icon-tweaks, hideLanguageBar, hideLanguageSupplementaryIcons |
 | 终端按快捷键被当成 Ctrl+C 杀会话或清行、划词工具（Manggo等）黑名单失效、或按完快捷键系统静默切为纯英文美式键盘打不出中文 | [`055_win_sys_fix_划词工具CtrlC误杀终端与AltShift切语言排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/055_win_sys_fix_划词工具CtrlC误杀终端与AltShift切语言排障.md) | Manggo, 划词翻译, 盲发 Ctrl+C, SendInput, 终端中断, SIGINT, Resume with -c, 黑名单失效, wt.exe 别名陷阱, WindowsTerminal.exe, Alt+Shift, 切语言, 纯英文键盘, HKL 0x4090409, 语言热键禁用, Keyboard Layout Toggle, 00000070 |
@@ -216,13 +223,13 @@ kb-engineering-notes/
 | 定制版 Windows Terminal 突然消失、桌面/任务栏快捷方式提示“WindowsTerminal.exe 已经更改或移动”、Defender 报毒 Trojan:Win32/Bearfoos.A!ml | [`061_ide_terminal_fix_WinTerminal定制版PE图标损坏Defender误杀排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/061_ide_terminal_fix_WinTerminal定制版PE图标损坏Defender误杀排障.md) | WindowsTerminal.exe 已经更改或移动, 是否删除该快捷方式, Trojan:Win32/Bearfoos.A!ml, Defender误杀, 隔离区还原, ExclusionPath, PE图标签名损坏 |
 | 想用脚本或 Agent 自动操作/验证 Windows 桌面软件（点按钮、切页签、截图取证），或想搞清楚 WebView2 与原生控件分别怎么被自动化、“是不是只能模拟鼠标” | [`062_win_sys_flow_WinGUI自动化能力阶梯与UIA元素点击验证.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/062_win_sys_flow_WinGUI自动化能力阶梯与UIA元素点击验证.md) | UIA, UI Automation, InvokePattern, 无障碍树, AXTree, 自动化能力阶梯, 模拟鼠标, mouse_event, SendInput, 坐标点击, Agent 自验证 GUI, EnumWindows |
 | 自动化点击没反应/点不准、截图缺一块、窗口尺寸诡异（199x34）、窗口莫名最小化启动、坐标整体偏移 | [`062_win_sys_flow_WinGUI自动化能力阶梯与UIA元素点击验证.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/062_win_sys_flow_WinGUI自动化能力阶梯与UIA元素点击验证.md) | DPI 虚拟化, SetProcessDPIAware, 首次点击被吃, 前台激活, SetForegroundWindow, PrintWindow, PW_RENDERFULLCONTENT, ShowWindow SW_RESTORE, MainWindowHandle 不对 |
-| 想做个桌面快捷方式：双击就启动本地常驻 Web 服务，且全程不弹黑框、不占终端窗口 | [`win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | 一键启动, 快捷方式, 不弹黑框, 无窗口启动, conhost, wscript Run 0, CreateNoWindow, WindowStyle Hidden, 双击启动服务 |
-| 直连 `.lnk` 到 powershell 仍闪窗；服务已在运行时再点一次会撞端口 `EADDRINUSE`；想做到"在跑就只开界面" | [`win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | 闪窗, EADDRINUSE, 端口已占用, 幂等启动, 端口反查, Get-NetTCPConnection OwningProcess, 已经在跑, reuse |
-| 给本地 Web 服务做"重启自己"按钮：点完页面卡在重启中不刷新、服务带上了黑框窗口、或重启后起不来 | [`win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | 自重启, 重启按钮, 卡在等待重启, 需要手动刷新, 重启后黑框, 无窗口性质丢失, listener is back, WMI Win32_Process Create, 脱离进程树, taskkill /T 不向上 |
-| PowerShell 脚本报 `The Try statement is missing its Catch or Finally block` 但 try/catch 明明是对的；或 5.1 下中文注释导致解析崩溃 | [`win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | The Try statement is missing, Unexpected token, UTF-8 无 BOM, 中文注释, 编码误读, GBK 解码, 纯 ASCII 脚本, ParseFile 校验 |
-| `Start-Process` 报 `Item has already been added. Key in dictionary: 'NO_PROXY'`；或 `EnvironmentVariables` 操作报 null-valued / null array | [`win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | NO_PROXY no_proxy 重复键, Item has already been added, Start-Process 不可用, ProcessStartInfo EnvironmentVariables null, cannot index into a null array, Process.Start 替代 |
-| 生成的 `.bat`/`.cmd` 内容看起来对但执行毫无反应；或 `Set-Content` 写数组被分号连成一行、`rem` 注释吞掉命令 | [`win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | Set-Content 数组分号连接, rem 吞命令, bat 不执行, 退出码 1 无输出, WriteAllText CRLF, 反引号续行误判 |
-| 脚本"完全没执行"、连第一行日志都没有，但调用方看到进程创建成功；或日志文件被占用导致新服务起不来 | [`win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | NamedParameterNotFound, 参数名不匹配, 参数绑定阶段终止, 无任何日志, WMI 返回 0 不代表成功, 重定向到文件抓错, 日志文件被占用, being used by another process, 日志按端口隔离 |
+| 想做个桌面快捷方式：双击就启动本地常驻 Web 服务，且全程不弹黑框、不占终端窗口 | [`063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | 一键启动, 快捷方式, 不弹黑框, 无窗口启动, conhost, wscript Run 0, CreateNoWindow, WindowStyle Hidden, 双击启动服务 |
+| 直连 `.lnk` 到 powershell 仍闪窗；服务已在运行时再点一次会撞端口 `EADDRINUSE`；想做到"在跑就只开界面" | [`063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | 闪窗, EADDRINUSE, 端口已占用, 幂等启动, 端口反查, Get-NetTCPConnection OwningProcess, 已经在跑, reuse |
+| 给本地 Web 服务做"重启自己"按钮：点完页面卡在重启中不刷新、服务带上了黑框窗口、或重启后起不来 | [`063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | 自重启, 重启按钮, 卡在等待重启, 需要手动刷新, 重启后黑框, 无窗口性质丢失, listener is back, WMI Win32_Process Create, 脱离进程树, taskkill /T 不向上 |
+| PowerShell 脚本报 `The Try statement is missing its Catch or Finally block` 但 try/catch 明明是对的；或 5.1 下中文注释导致解析崩溃 | [`063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | The Try statement is missing, Unexpected token, UTF-8 无 BOM, 中文注释, 编码误读, GBK 解码, 纯 ASCII 脚本, ParseFile 校验 |
+| `Start-Process` 报 `Item has already been added. Key in dictionary: 'NO_PROXY'`；或 `EnvironmentVariables` 操作报 null-valued / null array | [`063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | NO_PROXY no_proxy 重复键, Item has already been added, Start-Process 不可用, ProcessStartInfo EnvironmentVariables null, cannot index into a null array, Process.Start 替代 |
+| 生成的 `.bat`/`.cmd` 内容看起来对但执行毫无反应；或 `Set-Content` 写数组被分号连成一行、`rem` 注释吞掉命令 | [`063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | Set-Content 数组分号连接, rem 吞命令, bat 不执行, 退出码 1 无输出, WriteAllText CRLF, 反引号续行误判 |
+| 脚本"完全没执行"、连第一行日志都没有，但调用方看到进程创建成功；或日志文件被占用导致新服务起不来 | [`063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | NamedParameterNotFound, 参数名不匹配, 参数绑定阶段终止, 无任何日志, WMI 返回 0 不代表成功, 重定向到文件抓错, 日志文件被占用, being used by another process, 日志按端口隔离 |
 | 单按或松开 Alt / 右 Alt 键导致 Chrome 右上角三点菜单被高亮选中、打字光标丢失、或豆包输入法长按右 Alt 语音识别松手后无法正常上屏 | [`064_win_chrome_fix_Win单按Alt抢焦点与豆包输入法右Alt语音透传.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/064_win_chrome_fix_Win单按Alt抢焦点与豆包输入法右Alt语音透传.md) | Chrome 三点菜单, 自定义及控制 Google Chrome, 按 Alt 选中, 抢焦点, 光标丢失, 豆包输入法, 右 Alt, RAlt, 语音输入上屏失败, AutoHotkey, AHK vkE8, SC_KEYMENU, 菜单激活屏蔽 |
 | 应用设置点了没反应/自动跳回原值、刷新后不生效，日志里是 `EPERM ... rename *.tmp -> <配置文件>`，而文件"明明能写" | [`065_win_fs_fix_Win文件外部句柄持有原子替换失败写入静默丢失.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/065_win_fs_fix_Win文件外部句柄持有原子替换失败写入静默丢失.md) | EPERM operation not permitted, rename tmp, win32 5 Access is denied, 原子替换失败, MoveFileEx REPLACE_EXISTING, 设置静默丢失, revision 不变, HTTP 200 但没落盘, 临时文件+rename |
 | 文件被谁占着完全看不出来（编辑器无标签、任务管理器无句柄），关标签页与重启程序都没用，想按文件反查持有进程 | [`065_win_fs_fix_Win文件外部句柄持有原子替换失败写入静默丢失.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/065_win_fs_fix_Win文件外部句柄持有原子替换失败写入静默丢失.md) | 谁占着文件, 文件锁, 句柄反查, Restart Manager, RmGetList, handle.exe 替代, 看不到占用, 关标签页无效, 重启又回来, last_session |
@@ -261,7 +268,7 @@ kb-engineering-notes/
      - 三、标准自动化生成流水线与代码实现：可直接复用的完整脚本骨架与核心装配函数；
      - 四、交付验证与工程扩展建议：产物校验断言与新场景复用 SOP；
 3. **更新本路由表**：在上面的路由表格中添加新条目的索引行；
-4. **外部解耦原则**：知识库条目由本路由表完全自洽索引。外部路由器（如 `sh-engineering-notes` 及顶层 `sh-user-skills`）统一采用领域定性描述，严禁绑定条目总数或区间，新增条目无需修改外部技能描述。
+4. **外部解耦原则**：知识库条目由本路由表完全自洽索引。外部路由器（如 `kb-engineering-notes` 及顶层 `sh-user-skills`）统一采用领域定性描述，严禁绑定条目总数或区间，新增条目无需修改外部技能描述。
 ---
 
 ## 4. 条目时序演进检索表（按 ID 逻辑时钟升序）
@@ -332,7 +339,7 @@ kb-engineering-notes/
 | 060 | [`060_ide_zed_fix_Zed终端无会话恢复agy历史ID丢失与选号恢复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/060_ide_zed_fix_Zed终端无会话恢复agy历史ID丢失与选号恢复.md) | `060_ide_zed_fix_Zed终端无会话恢复agy历史ID丢失与选号恢复.md` | `ide` | `fix` | Zed 终端无会话恢复 agy 历史 ID 丢失排障与交互选号恢复 |
 | 061 | [`061_ide_terminal_fix_WinTerminal定制版PE图标损坏Defender误杀排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/061_ide_terminal_fix_WinTerminal定制版PE图标损坏Defender误杀排障.md) | `061_ide_terminal_fix_WinTerminal定制版PE图标损坏Defender误杀排障.md` | `ide` | `fix` | WT 定制版 PE 图标注入签名破损致 Defender 误杀排障 |
 | 062 | [`062_win_sys_flow_WinGUI自动化能力阶梯与UIA元素点击验证.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/062_win_sys_flow_WinGUI自动化能力阶梯与UIA元素点击验证.md) | `062_win_sys_flow_WinGUI自动化能力阶梯与UIA元素点击验证.md` | `win` | `flow` | Windows GUI 自动化能力阶梯与 UIA 元素点击及截图验证 |
-| 063 | [`win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | `win_sys_flow_063_Win无窗口服务快捷方式与自重启及PS5.1排障.md` | `win` | `flow` | 无窗口服务一键启动快捷方式、Web 自重启与 PS 5.1 排障 |
+| 063 | [`063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md) | `063_win_sys_flow_Win无窗口服务快捷方式与自重启及PS5.1排障.md` | `win` | `flow` | 无窗口服务一键启动快捷方式、Web 自重启与 PS 5.1 排障 |
 | 064 | [`064_win_chrome_fix_Win单按Alt抢焦点与豆包输入法右Alt语音透传.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/064_win_chrome_fix_Win单按Alt抢焦点与豆包输入法右Alt语音透传.md) | `064_win_chrome_fix_Win单按Alt抢焦点与豆包输入法右Alt语音透传.md` | `win` | `fix` | 单按 Alt 激活 Chrome 抢焦点与豆包输入法语音透传 AHK 排障 |
 | 065 | [`065_win_fs_fix_Win文件外部句柄持有原子替换失败写入静默丢失.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/065_win_fs_fix_Win文件外部句柄持有原子替换失败写入静默丢失.md) | `065_win_fs_fix_Win文件外部句柄持有原子替换失败写入静默丢失.md` | `win` | `fix` | 文件被外部持有导致原子替换失败与上层写入静默丢失排障 |
 | 066 | [`066_ide_fs_fix_同步publish重入前端覆盖层擦不掉与视图分叉.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/066_ide_fs_fix_同步publish重入前端覆盖层擦不掉与视图分叉.md) | `066_ide_fs_fix_同步publish重入前端覆盖层擦不掉与视图分叉.md` | `ide` | `fix` | 同步 publish 重入与陈旧句柄导致覆盖层擦不掉与视图分叉排障 |

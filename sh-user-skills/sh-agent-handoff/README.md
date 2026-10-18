@@ -116,7 +116,7 @@ sh-agent-handoff: <绝对路径>
 用户明确提出的约束、偏好、不可动的边界。写清楚"为什么"，否则接手侧会以为是随意选择而改掉。
 
 ## Suggested Skills
-下一任接手 Agent 应优先调用的推荐工具或 skill 列表（如 `sh-plan-driven-development`、`tdd`、`sh-engineering-notes` 等），指明调用理由与切入点。
+下一任接手 Agent 应优先调用的推荐工具或 skill 列表（如 `sh-plan-driven-development`、`tdd`、`kb-engineering-notes` 等），指明调用理由与切入点。
 
 ## Progress
 ### Done
