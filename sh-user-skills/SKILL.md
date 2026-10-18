@@ -5,9 +5,9 @@ description: |
   第一优先——内置工程避坑知识库（kb-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理等；全量索引以知识库内部路由表为准，随条目持续生长。
   开发与重构（后端系统设计、计划驱动与规格驱动工作流、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、饥荒模组下载与脱壳、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、Nuitka 单文件打包、WT 独立版定制守卫、monorepo 提交推送、GitHub 仓库大扫除）；
   文档与交接（PRD/技术方案、技能创作与知识库规范、书转 skill、跨 agent 交接、排障复盘）；
-  检索与媒资归档（全盘/跨盘找文件、找大文件、文件忘了放哪、按时间/大小/正则定位文件（Everything 秒搜）、抖音/B站/知乎下载、视频转写字幕、去水印、Office 提图、网页存档、飞书聊天与会话归档）；
+  检索与媒资归档（全盘/跨盘找文件、找大文件、本地文档与知识库语义检索、文件忘了放哪、按时间/大小/正则定位文件（Everything 秒搜）、抖音/B站/知乎下载、视频转写字幕、去水印、Office 提图、网页存档、飞书聊天与会话归档）；
   另有飞书、Redis/Iris、antigravity 三个族路由器；用户直接点名 `sh-*` 子技能（含拼写近似）时也由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
-version: 1.3.0
+version: 1.4.0
 created: 2026-10-07
 updated: 2026-10-17
 ---
@@ -45,6 +45,7 @@ updated: 2026-10-17
 | 飞书群聊记录导出成 HTML | `sh-lark-chat-archive` |
 | 把这轮对话归档到飞书文档 | `sh-lark-session-doc` |
 | 全盘找某个文件／找大文件 | `sh-everything-search` |
+| 搜文档／语义搜索文档／查技术规范／检索知识库／docsearch | `sh-docsearch` |
 | 写 PRD／技术方案／排期 | `sh-tech-doc-writing` |
 | 复盘一下你刚才定为排障的过程 | `sh-troubleshooting-recap` |
 | 换一个 agent 接着做／交接 | `sh-agent-handoff` |
@@ -116,6 +117,7 @@ updated: 2026-10-17
 | 技能名称 | 核心职责与功能（一句话） |
 | :--- | :--- |
 | `sh-everything-search` | 全盘/跨盘文件秒搜（Everything es.exe 一次性查询，查完即退）。点名使用 |
+| `sh-docsearch` | 本地文档与知识库语义检索（docsearch 一次性查询，即查即退，0 内存驻留）。点名使用 |
 | `sh-zhangshihao-douyin-dl` | 本机抖音/B 站视频下载 + 知乎文章提取为 Markdown 与本地原图。点名使用 |
 | `sh-video-transcribe` | 视频/音频提取字幕并总结：ffmpeg 抽音轨→faster-whisper 本地转写 SRT/TXT→AI 总结。点名使用 |
 | `sh-image-watermark-removal` | 去水印/角标：PIL+numpy 局部修补，擅长水印压在图案笔画上的复杂情形。点名使用 |
