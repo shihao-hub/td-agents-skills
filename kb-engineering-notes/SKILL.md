@@ -2,12 +2,12 @@
 name: kb-engineering-notes
 description: |
   开发者通用工程实战手记、疑难排障与自动化流水线知识库（两级渐进式检索总入口）：遇到系统/IDE/终端异常、底层报错或落地工程自动化时优先查阅。
-  【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突等。
+   【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突等。
   【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查。
   检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。
-version: 2.0.0
+version: 2.1.0
 created: 2026-10-07
-updated: 2026-10-18
+updated: 2026-10-19
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -249,6 +249,7 @@ kb-engineering-notes/
 | Zed 集成 Pi Coding Agent（官方 Registry 版 `svkozak/pi-acp`）难用卡顿、Windows 下 `pi.cmd` 双层管道挂起断开、取消中断信号丢失，或想在 Zed 中零心智负担使用原版 Pi | [`074_agent_pi_fix_Zed集成PiCodingAgent双层管道难用与openma内存直载SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/074_agent_pi_fix_Zed集成PiCodingAgent双层管道难用与openma内存直载SOP.md) | Zed pi-acp 难用, svkozak/pi-acp, openma-ai/pi-acp, @openma/pi-acp, In-Process SDK 直载, createAgentSessionRuntime, 双层 stdio 管道挂起, pi.cmd 管道断开, PI_ACP_PI_COMMAND, 原版 Pi 零心智负担, session/cancel 信号丢失 |
 | 想确认某软件「我装的**这版**」到底支不支持某功能，但本地只有发行版产物（无源码、无 `.git`）；或需要给某个结论补上可回查的源码级证据 | [`075_dev_core_flow_发行版二进制嵌SHA溯源与上游源码取证.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/075_dev_core_flow_发行版二进制嵌SHA溯源与上游源码取证.md) | 发行版没有 git 历史, --version 嵌 SHA, Zed 1.24.3 2a857f5f, raw.githubusercontent 按 SHA 取文件, commits API 校验, main 与本地版本差异, 别 dump 巨型二进制字符串, 二进制字符串粘连, 源码级取证, path:line 回查 |
 | Zed 里自定义 ACP 代理（`type: custom`）图标是通用终端图标想换掉、settings 里加 `icon` 无效也不报错，或想让自定义代理显示品牌图标 | [`076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md) | Zed 自定义代理图标, agent_servers custom icon 无效, ACP Registry 图标, pi-acp.svg, external_agents\registry\icons, 线程侧栏终端图标, CustomAgentServerSettings, REGISTRY_URL 硬编码, agentInfo.icons 不生效, 键名蹭 Registry 图标 |
+| Zed 外部 ACP 线程（openma-pi / pi-acp 等）标题永远是占位「New Agent Thread」、不再按首条消息自动命名，而 `/rename` 手动改名却立刻生效；或想搞清启动横幅与自动命名的关系、想改本地命名插件 | [`077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md) | New Agent Thread, 外部 ACP 线程不自动命名, 第一次正常之后失效, openma-pi 线程标题, pi-acp 标题, startup banner 抢占 entry, is_first_message, provisional title, set_provisional_title, is_draft_thread, session_info_update title, pi 无自动命名, auto-session-title, pi-local-plugins, quietStartup, PI_ACP_QUIET_STARTUP |
 
 
 
@@ -356,4 +357,5 @@ kb-engineering-notes/
 | 074 | [`074_agent_pi_fix_Zed集成PiCodingAgent双层管道难用与openma内存直载SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/074_agent_pi_fix_Zed集成PiCodingAgent双层管道难用与openma内存直载SOP.md) | `074_agent_pi_fix_Zed集成PiCodingAgent双层管道难用与openma内存直载SOP.md` | `agent` | `fix` | Zed 集成 Pi Coding Agent 双层管道难用排障与 openma-pi-acp SDK 内存直载 SOP |
 | 075 | [`075_dev_core_flow_发行版二进制嵌SHA溯源与上游源码取证.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/075_dev_core_flow_发行版二进制嵌SHA溯源与上游源码取证.md) | `075_dev_core_flow_发行版二进制嵌SHA溯源与上游源码取证.md` | `dev` | `flow` | 发行版二进制嵌 SHA 溯源与上游对应版本源码取证流水线 |
 | 076 | [`076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md) | `076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md` | `ide` | `fix` | Zed 自定义 ACP 代理图标来源机制与注册表兜底修复 |
+| 077 | [`077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md) | `077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md` | `ide` | `fix` | Zed 外部 ACP 线程不自动命名与首消息标题链路（横幅抢占 entry + agent 侧命名插件） |
 

@@ -2,12 +2,14 @@
 name: kb-pi-acp-openma-inprocess
 description: |
   解决 Zed 编辑器使用官方 Registry 的 svkozak/pi-acp 桥接难用、卡顿挂起、事件丢失与 pi.cmd 管道断开问题。通过 openma-ai/pi-acp 实现 In-Process SDK 内存直载，并规避 Bun 未签名 exe 启动器垫片引发 Windows Defender 实时拦截与 CPU/内存暴涨，零转接损耗无缝接入原版 Pi。
-version: 1.2.0
+version: 1.3.0
 created: 2026-10-19
 updated: 2026-10-19
 ---
 
 # Zed 集成 Pi Coding Agent 双层管道难用排障与 openma-pi-acp 内存直载 SOP
+
+> **关联条目**：本条目只解决「能不能顺畅跑起来」；线程标题恒为「New Agent Thread」、启动横幅与自动命名的关系、以及 agent 侧命名插件 `auto-session-title`，见 `077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md`。
 
 ## 1. 现象与报错特征
 
