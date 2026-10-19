@@ -1,0 +1,1 @@
+../sh-user-skills/sh-skill-authoring-rules/README.md

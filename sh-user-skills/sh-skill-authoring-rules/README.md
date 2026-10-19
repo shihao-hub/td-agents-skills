@@ -2,9 +2,9 @@
 name: sh-skill-authoring-rules
 description: |
   技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/ID置顶五段式分面命名与时序解耦/Type A与Type B极简双轨/虚拟路径分层契约/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
-version: 2.5.0
+version: 2.6.0
 created: 2026-10-07
-updated: 2026-10-17
+updated: 2026-10-19
 ---
 
 # SKILL-AUTHORING-RULES：技能与工程知识库创作总规范
@@ -23,7 +23,7 @@ updated: 2026-10-17
 |---|:---:|---|---|
 | `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`） | **卷一** |
 | `~/.agents/skills/sh-user-skills/<name>/README.md` | ❌ | **个人沉淀类子技能**：通过 `README.md` 命名避开全局自动扫描，由 `sh-user-skills` 按需通过 `view_file` 调入 | **卷二** |
-| `~/.agents/skills/<name>/`（junction 链出，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的子技能**：需进全局清单的高频/关键入口（如 `sh-plan-driven-development`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，链接产物不入库。**转正为根级独立技能后不再走此形态**（如 `kb-engineering-notes`：真身已迁至根级，`sh-user-skills/` 下不留目录） | **卷二·4** |
+| `~/.agents/skills/<name>/`（相对软链暴露，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的子技能**：需进全局清单的高频/关键入口（如 `sh-plan-driven-development`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，**相对软链随仓入库**（可直接 `git` 管理与同步）。**转正为根级独立技能后不再走此形态**（如 `kb-engineering-notes`：真身已迁至根级，`sh-user-skills/` 下不留目录） | **卷二·4** |
 | `~/.agents/skills/<kb-dir>/<name>.md`（分面槽位/历史0N知识库条目） | ❌ | **隐形技能 / 实战手记**：单点深度排障或工程实现，自带合规 frontmatter 但不命名为 `SKILL.md`，靠 `SKILL.md` 动态索引 | **卷三** |
 | `<kb-dir>/_SKILL.md` | ❌ | **知识库母版 / 动态路由表**：草稿与二级分流器，转正时 `git mv` 为 `SKILL.md` | **卷三** |
 | 根目录下无 frontmatter 的 `.md`（`GUIDE-*`、`plans-*`） | ❌ | **纯文档与历史规划记事**：不参与任何技能注册 | - |
@@ -109,11 +109,16 @@ uv run expose_user_skill.py <name> --check   # 预演
 uv run expose_user_skill.py <name>           # 实跑
 ```
 
-脚本把 `sh-user-skills/<name>/` 以链接方式暴露为根级 `~/.agents/skills/<name>/`：`README.md` 改名链出为 `SKILL.md`，其余内容原名链出；`.gitkeep` 与 `.gitignore` 占位入库，链接产物不入库。暴露后：
+脚本把 `sh-user-skills/<name>/` 以**相对软链**暴露为根级 `~/.agents/skills/<name>/`：`README.md` 改名链出为 `SKILL.md`，其余内容（`references/`、`evals/` 等）原名链出。**链接本身随仓入库**（git 以 mode 120000 记录链接文本），因此必须用相对目标，换机/换盘/双入口（本仓 `.agents/skills` 与 `~/.agents/skills` 的 junction）都无需重建；旧版的 `.gitkeep`/`.gitignore` 占位已废弃，脚本遇到即清理。暴露后：
 
 - 该技能 description 进入全局 prompt，此后遵守卷一对根级技能的全部约束（≤1024、关键词集群规范等）；
 - 真身仍在 `sh-user-skills/<name>/`，**一切修改只动真身**；改后重跑脚本（`--check` 探测链接失联）；
-- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`kb-engineering-notes`、`sh-skill-authoring-rules`。
+- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`sh-skill-authoring-rules`（`kb-engineering-notes` 已转正为根级真身，不再走此形态）。
+
+**三条硬约束（踩过坑，勿违）**：
+1. **暴露目录内严禁再放 `.gitignore`**：Harness 的技能发现同样读 `.gitignore`/`.ignore`/`.fdignore`（pi 的 `loadSkillsFromDir` 直接复用 gitignore 语义），一旦写 `*` 屏蔽链接产物，被屏蔽的 `SKILL.md` 会**静默不进技能清单**（无任何告警，连 `/skill:name` 也一起失效）——这正是本机制曾整体失效的根因。
+2. **Windows 下相对软链目标禁用正斜杠**：目标含 `/` 时 Windows 原生 API（Node/PowerShell/.NET）解析即 ENOENT，必须用 `\`；POSIX 用 `/`。脚本的 `link_text()` 已按平台自动转换，手搓链接时务必照做。
+3. **仓库须 `git config core.symlinks true`**（Windows 无开发者模式时 git 可能探成 `false`，会把入库链接检出成纯文本文件，技能发现同样失败）；建链失败时脚本直接报错，不提供硬链接/junction 兜底——那两种形态 git 无法以链接模式入库，只会把真身内容复制进来造成双份漂移。
 
 ---
 
@@ -193,4 +198,5 @@ uv run expose_user_skill.py <name>           # 实跑
 - [ ] description 是否存在军备竞赛词或对抗性触发语？（路由器/知识库入口的关键词集群不视为“冗余列表”）
 - [ ] 顶层 `sh-user-skills/SKILL.md` 的 description 字符数是否严格 `≤ 1024`？
 - [ ] 是否违反了知识库外部解耦原则（有无写死条目数）？
+- [ ] 提级暴露目录内是否残留 `.gitignore` 屏蔽链接、软链目标是否为相对路径（Windows 用 `\`）？（详见卷二·4 三条硬约束）
 - [ ] 关联测试/执行命令是否已经过真实环境验证？
