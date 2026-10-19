@@ -7,7 +7,8 @@ description: Windows 上「临时文件 + 原子 rename」被外部程序持有�
 
 > **一句话**：**「文件能写」≠「文件能被替换」**。Windows 上原子替换要求目标文件可删除；只要有任何进程持有句柄（尤其是内存映射），`MoveFileEx(REPLACE_EXISTING)` 直接 `ACCESS_DENIED`，而多数应用把它当成"写失败"只记在自己的日志里 —— 用户侧看到的就是「设置点了没反应」。
 >
-> 本条目源自一次真实排障：DSH（DeepSeek Harness）`dsh web` 的外观/设置写入全部静默丢失，最终定位到 **Zed 的 ACP agent 会话（opencode）把 `~/.dsh/profiles/<profile>/cordis.patch.yml` 当成了上下文文件**，Zed 主进程因此长期持有该文件句柄。
+> 本条目源自一次真实排障：DSH（DeepSeek Harness）`dsh web` 的外观/设置写入全部静默丢失，最终定位到 **Zed 的 ACP agent 会话（opencode）把 `~/.dsh/profiles/<profile>/cordis.patch.yml` 当成了上下文文件**，Zed 主进程因此长期持有该文件句柄。  
+> **上游 Issue 追踪**：该缺陷已正式向 Zed 官方上游建档追踪：[zed-industries/zed#65845](https://github.com/zed-industries/zed/issues/65845)。
 
 ---
 

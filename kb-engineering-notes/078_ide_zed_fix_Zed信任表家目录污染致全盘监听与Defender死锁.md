@@ -12,8 +12,10 @@ updated: 2026-10-20
 > **条目定位**：**【顶级高危事故】Type A 终极排障与架构机理深度复盘条目**  
 > **危险评级**：★★★★★（单体吞噬 11.5GB 提交内存，拉爆 Windows Defender 占用 64% CPU，造成磁盘满载与整机假死）  
 > **验证环境**：Zed 1.24.3 (Windows x64)、Windows 11 (Defender)、Claude ACP / OpenMA-Pi ACP / Antigravity ACP。  
-> **关联条目**：会话提取与 SQLite 抢救见 `025_ide_zed_fix_Zed会话丢失提取与SQLite解析抢救.md`；ACP 进程池累积与内存治理见 `023_ide_zed_fix_Zed与IDEA外接ACP代理失效与进程堆积.md`。  
-> **上游 Issue 追踪**：已向 Zed 官方上游提交深度 Bug 报告并建档追踪：[zed-industries/zed#65842](https://github.com/zed-industries/zed/issues/65842)（已由 Zed 官方维护人员 `@yeskunall` (Kunall Banerjee) 亲自接单，完成分类 Triage 并正式立项为 Bug 跟踪）。
+> **关联条目**：会话提取与 SQLite 抢救见 `025_ide_zed_fix_Zed会话丢失提取与SQLite解析抢救.md`；ACP 进程池累积与内存治理见 `023_ide_zed_fix_Zed与IDEA外接ACP代理失效与进程堆积.md`；文件锁与原子替换排障见 `065_win_fs_fix_Win文件外部句柄持有原子替换失败写入静默丢失.md`。  
+> **上游 Issue 追踪**：已向 Zed 官方上游提交两份深度 Bug 报告并建档追踪：  
+> 1. 全盘监听与杀毒死锁：[zed-industries/zed#65842](https://github.com/zed-industries/zed/issues/65842)（官方维护者 `@yeskunall` 已接单 Triage）；  
+> 2. ACP 隐式 Buffer 句柄泄漏致外部写入 EPERM：[zed-industries/zed#65845](https://github.com/zed-industries/zed/issues/65845)。
 
 ---
 
