@@ -1,11 +1,12 @@
 ---
 name: kb-cc-switch-db
 description: 直接读写 cc-switch 的 SQLite 数据库，绕过 UI 批量配置与跨应用模型供应商迁移指南。
+version: 1.1.0
+created: 2026-09-06
+updated: 2026-10-19
 ---
 
-# cc-switch配置SQLite直接读写与跨应用模型迁移指南
-
-# Skill: sh-cc-switch-db（cc-switch 数据库直改手册）
+# cc-switch 配置 SQLite 直接读写与跨应用模型迁移指南
 
 沉淀自 2026-09-06 实操（cc-switch v3.20.0，Windows，SQLite 版），关键结论经源码交叉验证（farion1231/cc-switch）。cc-switch 升级后表结构可能变化——用 `cc-db.mjs tables` 先核对再动手。
 2026-09-14 增补：改既有条目/改 id 两脚本（cc-update-provider-config / cc-rename-provider-id）、**providers.id 外键坑**（见总原则 9）、DeepSeek→opencode 段默认 max 实战案例（app-config-shapes.md）。
@@ -13,6 +14,7 @@ description: 直接读写 cc-switch 的 SQLite 数据库，绕过 UI 批量配�
 2026-09-23 增补：codex 段代理翻译坑——`meta.apiFormat` 决定本地代理透传还是翻译（GLM 无 `/responses`，必须 `openai_chat` + `codexChatReasoning`）；模型目录 `modelCatalog.inputModalities` 控制 Codex 应用贴图能力；新增 `cc-update-meta.mjs`（改 meta 通用脚本）。
 2026-09-24 增补：**codex 段思考深度坑**——GLM-5.3/flash 始终思考、`thinking.type` 仅 `enabled`，深度唯一参数是 `reasoning_effort`（low/high/max，默认 max）；chat 翻译路径**必须** `supportsEffort:true` + `effortParam:"reasoning_effort"`，否则档位静默失效（只发 thinking，从不发 effort；UI 开关从关闭切到打开也不会自动补 `effortParam`）。另：cc-switch **公共配置** `settings.common_config_codex` 里的 `model_reasoning_effort` 会合并进 live config.toml、覆盖 catalog 默认档位，CLI 默认档位要改这里（直接改 live 文件会被接管/异常退出恢复覆盖）。原生 Responses 端点是 `https://open.bigmodel.cn/api/v1`（官方预设路径），与 chat 端点 `/api/coding/paas/v4` 协议不互通。
 2026-09-25 增补：**DeepSeek 官方 Codex 原生透传与识图多模态避坑**——DeepSeek 官方规范（`wire_api="responses"` + `https://api.deepseek.com`）由 `meta.apiFormat="openai_responses"` 直通代理层，免 chat 翻译；多模态识图必须在 catalog 中显式声明 `"inputModalities": ["text", "image"]`（否则 Codex 禁用贴图）；第三方网关（如 OpenCode Go）中的 `deepseek-v4-flash` 实测为纯文本模型（发图 400），多模态模型名必须为 `deepseek-flash`；严禁在 CC Switch 环境中运行官方 `codex-deepseek-setup.ps1` 脚本覆写 `config.toml`。详见 `references/deepseek-codex-integration.md`。
+2026-10-19 增补：**密钥轮换 SOP 与 cc-switch 回写反噬**——`cc-update-provider-config.mjs` 新增 `--set <dotted.path>=<value>` 定点改字段（不再需要落临时 JSON），换 token 一条命令搞定；**实测被回滚案例**：改库双写成功后，隔日 cc-switch 启动把 `providers.settings_config` 与投影文件 `~/.claude/settings.json` **一起**重写回旧 key（两文件 mtime 同一秒），故新增任务 D 流程。另：只按 `cc-switch.exe` 探测进程会假阴性（真实镜像名含空格），见环境表。
 
 ## 总原则（每次先读）
 
@@ -32,7 +34,7 @@ description: 直接读写 cc-switch 的 SQLite 数据库，绕过 UI 批量配�
 |---|---|
 | cc-switch 数据库 | `~/.cc-switch/cc-switch.db`（SQLite，表 `providers` 主键 `(id, app_type)`） |
 | 备份目录 | `~/.cc-switch/backups/` |
-| cc-switch 程序 | 每用户安装，可能在非 C 盘（实测 `D:\Users\<user>\AppData\Local\Programs\CC Switch\cc-switch.exe`），用 `Get-Process cc-switch | select Path` 定位 |
+| cc-switch 程序 | 每用户安装，可能在非 C 盘（实测 `D:\Users\<user>\AppData\Local\Programs\CC Switch\cc-switch.exe`）。**探测别只 match `cc-switch.exe`**：镜像名可能是 `CC Switch.exe`（带空格），`tasklist /FI "IMAGENAME eq cc-switch.exe"` 会假阴性并导致"以为没运行"从而白改库。用 `Get-Process \| Where-Object ProcessName -match '(?i)cc.?switch'` 或 `Get-CimInstance Win32_Process` 同名过滤 |
 | opencode 配置 | `~/.config/opencode/opencode.json`（Additive 联动，见 sh-zed-opencode-setup） |
 | pi 配置 | `~/.pi/agent/`：`models.json`（cc-switch 唯一管理的文件）、`settings.json`、`auth.json`（cc-switch 绝不碰） |
 
@@ -54,6 +56,10 @@ node scripts/cc-add-provider.mjs --app pi --id zhipu-glm --config cfg.json \
 
 # 改既有条目的 settings_config（任意 app 段；默认 dry-run）
 node scripts/cc-update-provider-config.mjs --app opencode --id deepseek-max --config cfg.json [--db 沙箱.db --apply]
+
+# 定点改单个字段（--set 可重复；value 先按 JSON 解析，失败当字符串；基底为库中现值）
+node scripts/cc-update-provider-config.mjs --app claude --id <id> \
+  --set env.ANTHROPIC_AUTH_TOKEN=<新key> [--db 沙箱.db --apply]
 
 # 改既有条目的 meta（任意 app 段；默认 dry-run）
 node scripts/cc-update-meta.mjs --app codex --id <id> --meta meta.json [--db 沙箱.db --apply]
@@ -120,6 +126,20 @@ UI 上把「支持 effort」开关从关闭切到打开**不会**自动修好—
 
 **公共配置会覆盖 catalog 默认档位**（2026-09-24 实测）：`settings` 表 `common_config_codex` 的 TOML 会合并进每个 codex 供应商的 live config。里面若有 `model_reasoning_effort`，它会覆盖 model catalog 的 `default_reasoning_level`（影响 CLI/读 config.toml 的客户端；Desktop 用自选档位、Zed 用自身设置）。直接改 `~/.codex/config.toml` 会在 cc-switch 接管或异常退出恢复时被覆盖——要持久改必须改 `common_config_codex`（settings 表）。
 
+## 任务 D：密钥轮换（换 API Key / token）
+
+最常做的一件事，但有反噬风险，按顺序走：
+
+1. **先确认 cc-switch 已退出**——用环境表里的 `ProcessName -match '(?i)cc.?switch'` 探测，别只试 `cc-switch.exe`。运行中的实例会把内存态刷回库，改完等于白改（本坑已踩过两次）。
+2. `node scripts/cc-db.mjs list claude` 取目标 provider 的 `id`。
+3. 沙箱试写：`cp ~/.cc-switch/cc-switch.db $TEMP/sandbox.db`，对沙箱 `--apply` 后回读，确认 token 变了而 `ANTHROPIC_BASE_URL` / 模型名 / effort 等**其余字段全部保留**（`--set` 是深合并不是整体替换，这一点靠这步兜底）。
+4. 对真实库 `--apply`（脚本自带备份 + 事务 + round-trip 深比较）。
+5. **同步投影文件**：`is_current=1` 的条目会投影到客户端活配置，claude 段即 `~/.claude/settings.json` 的 `env.ANTHROPIC_AUTH_TOKEN`。**改库不会自动更新投影**，必须手工写入同一把 key，否则库与生效值不一致。
+6. 端到端验证：`POST {ANTHROPIC_BASE_URL}/v1/messages`（`max_tokens` 给小值，`x-api-key` 带新 key）→ **200 即通**；401 = key 无效；400 带 `1211 模型不存在` = 模型名问题、与 key 无关（`glm-5.3[1M]` 这类带方括号的写法直连 API 会被拒，Claude Code 客户端会自行剥离后缀，属正常）。
+7. **改完必须回读 + 告知用户核对**，别假定一次写入长期有效。反例（2026-10-18 → 10-19 实测）：库与投影双写、回读均 PASS 且 API 200，次日 cc-switch 启动仍把**库和投影一起**重写回旧 key（两文件 mtime 落在同一秒）。用户可能自己在 UI 里切过，也可能启动期做了回写——结论是密钥轮换必须闭环到"用户确认当前生效值"。
+
+> 旧 key 建议留档：`~/.claude/backups/claude-token-backup-<date>.txt`（新旧对照）+ 库/投影各自的时间戳快照，回滚时按快照还原而不是靠记忆。
+
 ## 与 sh-zed-opencode-setup 的分工
 
 - 本 skill：cc-switch 数据库通用机制（表结构/读写/备份/各段形状/pi 机制）。
@@ -127,6 +147,7 @@ UI 上把「支持 effort」开关从关闭切到打开**不会**自动修好—
 
 ## 深入资料
 
+- `scripts/` —— 5 个可直接执行的本条目配套脚本（`cc-db` / `cc-add-provider` / `cc-update-provider-config` / `cc-update-meta` / `cc-rename-provider-id`），与 `kb_timeline.ps1`、`organize_subdirs.ps1` 同目录；统一 `node <脚本>` 直跑，默认 dry-run。
 - `references/db-schema.md` —— 全部 18 张表清单、providers 表逐列详解、meta JSON 字段、settings 表已知键。
 - `references/app-config-shapes.md` —— 各 app_type 的 settings_config 形状、Switch vs Additive 同步模式、codex 代理翻译与模型目录（apiFormat/codexChatReasoning/inputModalities）、pi 深挖（models.json schema、thinking 级联）、完整实战案例。
 - `references/deepseek-codex-integration.md` —— DeepSeek 官方接入 Codex 规范全文对比、一键脚本与 CC Switch 冲突分析、原生 Responses 透传配置模板与端到端验证命令。

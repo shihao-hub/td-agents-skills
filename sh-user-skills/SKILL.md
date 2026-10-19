@@ -36,7 +36,7 @@ updated: 2026-10-17
 
 | 用户口语说法（示例） | 技能 |
 | :--- | :--- |
-| 底层报错／排障手记／避坑知识库／声卡爆音／UWP打不开／C盘清理／内存防死机／GLM 401／Zed崩溃与会话／LSP排障／多Git账号／Atuin历史／VSCode搬插件／PowerShell7绿色部署／字体渲染／右键菜单／Terminus退格／Pi改键／chrome-devtools-mcp／思考档位／DDG核查／软链接机制／进程取证／WT分屏／迅雷插件 | `kb-engineering-notes`（两级渐进式检索 `kb-engineering-notes/`，已提级为根级技能） |
+| 底层报错／排障手记／避坑知识库／声卡爆音／UWP打不开／C盘清理／内存防死机／GLM 401／换 API Key／换 key／密钥轮换／cc-switch 改配置／Zed崩溃与会话／LSP排障／多Git账号／Atuin历史／VSCode搬插件／PowerShell7绿色部署／字体渲染／右键菜单／Terminus退格／Pi改键／chrome-devtools-mcp／思考档位／DDG核查／软链接机制／进程取证／WT分屏／迅雷插件 | `kb-engineering-notes`（两级渐进式检索 `kb-engineering-notes/`，已提级为根级技能） |
 | 把视频/音频转成字幕 | `sh-video-transcribe` |
 | 抖音/B站无水印下载、知乎文章存 Markdown | `sh-zhangshihao-douyin-dl` |
 | 图片去水印／去角标 | `sh-image-watermark-removal` |
