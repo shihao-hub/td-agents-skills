@@ -129,6 +129,11 @@ export default function (pi: ExtensionAPI) {
 机制链：`before_agent_start` → `pi.setSessionName()` → pi 发 `session_info_changed` → pi-acp 转 `session_info_update{title}` → Zed `AcpThread::title()` 变真标题。**不调模型、零额外 token**。
 生效方式：扩展在会话创建时加载，改完插件需**重启 Zed**（或让 agent 进程重连）后新开线程验证。
 
+> **边界：`mode` 门禁的代价（本机已知取舍）**
+> 因为只在 `mode === "rpc"` 时命名，**在 pi TUI / `--print` 里起头的会话不会带会话名**。这些会话之后拿到 Zed 里打开时，依旧会显示占位「New Agent Thread」——原因是 Zed 自带的占位命名仍被启动横幅卡着（见第二节第 3 点），而 agent 侧又没写过名字。两条处理路径：
+> 1. 保留门禁，遇到这类会话手动 `/rename <名字>`（写入 pi 会话名，一次生效、永久保留）；
+> 2. 想要「TUI 起头也自动命名」，删掉 `if (ctx.mode !== "rpc") return;` 那一行（代价：pi TUI 的会话也会被自动命名，footer/会话选择器里会多出一个名字）。
+
 改这个插件吃什么参数（后续扩展点）：
 
 | 想要的效果 | 改法 |
@@ -158,7 +163,7 @@ export default function (pi: ExtensionAPI) {
 
 | 方案 | 标题来源 | 是否写进 pi 会话文件 | 失效风险 | 代价 |
 |:---|:---|:---:|:---|:---|
-| A 插件 | pi `setSessionName()` | ✅ | 极低（不依赖 Zed 判断） | 需维护一个本地插件 |
+| A 插件 | pi `setSessionName()` | ✅ | 极低（不依赖 Zed 判断） | 需维护一个本地插件；TUI 起头的会话不带名（`mode` 门禁代价，见上） |
 | B 去横幅 | Zed 占位命名（首行 ≤200） | ❌ | 只要再有别的 entry 抢先就再次失效 | 丢自检卡片 |
 | C 手动 | 人 | ✅（pi 侧）/ ❌（Zed 侧） | 无 | 每次手工 |
 
@@ -189,6 +194,7 @@ node $pi --print --no-tools --session-dir "$env:TEMP\pi-title-print" --model <pr
 ```
 
 ### 防复发（三个版本锚点，任一漂移都要重跑）
+0. **先确认边界是否还成立**：`mode` 门禁下，TUI 起头的会话无名字属于**预期行为**（不是 bug）；若人类反馈“TUI 里的会话拿到 Zed 没名字”，先复看上方「边界」小节再动手。
 1. **Zed**：占位命名条件是否仍是 `is_first_message && title().is_none()`（`thread_view.rs` 的 `send_content` 内）；`is_draft_thread()` 是否仍等于 `entries().is_empty()`。新版 Zed 已在 main 分支加入更宽松的 provisional title 逻辑，升级后可能自然修复，**别沿用旧结论**。
 2. **pi-acp**：`publishSurfaces` 的启动横幅条件（是否新增默认安静、是否改成 notice 而非 message entry）、`session/new` 是否开始直接返回/推送初始标题。
 3. **pi**：是否新增自动命名（一旦有，插件即可退场，删掉 junction 与源目录即可回滚）。
