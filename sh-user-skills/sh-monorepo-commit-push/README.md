@@ -1,6 +1,7 @@
 ---
 name: sh-monorepo-commit-push
 description: Monorepo 与 git submodule 项目逐项审查、提交并推送。点名使用
+disable-model-invocation: true
 ---
 
 # Monorepo 项目逐项提交与推送

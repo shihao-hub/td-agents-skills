@@ -1,6 +1,7 @@
 ---
 name: sh-web-archive
 description: 公开网页存档为离线三 tab 页面（原文转录+AI 总结+可编辑），媒体本地化；仅限无鉴权页面。点名使用
+disable-model-invocation: true
 ---
 
 # 网页文章 → 三 tab 离线存档（原文 / AI 总结 / 可编辑页面）

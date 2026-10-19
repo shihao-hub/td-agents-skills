@@ -1,6 +1,7 @@
 ---
 name: sh-bruno-collection
 description: 为 HTTP 接口生成 Bruno API 测试集合（.bru）。点名使用
+disable-model-invocation: true
 ---
 
 # sh-bruno-collection — 生成 Bruno 接口测试脚本

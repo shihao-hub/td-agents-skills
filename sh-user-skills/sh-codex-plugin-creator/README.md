@@ -1,6 +1,7 @@
 ---
 name: sh-codex-plugin-creator
 description: 脚手架创建 Codex 插件目录、manifest 与个人市场条目，含校验和更新流程。点名使用
+disable-model-invocation: true
 ---
 
 # Plugin Creator

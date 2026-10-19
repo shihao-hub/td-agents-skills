@@ -4,6 +4,7 @@ description: 用户提到把当前会话/对话导出或归档为飞书云文档
 version: 1.0.0
 created: 2026-10-07
 updated: 2026-10-19
+disable-model-invocation: true
 ---
 
 # 会话完整归档至飞书云文档（sh-lark-session-doc）

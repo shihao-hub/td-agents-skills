@@ -4,6 +4,7 @@ description: 本地 Web/CLI 服务改造为 Chrome/Edge 独立应用窗口（--a
 version: 1.0.0
 created: 2026-10-07
 updated: 2026-10-07
+disable-model-invocation: true
 ---
 
 # sh-localhost-pwa：本地服务桌面应用化 SOP

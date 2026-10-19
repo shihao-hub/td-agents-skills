@@ -1,6 +1,7 @@
 ---
 name: sh-video-transcribe
 description: 视频/音频提取字幕并总结：ffmpeg 抽音轨→faster-whisper 本地转写 SRT/TXT→AI 总结。点名使用
+disable-model-invocation: true
 ---
 
 # 视频字幕提取与总结

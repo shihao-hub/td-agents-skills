@@ -1,6 +1,7 @@
 ---
 name: sh-lark-chat-archive
 description: 飞书聊天记录归档为单文件 HTML（私聊/群聊/话题，纸面排版+图注+lightbox）。点名使用
+disable-model-invocation: true
 ---
 
 # 飞书聊天区间 / 话题归档（HTML → 可选归档 → 可选撤回）

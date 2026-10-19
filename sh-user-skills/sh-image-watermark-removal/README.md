@@ -1,6 +1,7 @@
 ---
 name: sh-image-watermark-removal
 description: 去水印/角标：PIL+numpy 局部修补，擅长水印压在图案笔画上的复杂情形。点名使用
+disable-model-invocation: true
 ---
 
 # 图片水印去除（PIL+numpy 修补管线）

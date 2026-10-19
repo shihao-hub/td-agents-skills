@@ -4,6 +4,7 @@ description: Windows Terminal (wt) 与 agy CLI 会话保持与恢复双保险守
 version: 1.0.0
 created: 2026-10-13
 updated: 2026-10-13
+disable-model-invocation: true
 ---
 
 # sh-wt-session-guard：Windows Terminal 与 agy CLI 会话恢复双保险守卫引擎

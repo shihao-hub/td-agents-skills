@@ -2,6 +2,7 @@
 name: sh-agent-handoff
 description: "跨 agent 会话交接：生成贯穿全会话生命周期的自包含交接简报，另一 agent 按路径或模糊描述接手继续。点名使用；接管侧必须完成状态检查与回写打标"
 argument-hint: "下一任 agent 或会话的专注目标（可选）"
+disable-model-invocation: true
 ---
 
 # 跨 Agent 会话交接

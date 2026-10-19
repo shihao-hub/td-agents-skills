@@ -4,6 +4,7 @@ description: 饥荒联机版（DST）创意工坊模组下载、通用DaxSg/混�
 version: 2.0.0
 created: 2026-10-13
 updated: 2026-10-14
+disable-model-invocation: true
 ---
 
 # sh-dst-mod-workshop：饥荒联机版（DST）通用模组脱壳与独立运行实战

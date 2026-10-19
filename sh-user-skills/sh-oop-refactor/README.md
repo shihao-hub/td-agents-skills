@@ -4,6 +4,7 @@ description: 运用 OOP 思想与设计模式重构项目：代码坏味道诊�
 version: 1.0.0
 created: 2026-10-03
 updated: 2026-10-03
+disable-model-invocation: true
 ---
 
 # OOP 重构最佳落地工作流（SOP）

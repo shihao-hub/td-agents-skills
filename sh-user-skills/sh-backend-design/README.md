@@ -1,6 +1,7 @@
 ---
 name: sh-backend-design
 description: 后端系统设计：从需求分析到接口契约、表结构与工程分层全流程。点名使用
+disable-model-invocation: true
 ---
 
 # 从需求到设计：后端全流程方法论

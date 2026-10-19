@@ -1,6 +1,7 @@
 ---
 name: sh-everything-search
 description: 全盘/跨盘文件秒搜（Everything es.exe 一次性查询，查完即退）：按文件名、扩展名、大小、修改时间、正则定位文件，支持计数与 JSON/CSV 导出。当任务要在整个磁盘或跨盘范围找文件时使用（全盘搜索、找大文件、找最近改动的文件、不记得放哪的文件、磁盘清理候选）；仓内找文件或搜文件内容用 rg/glob，不用本 skill。
+disable-model-invocation: true
 ---
 
 # sh-everything-search — 全盘/跨盘秒搜（Everything es.exe）

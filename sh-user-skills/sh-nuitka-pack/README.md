@@ -4,6 +4,7 @@ description: uv单脚本PEP 723+Nuitka打包Windows单文件exe与启动加速�
 version: 1.0.0
 created: 2026-10-13
 updated: 2026-10-13
+disable-model-invocation: true
 ---
 
 # sh-nuitka-pack — uv 单脚本 Nuitka 单文件打包与启动加速

@@ -1,6 +1,7 @@
 ---
 name: sh-book2skill-sop
 description: 把书/文档转成 agent skill：book-to-skill 全流程 SOP、扫描版 OCR 兜底与本机坑位速查。点名使用
+disable-model-invocation: true
 ---
 
 # book-to-skill 使用 SOP（本机版）

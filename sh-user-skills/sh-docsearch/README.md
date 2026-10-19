@@ -4,6 +4,7 @@ description: 本地文档与技能库轻量级语义检索（docsearch CLI 一�
 version: 1.0.0
 created: 2026-10-18
 updated: 2026-10-18
+disable-model-invocation: true
 ---
 
 # sh-docsearch — 本地文档与知识库语义检索

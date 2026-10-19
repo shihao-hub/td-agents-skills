@@ -4,6 +4,7 @@ description: Windows Terminal (wt) 独立版定制、图标注入、任务栏守
 version: 1.2.0
 created: 2026-10-11
 updated: 2026-10-12
+disable-model-invocation: true
 ---
 
 # sh-wt-customizer：Windows Terminal (wt) 独立版定制、图标注入与全链路接管 SOP

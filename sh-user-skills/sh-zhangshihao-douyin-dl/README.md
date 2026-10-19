@@ -1,6 +1,7 @@
 ---
 name: sh-zhangshihao-douyin-dl
 description: 本机抖音/B 站视频下载 + 知乎文章提取：用本机打包好的 douyin_dl.exe（Nuitka 产物，路径仅在本机 ZHANGSHIHAO 有效）下载抖音无水印视频、B 站视频（含多 P），并把知乎回答/专栏文章提取为 Markdown + 本地原图。用户提到抖音分享文案、无水印下载、BV 号/b23.tv/bilibili 链接、知乎回答或专栏文章提取/存成 Markdown 时使用。点名使用
+disable-model-invocation: true
 ---
 
 # sh-zhangshihao-douyin-dl — 本机抖音/B 站下载 + 知乎文章提取

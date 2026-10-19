@@ -1,6 +1,7 @@
 ---
 name: sh-tech-doc-writing
 description: 技术文档写作：读者视角撰写 PRD、技术方案、架构与排期等研发文档。点名使用
+disable-model-invocation: true
 ---
 
 # 技术文档写作：读者视角的六类文档方法论

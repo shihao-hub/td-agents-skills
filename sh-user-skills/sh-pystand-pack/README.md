@@ -1,6 +1,7 @@
 ---
 name: sh-pystand-pack
 description: PyStand+嵌入式 Python 把 Python 项目打包成免安装绿色文件夹。点名使用
+disable-model-invocation: true
 ---
 
 # sh-pystand-pack — PyStand 独立打包

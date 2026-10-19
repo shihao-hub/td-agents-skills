@@ -1,6 +1,7 @@
 ---
 name: sh-troubleshooting-recap
 description: 排障复盘：把一次排障/解题过程按「做了什么 → 怎么想的 → 在哪碰壁 → 怎么解决」四段精炼呈现。当用户要求复盘、想听定位过程，或问"你怎么思考、怎么碰壁、怎么解决的"时使用。点名使用
+disable-model-invocation: true
 ---
 
 # 排障复盘：四段心路

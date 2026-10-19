@@ -1,6 +1,7 @@
 ---
 name: sh-sql-query-builder
 description: 重构 SOP：把 SQLAlchemy Core 嵌套只读查询抽取为文本 SQL 模板+builder，适用任意 Python 后端项目。点名使用
+disable-model-invocation: true
 ---
 
 # 复杂 SQL 抽取到 Query Builder 层

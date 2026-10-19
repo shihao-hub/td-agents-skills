@@ -1,6 +1,7 @@
 ---
 name: sh-cluacpp-build
 description: C/C++/Lua 项目工具链与构建手册：LLVM/Ninja/MSVC、CMake Presets、FetchContent 集成 Lua、clangd、编译报错速查。点名使用
+disable-model-invocation: true
 ---
 
 # sh-cluacpp-build —— native_projects 构建手册

@@ -4,6 +4,7 @@ description: Google Antigravity (App 与 CLI 双端) 会话标题批量治理与
 version: 1.1.0
 created: 2026-10-13
 updated: 2026-10-17
+disable-model-invocation: true
 ---
 
 # sh-agy-session-governance — Antigravity (App & CLI) 会话标题批量治理与汉化 SOP

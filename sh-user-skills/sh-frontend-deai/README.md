@@ -1,6 +1,7 @@
 ---
 name: sh-frontend-deai
 description: 前端去 AI 味：反蓝紫渐变、暗底霓虹与模板化套路，场景导向设计界面。点名使用
+disable-model-invocation: true
 ---
 
 # 前端去 AI 味（sh-frontend-deai）

@@ -1,6 +1,7 @@
 ---
 name: sh-github-repo-cleanup
 description: GitHub 仓库大扫除：审计→fork 转 Star→mirror 备份→批量删除/归档。点名使用
+disable-model-invocation: true
 ---
 
 # GitHub 账号仓库大扫除

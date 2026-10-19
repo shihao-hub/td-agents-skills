@@ -1,6 +1,7 @@
 ---
 name: sh-office-extract-media
 description: 提取 Word/PPT/Excel 内嵌原图：改后缀为 zip 进 media 目录取图。点名使用
+disable-model-invocation: true
 ---
 
 # Office 文档内嵌原图提取
