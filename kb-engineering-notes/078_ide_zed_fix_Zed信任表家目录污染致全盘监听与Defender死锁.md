@@ -12,7 +12,8 @@ updated: 2026-10-20
 > **条目定位**：**【顶级高危事故】Type A 终极排障与架构机理深度复盘条目**  
 > **危险评级**：★★★★★（单体吞噬 11.5GB 提交内存，拉爆 Windows Defender 占用 64% CPU，造成磁盘满载与整机假死）  
 > **验证环境**：Zed 1.24.3 (Windows x64)、Windows 11 (Defender)、Claude ACP / OpenMA-Pi ACP / Antigravity ACP。  
-> **关联条目**：会话提取与 SQLite 抢救见 `025_ide_zed_fix_Zed会话丢失提取与SQLite解析抢救.md`；ACP 进程池累积与内存治理见 `023_ide_zed_fix_Zed与IDEA外接ACP代理失效与进程堆积.md`。
+> **关联条目**：会话提取与 SQLite 抢救见 `025_ide_zed_fix_Zed会话丢失提取与SQLite解析抢救.md`；ACP 进程池累积与内存治理见 `023_ide_zed_fix_Zed与IDEA外接ACP代理失效与进程堆积.md`。  
+> **上游 Issue 追踪**：已向 Zed 官方上游提交深度 Bug 报告并建档追踪：[zed-industries/zed#65842](https://github.com/zed-industries/zed/issues/65842)（已由 Zed 官方维护人员 `@yeskunall` (Kunall Banerjee) 亲自接单，完成分类 Triage 并正式立项为 Bug 跟踪）。
 
 ---
 
@@ -93,13 +94,32 @@ Zed 判定："该文件属于合法工程 C:\Users\<user>，立即在后台激�
 3. Defender 内核驱动 (WdFilter.sys) 拦截到第三方进程高速触碰系统文件，全面介入实时查杀；
 4. Defender 独占扫描与 Zed 并发读取产生文件锁冲突 (os error 5 / 32)；
 5. 两者在 CPU 与磁盘上死锁互咬，堆内存飙升至 11.5 GB，界面彻底假死。
-```
+---
+
+### 3. 次生灾害深水区：清空信任表后的“盘符根无脑滑坡”（Fallback to C:\）
+
+在实测排障深水区，我们揭露了比“家目录污染”更隐蔽、破坏力更大的系统级架构缺陷：
+- **直觉误区**：开发者以为只要把 `C:\Users\<user>` 从 `trusted_worktrees` 表中彻底清除，Zed 找不到受信任工程就会放弃挂载；
+- **惊险反转**：当 Agent 恢复历史会话、再次向 Zed 请求读取外部路径（例如 `C:\Users\<user>\.dsh`）时，Zed 向上逐级回溯寻找项目根：
+  - `.dsh`：无 `.git`，不受信任；
+  - `<user>`：无 `.git`，不受信任；
+  - `Users`：无 `.git`，不受信任；
+- **致命的兜底逻辑（Fallback to Root）**：
+  Zed 代码缺乏根目录边界熔断，**竟然一路无脑回退到了驱动器根路径 `C:\`，直接把整个 C 盘当作了这棵后台 Worktree 的根目录（Root）！**
+- **现场日志铁证**：
+  ```text
+  INFO  [worktree] deferred indexing of 6413 directories in "C:\\" that are outside of git repositories
+  ERROR [worktree] error reading file "C:\\Windows/System32/sru": 拒绝访问。 (os error 5)
+  ERROR [worktree] error reading file "C:\\Windows/System32/winevt/Logs/Application.evtx": 拒绝访问。 (os error 5)
+  ```
+- **破坏力倍增**：
+  取消信任若无配套规则，挂载范围反而从“家目录”**升级为“整个 Windows 系统盘”**！`C:\Windows\System32`、`winevt`（系统事件日志）、`ProgramData` 等成千上万个带内核排他锁的文件直接把 File Watcher 与 Defender 拖入新一轮死锁！
 
 ---
 
-## 四、确定性排查与数据库无损清洗 SOP
+## 四、确定性排查与终极双层防御 SOP
 
-清洗目标：**将潜伏在数据库里、被错误提升为受信任项目的父级根目录从 `trusted_worktrees` 表中彻底剔除**。
+治理目标：**第一层清洗数据库被污染父目录；第二层建立系统级扫描防火墙，彻底杜绝盘符滑坡死锁。**
 
 ### 步骤 1：排查当前受信任工作区（安全只读）
 ```powershell
@@ -166,6 +186,38 @@ uv run python clean_zed_trust.py
 # 随手清理临时脚本
 Remove-Item clean_zed_trust.py -Force
 ```
+
+### 步骤 4：构建全盘系统级扫描防火墙（终极物理防御）
+
+为了彻底杜绝 Zed 后续因各种原因再次退化滑坡至 `C:\` 并把操作系统扫爆，必须在客户端配置层建立硬性防火墙。
+
+在 `%APPDATA%\Zed\settings.json` 中配置全量系统级排除黑名单：
+
+```json
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "**/node_modules",
+    "**/.dsh",
+    "**/AppData",
+    "**/Windows",
+    "**/ProgramData",
+    "**/$Recycle.Bin",
+    "**/*.evtx",
+    "**/*.LOG*",
+    "**/System Volume Information"
+  ]
+```
+
+> **机制保障释疑**：
+> 1. **为什么有效？** 后台 File Watcher 与 Symbol Indexer 在扫描 `C:\` 时，一旦触碰规则会立刻被底层剪枝，绝不会再去碰 `C:\Windows`、`AppData` 等系统排他锁文件，直接拔除了死锁根基；
+> 2. **Agent 还能读写这些文件吗？** **100% 正常读取**。`file_scan_exclusions` 仅作用于后台被动遍历监视，绝不阻断 Agent 或用户对具体单文件的显式主动读取；而且排除了句柄常驻后，外部程序与 Agent 保存文件时再也不会遭遇 `EPERM` 写入丢失。
 
 ---
 
