@@ -77,7 +77,7 @@ updated: 2026-10-19
 ```yaml
 ---
 name: sh-<name>
-description: 一句话功能语义，结尾固定点名使用。点名使用
+description: 一句话功能语义，结尾固定点名使用。
 version: 1.0.0
 created: YYYY-MM-DD
 updated: YYYY-MM-DD

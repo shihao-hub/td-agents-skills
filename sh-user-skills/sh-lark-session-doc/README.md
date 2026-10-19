@@ -1,6 +1,9 @@
-﻿---
+---
 name: sh-lark-session-doc
 description: 用户提到把当前会话/对话导出或归档为飞书云文档时使用，直接原封不动存入个人文档库；非导出当前会话或要导出本地已有文件时不使用
+version: 1.0.0
+created: 2026-10-07
+updated: 2026-10-19
 ---
 
 # 会话完整归档至飞书云文档（sh-lark-session-doc）
