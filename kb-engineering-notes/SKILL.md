@@ -7,7 +7,7 @@ description: |
   检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。
 version: 2.1.0
 created: 2026-10-07
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -191,7 +191,7 @@ kb-engineering-notes/
 | Zed 同时打开多个项目导致各个语言服务器全量拉起吃满内存，需要针对特定项目精细管控 LSP | [`026_ide_zed_flow_Zed项目级LSP白名单与内存优化.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/026_ide_zed_flow_Zed项目级LSP白名单与内存优化.md) | Zed LSP 白名单, .zed/settings.json, 按项目开 LSP, 内存优化 |
 | 既有个人 GitHub 账号又有公司 GitLab 账号，SSH 密钥冲突或提交邮箱身份串号 | [`027_git_ssh_flow_多Git账号SSH与IncludeIf配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/027_git_ssh_flow_多Git账号SSH与IncludeIf配置.md) | GitHub GitLab 共存, 多 SSH Key, includeIf, 身份自动切换, .gitconfig 隔离 |
 | Windows 下 Atuin 历史命令不同步、前导空格静默丢失、Ctrl+R 无法呼出或 PowerShell Profile 报错打架 | [`028_ide_atuin_fix_Win终端Atuin历史同步与Profile修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/028_ide_atuin_fix_Win终端Atuin历史同步与Profile修复.md) | Atuin 历史丢失, 前导空格, ignorespace, 静默丢弃, Ctrl+R 搜索历史, PSReadLine 冲突, profile.ps1 修复 |
-| cc-switch 界面操作卡顿或需要直接通过脚本批量迁移/读写应用模型配置；**换 API Key / 换 token 后不生效或被回滚**（Claude Code 的 key 由 cc-switch 托管，只改 settings.json 会被覆盖） | [`029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md) | cc-switch SQLite, 直接修改供应商, 跨应用模型迁移, 绕过 UI 配置, 换密钥, 密钥轮换, 换 key, token 不生效, settings.json 被回写 |
+| cc-switch 界面操作卡顿或需要直接通过脚本批量迁移/读写应用模型配置；**换 API Key / 换 token 后不生效或被回滚**；**添加 OpenCode 官方直连供应商（如 DeepSeek）报错「需要填写 npm 包和至少一个模型」无法添加** | [`029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md) | cc-switch SQLite, 直接修改供应商, 跨应用模型迁移, 绕过 UI 配置, 换密钥, 密钥轮换, 换 key, token 不生效, settings.json 被回写, npm 校验死锁, 只有配置中已有的同名供应商可以沿用默认定义, disabled_providers, live config 二元判定 |
 | 在 Cursor、Antigravity IDE 或 Trae 中需要用到某个只有 VS Code 插件市场才有的扩展 | [`030_ide_vscode_flow_VSCode扩展跨分支IDE手动搬运.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/030_ide_vscode_flow_VSCode扩展跨分支IDE手动搬运.md) | VS Code 插件搬运, Cursor 安装离线扩展, Trae 扩展移植, extensions.json 注册 |
 | VS Code 缺乏像 IntelliJ IDEA 那样直观清晰的 Git 提交树图谱，希望在底部面板集成 | [`031_git_vscode_flow_VSCode底部面板GitLG配色调优.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/031_git_vscode_flow_VSCode底部面板GitLG配色调优.md) | VS Code 提交图, GitLG, 分支配色, 底部面板终端, IDEA 视图复刻 |
 | 新电脑没有管理员权限或不想污染系统，需要免安装绿色便携部署 PowerShell 7 | [`032_win_ps_flow_Win便携PowerShell7绿色部署.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/032_win_ps_flow_Win便携PowerShell7绿色部署.md) | PowerShell 7 绿色安装, Pwsh 便携部署, 零系统残留, 用户级环境变量 |

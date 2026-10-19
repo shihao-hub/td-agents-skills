@@ -1,9 +1,9 @@
 ---
 name: kb-cc-switch-db
 description: 直接读写 cc-switch 的 SQLite 数据库，绕过 UI 批量配置与跨应用模型供应商迁移指南。
-version: 1.1.0
+version: 1.2.0
 created: 2026-09-06
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # cc-switch 配置 SQLite 直接读写与跨应用模型迁移指南
@@ -15,6 +15,7 @@ updated: 2026-10-19
 2026-09-24 增补：**codex 段思考深度坑**——GLM-5.3/flash 始终思考、`thinking.type` 仅 `enabled`，深度唯一参数是 `reasoning_effort`（low/high/max，默认 max）；chat 翻译路径**必须** `supportsEffort:true` + `effortParam:"reasoning_effort"`，否则档位静默失效（只发 thinking，从不发 effort；UI 开关从关闭切到打开也不会自动补 `effortParam`）。另：cc-switch **公共配置** `settings.common_config_codex` 里的 `model_reasoning_effort` 会合并进 live config.toml、覆盖 catalog 默认档位，CLI 默认档位要改这里（直接改 live 文件会被接管/异常退出恢复覆盖）。原生 Responses 端点是 `https://open.bigmodel.cn/api/v1`（官方预设路径），与 chat 端点 `/api/coding/paas/v4` 协议不互通。
 2026-09-25 增补：**DeepSeek 官方 Codex 原生透传与识图多模态避坑**——DeepSeek 官方规范（`wire_api="responses"` + `https://api.deepseek.com`）由 `meta.apiFormat="openai_responses"` 直通代理层，免 chat 翻译；多模态识图必须在 catalog 中显式声明 `"inputModalities": ["text", "image"]`（否则 Codex 禁用贴图）；第三方网关（如 OpenCode Go）中的 `deepseek-v4-flash` 实测为纯文本模型（发图 400），多模态模型名必须为 `deepseek-flash`；严禁在 CC Switch 环境中运行官方 `codex-deepseek-setup.ps1` 脚本覆写 `config.toml`。详见 `references/deepseek-codex-integration.md`。
 2026-10-19 增补：**密钥轮换 SOP 与 cc-switch 回写反噬**——`cc-update-provider-config.mjs` 新增 `--set <dotted.path>=<value>` 定点改字段（不再需要落临时 JSON），换 token 一条命令搞定；**实测被回滚案例**：改库双写成功后，隔日 cc-switch 启动把 `providers.settings_config` 与投影文件 `~/.claude/settings.json` **一起**重写回旧 key（两文件 mtime 同一秒），故新增任务 D 流程。另：只按 `cc-switch.exe` 探测进程会假阴性（真实镜像名含空格），见环境表。
+2026-10-20 增补：**OpenCode 官方供应商 npm 校验死锁与恢复 SOP**——官方直连 provider（如 DeepSeek）在被移出 `opencode.json` 或放入 `disabled_providers` 后，CC Switch 依据 live config 做二元判定将其视作“新自定义供应商”，点击 `+` 触发强制校验报错（`A new OpenCode provider ID requires an npm package and at least one model; only an existing ID in the live config may inherit defaults`；源码 `live.rs`）；破局无需在 UI 折腾，直接在 `opencode.json` 移除黑名单并补齐 provider，`auth.json` 注入 key，CC Switch 热感知后即自动移入“已添加”。见任务 G。
 
 ## 总原则（每次先读）
 
@@ -126,7 +127,7 @@ UI 上把「支持 effort」开关从关闭切到打开**不会**自动修好—
 
 **公共配置会覆盖 catalog 默认档位**（2026-09-24 实测）：`settings` 表 `common_config_codex` 的 TOML 会合并进每个 codex 供应商的 live config。里面若有 `model_reasoning_effort`，它会覆盖 model catalog 的 `default_reasoning_level`（影响 CLI/读 config.toml 的客户端；Desktop 用自选档位、Zed 用自身设置）。直接改 `~/.codex/config.toml` 会在 cc-switch 接管或异常退出恢复时被覆盖——要持久改必须改 `common_config_codex`（settings 表）。
 
-## 任务 D：密钥轮换（换 API Key / token）
+## 任务 F：密钥轮换（换 API Key / token）
 
 最常做的一件事，但有反噬风险，按顺序走：
 
@@ -139,6 +140,65 @@ UI 上把「支持 effort」开关从关闭切到打开**不会**自动修好—
 7. **改完必须回读 + 告知用户核对**，别假定一次写入长期有效。反例（2026-10-18 → 10-19 实测）：库与投影双写、回读均 PASS 且 API 200，次日 cc-switch 启动仍把**库和投影一起**重写回旧 key（两文件 mtime 落在同一秒）。用户可能自己在 UI 里切过，也可能启动期做了回写——结论是密钥轮换必须闭环到"用户确认当前生效值"。
 
 > 旧 key 建议留档：`~/.claude/backups/claude-token-backup-<date>.txt`（新旧对照）+ 库/投影各自的时间戳快照，回滚时按快照还原而不是靠记忆。
+
+## 任务 G：OpenCode 段 live config 二元判定与 npm 校验死锁（2026-10-20 实战）
+
+### 1. 现象与报错直击
+
+在 CC Switch 界面管理 OpenCode 供应商时，官方直连供应商（如 `deepseek`）出现在“可添加”列表中，点击右侧 `+` 试图添加时弹出报错：
+```text
+切换失败
+切换失败: 新的 OpenCode 供应商标识需要填写 npm 包和至少一个模型；只有配置中已有的同名供应商可以沿用默认定义 (A new OpenCode provider ID requires an npm package and at least one model; only an existing ID in the live config may inherit defaults)
+```
+而在 OpenCode 命令行中执行 `opencode models deepseek` 报：
+```text
+Error: Provider not found: deepseek
+```
+
+### 2. 底层机理归因（CC Switch 源码 live.rs 取证）
+
+1. **CC Switch 的二元判定机制**：
+   - CC Switch 以后台生效的 `~/.config/opencode/opencode.json`（live config）的 `provider` 键作为基准真值；
+   - 存在于 live config 的 provider 归为“已添加”；存在于 `cc-switch.db` 但不在 live config 中的归为“可添加”。
+2. **校验分支死锁**：
+   - 当点击 `+` 把供应商写入 live config 时，CC Switch 检查当前 live config：
+     - **已存在同名 ID**：允许沿用默认定义（inherit defaults，官方内置 provider 如 DeepSeek 原生内置无需填写 npm 包）；
+     - **不存在同名 ID**：判定为“全新自定义供应商”，强制走校验分支（源码 `cc_switch_lib::services::provider::live.rs`，要求 `must contain 'npm' or 'options'`）并必须填写 npm 包与至少一个模型。
+   - 官方直连 provider 原生内置，配置中只有模型列表（无需 npm 包）。一旦它曾被从 `opencode.json` 中移除，或被列入 `disabled_providers`，CC Switch 便将其误判为新供应商并拦截，而在 UI 上又无法补充该字段，形成闭环死锁。
+3. **OpenCode 的三大配置层级**：
+   - `disabled_providers`（黑名单拦截层）：优先级极高，在此列表中则完全不加载；
+   - `provider.<id>.models`（模型白名单与参数覆盖层）；
+   - `~/.local/share/opencode/auth.json`（独立凭据层）：结构为 `{"<provider_id>": {"type": "api", "key": "..."}}`。
+
+### 3. 确定性恢复 SOP
+
+不要在 CC Switch 界面反复点击，直接底层对齐：
+
+1. **编辑 `~/.config/opencode/opencode.json`**：
+   - 从 `disabled_providers` 中剔除目标 provider（若无其他禁用项可整块移除）；
+   - 在 `provider` 字典中补全同名定义（可包含官方主流模型与自定义推理参数）：
+     ```json
+     "deepseek": {
+       "models": {
+         "deepseek-chat": {},
+         "deepseek-reasoner": {},
+         "deepseek-flash": { "options": { "reasoningEffort": "max" } },
+         "deepseek-v4-pro": { "options": { "reasoningEffort": "max" } }
+       }
+     }
+     ```
+2. **编辑 `~/.local/share/opencode/auth.json`**：
+   - 注入 API Key：
+     ```json
+     "deepseek": {
+       "type": "api",
+       "key": "<sk-xxx>"
+     }
+     ```
+3. **验证与热感知**：
+   - 命令行执行 `opencode providers list`，确认显示 `● DeepSeek api`；
+   - 执行 `opencode models deepseek`，确认列出可用模型；
+   - **CC Switch 界面热刷新**：切到左侧其他 App（如 Claude/Codex）再点回 OpenCode（或在窗口中按 `Ctrl+R`），CC Switch 调用 `get_opencode_live_provider_ids` 重新感知 live config，目标 provider 自动进入“已添加”列表。
 
 ## 与 sh-zed-opencode-setup 的分工
 
