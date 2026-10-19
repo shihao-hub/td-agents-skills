@@ -3,7 +3,7 @@ name: sh-skill-authoring-rules
 description: |
   技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/ID置顶五段式分面命名与时序解耦/Type A与Type B极简双轨/虚拟路径分层契约/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
 disable-model-invocation: true
-version: 2.7.0
+version: 2.8.0
 created: 2026-10-07
 updated: 2026-10-19
 ---
@@ -53,7 +53,7 @@ updated: 2026-10-19
 - **结构**：一句话功能语义（≤70 字符）+ 领域/性质前缀（如 `装机：`、`配置：`、`排障：`、`路由器：`）+ 核心关键词 + 结尾固定 `点名使用`。
 - **点名直调型必须双保险**：已被 Harness 注册、但期望仅经 `/skill:<name>` 直调而不参与自动路由的技能（典型为提级暴露位与第三方引入技能），**必须**在 frontmatter 声明 `disable-model-invocation: true`；同时 description 仍保留结尾 `点名使用`，作为不识别该字段的 Harness（OpenCode / Codex / Antigravity 等）的跨端兜底。二者缺一不可。
 - **反军备竞赛红线**：严禁出现“必须调用本技能”、“即使只说 X 也要使用”等对抗性提示词；严禁穷举同义词堆砌字数。
-- **主动触发类（Auto）例外**：极少数需要 AI 自主根据上下文介入的方法论技能（如 `sh-backend-design`），不写“点名使用”，但必须显式划清正反边界（“用户需要 X 时使用；Y 场景不使用”）。
+- **主动触发类（Auto）例外（仅限根级技能）**：极少数需要 AI 自主根据上下文介入的根级方法论技能，可不写“点名使用”，但必须显式划清正反边界（“用户需要 X 时使用；Y 场景不使用”）。**`sh-user-skills` 下的子技能不适用本例外，一律点名直调。**
 - **路由器与知识库入口例外（关键词集群形态）**：`sh-user-skills`、族路由器与知识库入口（如 `kb-engineering-notes`）不适用首款模板（显式豁免“≤70 字符 + 点名使用”结尾）；其 description 允许并鼓励采用「定位语 + 用户真实会说的症状词/报错词/工具名关键词集群 + 触发或兜底说明」形态，用于启发式分流与主动查阅，**不视为“同义词堆砌”**；反军备竞赛红线仍然有效（禁对抗性触发语、禁无信息量重复）。此类 description 还须满足：
   - 关键词密度优先，不写长句铺陈，只写用户可能原样说出的词；
   - 分流器保留“点名 `sh-*` 子技能（含拼写近似）兜底解析”条款；知识库入口写明“报出症状即优先查阅”的触发语（属主动触发类，不写“点名使用”）；
@@ -73,6 +73,7 @@ updated: 2026-10-19
 ### 1. 核心机制：以 `README.md` 绝缘全局探测
 - **子技能入口**：`sh-user-skills/<name>/README.md`。**严禁命名为 `SKILL.md`**。
 - **激活模式**：仅供用户点名或经 `sh-user-skills` 语义分流命中后，由 AI 借助 `view_file` 按需读入执行，执行完毕即释放，永不占用常驻上下文。
+- **预置字段即暴露语义**：所有子技能 frontmatter 一律预置 `disable-model-invocation: true`。未暴露时该字段无任何解析器读取（Harness 只认 `SKILL.md`），零副作用；一旦经 `expose_user_skill.py` 建出 `SKILL.md -> README.md` 软链，同一文件立即被解析，字段当场生效。因此暴露动作是纯建链，**不需要二次改 frontmatter**。
 
 ### 2. 子技能 README.md 标准结构
 顶部必须包含完整 YAML frontmatter：
@@ -80,6 +81,7 @@ updated: 2026-10-19
 ---
 name: sh-<name>
 description: 一句话功能语义，结尾固定点名使用。
+disable-model-invocation: true
 version: 1.0.0
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -121,7 +123,7 @@ uv run expose_user_skill.py <name>           # 实跑
 1. **暴露目录内严禁再放 `.gitignore`**：Harness 的技能发现同样读 `.gitignore`/`.ignore`/`.fdignore`（pi 的 `loadSkillsFromDir` 直接复用 gitignore 语义），一旦写 `*` 屏蔽链接产物，被屏蔽的 `SKILL.md` 会**静默不进技能清单**（无任何告警，连 `/skill:name` 也一起失效）——这正是本机制曾整体失效的根因。
 2. **Windows 下相对软链目标禁用正斜杠**：目标含 `/` 时 Windows 原生 API（Node/PowerShell/.NET）解析即 ENOENT，必须用 `\`；POSIX 用 `/`。脚本的 `link_text()` 已按平台自动转换，手搓链接时务必照做。
 3. **仓库须 `git config core.symlinks true`**（Windows 无开发者模式时 git 可能探成 `false`，会把入库链接检出成纯文本文件，技能发现同样失败）；建链失败时脚本直接报错，不提供硬链接/junction 兜底——那两种形态 git 无法以链接模式入库，只会把真身内容复制进来造成双份漂移。
-4. **暴露后必须声明 `disable-model-invocation: true`**：暴露位进入全局清单后若不加该字段，模型会对其自动路由，与 `sh-user-skills` 分流器形成双入口竞争，违背「提级是为了直调快捷」的初衷；同时 description 保留 `点名使用` 文案作跨端兜底（机制 + 文案双保险）。
+4. **暴露即继承仅直调语义**：子技能真身已预置 `disable-model-invocation: true`，建链后自动生效，**无需二次改动**；若暴露位缺该字段，模型会对其自动路由，与 `sh-user-skills` 分流器形成双入口竞争，违背「提级是为了直调快捷」的初衷。description 保留 `点名使用` 文案作跨端兜底（机制 + 文案双保险）。`expose_user_skill.py` 在建链前会校验该字段，缺失时仅警告不阻断。
 
 ---
 

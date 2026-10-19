@@ -116,6 +116,35 @@ def check_core_symlinks() -> None:
         )
 
 
+def check_skill_flag(src: Path) -> None:
+    """校验真身是否预置 disable-model-invocation: true；缺失仅警告，不阻断建链。
+
+    子技能真身 README.md 在被 expose 之前不会进任何注册表，预置字段零副作用；
+    建链后 SKILL.md 软链指向同一文件，字段当场生效。缺字段即意味着暴露后会
+    参与模型自动路由，与 sh-user-skills 分流器竞争，故在此守护。
+    """
+    readme = src / "README.md"
+    try:
+        text = readme.read_text(encoding="utf-8-sig")
+    except OSError as exc:
+        print(f"警告: 无法读取 {readme.name}（{exc}），跳过字段校验")
+        return
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        print("警告: README.md 缺少 YAML frontmatter，暴露后将参与自动路由；请按规范卷二 §2 模板补写")
+        return
+    try:
+        end = lines.index("---", 1)
+    except ValueError:
+        print("警告: README.md frontmatter 未闭合，暴露后将参与自动路由；请按规范卷二 §2 模板补写")
+        return
+    if not any(ln.strip() == "disable-model-invocation: true" for ln in lines[1:end]):
+        print(
+            "警告: 真身未预置 `disable-model-invocation: true`，暴露后将被模型自动路由，"
+            "与 sh-user-skills 分流器竞争；请在 frontmatter 补写（详见规范卷二 §2）"
+        )
+
+
 def main() -> int:
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
         sys.stdout.reconfigure(encoding="utf-8")
@@ -136,6 +165,7 @@ def main() -> int:
         return 1
 
     check_core_symlinks()
+    check_skill_flag(src)
 
     actions = 0
     skips = 0
