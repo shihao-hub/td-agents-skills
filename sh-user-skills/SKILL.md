@@ -2,7 +2,7 @@
 name: sh-user-skills
 description: |
   个人技能库总入口与分流器：用户只有一句模糊需求、忘记技能名，或遇到底层报错/环境与配置疑难，或任务执行中途需要某项专门能力（如全盘检索、打包、下载、归档）时，在此匹配并加载对应子技能 SOP。
-  第一优先——内置工程避坑知识库（kb-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理等；全量索引以知识库内部路由表为准，随条目持续生长。
+  第一优先——内置工程避坑知识库（kb-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、【特大高危】Zed 信任表家目录污染致全盘监听与 10G 内存暴涨及 Defender 死锁、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理等；全量索引以知识库内部路由表为准，随条目持续生长。
   开发与重构（后端系统设计、计划驱动与规格驱动工作流、OOP 重构、SQL 模板 builder、C/C++/Lua 构建、饥荒模组下载与脱壳、前端去 AI 味、localhost PWA、Bruno 集合、Codex 插件、PyStand 打包、Nuitka 单文件打包、WT 独立版定制守卫、monorepo 提交推送、GitHub 仓库大扫除）；
   文档与交接（PRD/技术方案、技能创作与知识库规范、书转 skill、跨 agent 交接、排障复盘）；
   检索与媒资归档（全盘/跨盘找文件、找大文件、本地文档与知识库语义检索、文件忘了放哪、按时间/大小/正则定位文件（Everything 秒搜）、抖音/B站/知乎下载、视频转写字幕、去水印、Office 提图、网页存档、飞书聊天与会话归档）；
@@ -36,7 +36,7 @@ updated: 2026-10-17
 
 | 用户口语说法（示例） | 技能 |
 | :--- | :--- |
-| 底层报错／排障手记／避坑知识库／声卡爆音／UWP打不开／C盘清理／内存防死机／GLM 401／换 API Key／换 key／密钥轮换／cc-switch 改配置／Zed崩溃与会话／LSP排障／多Git账号／Atuin历史／VSCode搬插件／PowerShell7绿色部署／字体渲染／右键菜单／Terminus退格／Pi改键／chrome-devtools-mcp／思考档位／DDG核查／软链接机制／进程取证／WT分屏／迅雷插件 | `kb-engineering-notes`（两级渐进式检索 `kb-engineering-notes/`，已提级为根级技能） |
+| 底层报错／排障手记／避坑知识库／Zed内存暴涨10G／Defender扫盘64%死锁／trusted_worktrees污染／声卡爆音／UWP打不开／C盘清理／内存防死机／GLM 401／换 API Key／换 key／密钥轮换／cc-switch 改配置／Zed崩溃与会话／LSP排障／多Git账号／Atuin历史／VSCode搬插件／PowerShell7绿色部署／字体渲染／右键菜单／Terminus退格／Pi改键／chrome-devtools-mcp／思考档位／DDG核查／软链接机制／进程取证／WT分屏／迅雷插件 | `kb-engineering-notes`（两级渐进式检索 `kb-engineering-notes/`，已提级为根级技能） |
 | 把视频/音频转成字幕 | `sh-video-transcribe` |
 | 抖音/B站无水印下载、知乎文章存 Markdown | `sh-zhangshihao-douyin-dl` |
 | 图片去水印／去角标 | `sh-image-watermark-removal` |
