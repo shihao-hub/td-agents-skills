@@ -3,7 +3,7 @@ name: kb-engineering-notes
 description: |
   开发者通用工程实战手记、疑难排障与自动化流水线知识库（两级渐进式检索总入口）：遇到系统/IDE/终端异常、底层报错或落地工程自动化时优先查阅。
    【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、【特大高危】Zed信任表家目录污染致全盘监听与10G内存暴涨及Defender死锁、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突等。
-  【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查。
+  【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计。
   检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。
 version: 2.1.0
 created: 2026-10-07
@@ -129,6 +129,7 @@ kb-engineering-notes/
 ├── 076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md # [Stage 2: 专项排障] 针对 Zed 自定义 ACP 代理图标来源机制与注册表兜底修复
 ├── 077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md # [Stage 2: 专项排障] 针对 Zed 外部 ACP 线程不自动命名与首消息标题链路（横幅抢占 entry + agent 侧命名插件）
 ├── 078_ide_zed_fix_Zed信任表家目录污染致全盘监听与Defender死锁.md # [Stage 2: 专项排障·特大高危] 针对 Zed 工作区信任表(trusted_worktrees)被父级家目录污染致后台强挂16个Live Worktree、File Watcher打爆、10G内存暴涨与Defender 60%+ CPU死锁
+├── 079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md # [Stage 2: 专项流水线] 针对向头部开源项目(如Zed)提交高穿透力Bug Report的标准流程、置顶前言破局、内核级取证与三重对照实验设计
 └── ...（后续顺次扩充）
 ```
 
@@ -257,6 +258,7 @@ kb-engineering-notes/
 | Zed 里自定义 ACP 代理（`type: custom`）图标是通用终端图标想换掉、settings 里加 `icon` 无效也不报错，或想让自定义代理显示品牌图标 | [`076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md) | Zed 自定义代理图标, agent_servers custom icon 无效, ACP Registry 图标, pi-acp.svg, external_agents\registry\icons, 线程侧栏终端图标, CustomAgentServerSettings, REGISTRY_URL 硬编码, agentInfo.icons 不生效, 键名蹭 Registry 图标 |
 | Zed 外部 ACP 线程（openma-pi / pi-acp 等）标题永远是占位「New Agent Thread」、不再按首条消息自动命名，而 `/rename` 手动改名却立刻生效；或想搞清启动横幅与自动命名的关系、想改本地命名插件 | [`077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md) | New Agent Thread, 外部 ACP 线程不自动命名, 第一次正常之后失效, openma-pi 线程标题, pi-acp 标题, startup banner 抢占 entry, is_first_message, provisional title, set_provisional_title, is_draft_thread, session_info_update title, pi 无自动命名, auto-session-title, pi-local-plugins, quietStartup, PI_ACP_QUIET_STARTUP |
 | 【特大高危】Zed 内存暴涨至 10GB+（提交 11.5GB）、整机卡死；同时 Windows Defender (MsMpEng) 占用 40%~64% CPU 狂飙死锁；Zed.log 狂刷 Temp/ntuser.dat `os error 5 / 32`，工作区诊断显示 `live 16 worktrees` 但只开了两个窗口 | [`078_ide_zed_fix_Zed信任表家目录污染致全盘监听与Defender死锁.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/078_ide_zed_fix_Zed信任表家目录污染致全盘监听与Defender死锁.md) | 【特大高危】, Zed 10G 内存暴涨, Zed 内存泄漏, Defender 64%, MsMpEng 占满 CPU, trusted_worktrees, C:\Users, Temp 临时文件死循环, os error 5, os error 32, live 16 visible 2, WdFilter 死锁, 信任父级目录陷阱 |
+| 想给头部开源项目（如 Zed / VS Code / Rust）提交高质量 Bug Report，希望避免被当成杀毒/环境问题误杀、让官方核心维护者几分钟内迅速接单立项 | [`079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md) | 开源提 issue, GitHub Issue, bug report, 官方秒接单, 置顶前言, 对照实验, Restart Manager 内核取证, 标题工程学, 隐私脱敏, Zed issue 实战 |
 
 ---
 
@@ -364,5 +366,6 @@ kb-engineering-notes/
 | 076 | [`076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md) | `076_ide_zed_fix_Zed自定义ACP代理图标机制与注册表兜底.md` | `ide` | `fix` | Zed 自定义 ACP 代理图标机制与注册表兜底方案 |
 | 077 | [`077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md) | `077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md` | `ide` | `fix` | Zed 外部 ACP 线程不自动命名与首消息标题链路（横幅抢占 entry + agent 侧命名插件） |
 | 078 | [`078_ide_zed_fix_Zed信任表家目录污染致全盘监听与Defender死锁.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/078_ide_zed_fix_Zed信任表家目录污染致全盘监听与Defender死锁.md) | `078_ide_zed_fix_Zed信任表家目录污染致全盘监听与Defender死锁.md` | `ide` | `fix` | 【特大高危】Zed 信任表家目录污染致全盘监听、10G 内存暴涨与 Defender 死锁终极排障 |
+| 079 | [`079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md) | `079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md` | `dev` | `flow` | 开源上游 Issue 高穿透提交、置顶前言破局与证据链设计流水线 |
 
 
