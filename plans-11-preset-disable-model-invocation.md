@@ -23,25 +23,25 @@
 
 ## 任务分解
 
-- [ ] Task 1: 批量预置字段（29 个文件）
+- [x] Task 1: 批量预置字段（29 个文件）
   - 文件：`sh-user-skills/*/README.md`
   - 实现：脚本按文件原换行符切分，在第二个 `---` 前插入 `disable-model-invocation: true`；已有则跳过（幂等）
   - 验证：重跑扫描脚本，32 项全部 `HAS`；`git diff --stat` 恰为 29 个文件
   - Demo：任一子技能暴露后 `/skill:` 可用且不进自动路由清单
 
-- [ ] Task 2: 规范修订 `sh-skill-authoring-rules/README.md`
+- [x] Task 2: 规范修订 `sh-skill-authoring-rules/README.md`
   - 文件：`sh-user-skills/sh-skill-authoring-rules/README.md`
   - 实现：卷二 §1 增"预置字段 = 暴露即生效"原理；§2 模板加该字段；§4 第 4 条改写为"字段已在真身预置，暴露无需二次改动"；版本 `2.7.0 → 2.8.0`
   - 验证：`rg -n "disable-model-invocation"` 命中点与条款语义一致
   - Demo：新子技能照模板创建即天然合规
 
-- [ ] Task 3: 暴露脚本加校验
+- [x] Task 3: 暴露脚本加校验
   - 文件：`expose_user_skill.py`
   - 实现：建链前解析 `src/README.md` frontmatter，缺字段则打印警告（不阻断、不改文件）
   - 验证：临时造一个缺字段的假目录跑 `--check`，确认只警告不失败
   - Demo：新增子技能忘写字段时暴露过程可见提示
 
-- [ ] Task 4: 回归验证与提交
+- [x] Task 4: 回归验证与提交
   - 文件：无 / 子模块提交
   - 实现：`loadSkillsFromDir` 复核（加载 40 / DISABLED 10 / 可见 30 保持不变，因未暴露者不进注册表）；分两笔提交（改造、脚本+规范可合并为同一语义范围）
   - 验证：工作区干净，`git log` 可回溯
