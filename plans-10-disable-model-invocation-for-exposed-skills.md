@@ -24,7 +24,7 @@
 
 ## 任务分解
 
-- [ ] Task 1: 修订创作规范 `sh-user-skills/sh-skill-authoring-rules/README.md`
+- [x] Task 1: 修订创作规范 `sh-user-skills/sh-skill-authoring-rules/README.md`
   - 文件：`sh-user-skills/sh-skill-authoring-rules/README.md`（真身，暴露位为软链自动跟随）
   - 实现：
     - 卷一 §2「description 编写标准」首条：保留"结尾固定 `点名使用`"，补充"若该技能已被 Harness 注册且期望仅直调，须同时声明 `disable-model-invocation: true`，文案仅作跨端兜底"
@@ -35,19 +35,19 @@
   - 验证：`rg -n "disable-model-invocation" sh-user-skills/sh-skill-authoring-rules/README.md` 命中 ≥4 处
   - Demo：规范中"机制 + 文案双保险"表述可直接对照执行
 
-- [ ] Task 2: 三个暴露位真身加字段
+- [x] Task 2: 三个暴露位真身加字段
   - 文件：`sh-user-skills/sh-plan-driven-development/README.md`、`sh-user-skills/sh-spec-driven-development/README.md`、`sh-user-skills/sh-skill-authoring-rules/README.md`
   - 实现：在各 frontmatter 的 `description` 之后插入 `disable-model-invocation: true`；不动 description 文案（保留"点名使用"兜底）
   - 验证：`uv run expose_user_skill.py <name> --check` 三者均通过（链接未失联）
   - Demo：`/skill:sh-plan-driven-development` 仍可调用，但不再出现在自动路由清单
 
-- [ ] Task 3: 机制验证与回归
+- [x] Task 3: 机制验证与回归
   - 文件：无（只读校验）
   - 实现：调用 pi 的 `loadSkillsFromDir` 复核加载结果
   - 验证：加载总数 40、DISABLED 10（7+3）、可见 30；三个暴露位均标记 DISABLED 且 `filePath` 指向真实软链目标
   - Demo：可见清单缩减但直调能力完整
 
-- [ ] Task 4: 按范围隔离提交（两笔）
+- [x] Task 4: 按范围隔离提交（两笔）
   - 文件：`.agents/skills` 子模块（`td-agents-skills`）
   - 实现：
     - 提交 A（缺陷修复，已完成内容）：`fix: 修复 sh-lark-session-doc BOM 与 frontmatter 缺项，修正规范模板重复文案`
@@ -60,4 +60,4 @@
 
 - [x] 跨 Harness 兼容性：已决策保留文案兜底，不做实测
 - [x] `sh-agy-skills` 矛盾：本轮搁置
-- [ ] **提交 C 顺序**：计划文件应在改造前单独提交（"计划一旦落盘必须立即单独提交"），还是与改造同批？按 GLOBAL.md 字面要求应立即提交，但会形成"先提交计划、后提交实现"的两笔；请确认是否照此执行
+- [x] **提交 C 顺序**：已按 GLOBAL.md「计划落盘须立即独立提交」执行，计划先于实现成笔
