@@ -1,6 +1,7 @@
 ---
 name: sh-spec-driven-development
 description: Spec 驱动开发工作流：按 feature/bug 分流产出需求设计与任务清单，逐份获批后执行。点名使用
+disable-model-invocation: true
 version: 2.1.2
 created: 2026-09-21
 updated: 2026-10-10

@@ -1,6 +1,7 @@
 ---
 name: sh-plan-driven-development
 description: 计划与规划模式总入口：统一分发实施交付计划（默认 kiro 单文件 plans/）、只读探索规划（--claude 方案比选与 Critical Files 对齐）、并预留 agy/dsh 渠道。点名使用
+disable-model-invocation: true
 version: 3.2.0
 created: 2026-09-21
 updated: 2026-10-11
