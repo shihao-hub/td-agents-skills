@@ -117,7 +117,7 @@ uv run expose_user_skill.py <name>           # 实跑
 
 - 该技能 description 进入全局 prompt，此后遵守卷一对根级技能的全部约束（≤1024、关键词集群规范等）；
 - 真身仍在 `sh-user-skills/<name>/`，**一切修改只动真身**；改后重跑脚本（`--check` 探测链接失联）；
-- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`sh-skill-authoring-rules`（`kb-engineering-notes` 已转正为根级真身，不再走此形态）；三者 frontmatter 均已声明 `disable-model-invocation: true`。
+- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`sh-skill-authoring-rules`、`sh-agent-handoff`（`kb-engineering-notes` 已转正为根级真身，不再走此形态）；四者 frontmatter 均已声明 `disable-model-invocation: true`。
 
 **四条硬约束（踩过坑，勿违）**：
 1. **暴露目录内严禁再放 `.gitignore`**：Harness 的技能发现同样读 `.gitignore`/`.ignore`/`.fdignore`（pi 的 `loadSkillsFromDir` 直接复用 gitignore 语义），一旦写 `*` 屏蔽链接产物，被屏蔽的 `SKILL.md` 会**静默不进技能清单**（无任何告警，连 `/skill:name` 也一起失效）——这正是本机制曾整体失效的根因。
