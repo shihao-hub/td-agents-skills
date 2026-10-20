@@ -2,7 +2,6 @@
 name: sh-skill-authoring-rules
 description: |
   技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/ID置顶五段式分面命名与时序解耦/Type A与Type B极简双轨/虚拟路径分层契约/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
-disable-model-invocation: true
 version: 2.8.0
 created: 2026-10-07
 updated: 2026-10-19
@@ -81,7 +80,6 @@ updated: 2026-10-19
 ---
 name: sh-<name>
 description: 一句话功能语义，结尾固定点名使用。
-disable-model-invocation: true
 version: 1.0.0
 created: YYYY-MM-DD
 updated: YYYY-MM-DD

@@ -1,7 +1,6 @@
 ---
 name: sh-spec-driven-development
-description: Spec 驱动开发工作流：按 feature/bug 分流产出需求设计与任务清单，逐份获批后执行。点名使用
-disable-model-invocation: true
+description: Kiro Spec 驱动开发工作流（Kiro Quick Spec / Feature / Bug Fix）：产出 requirements.md、design.md、tasks.md 三件套并落盘至 docs/specs/，逐份获批后执行。当用户提及 spec、quick spec、kiro、规格驱动时使用。
 version: 2.1.2
 created: 2026-09-21
 updated: 2026-10-10
