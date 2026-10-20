@@ -5,7 +5,7 @@ description: |
    【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、【特大高危】Zed信任表家目录污染致全盘监听与10G内存暴涨及Defender死锁、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh启动误唤起Grok与accounts.x.ai弹窗等。
   【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计。
   检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。
-version: 2.1.1
+version: 2.1.2
 created: 2026-10-07
 updated: 2026-10-21
 ---
@@ -132,7 +132,7 @@ kb-engineering-notes/
 ├── 079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md # [Stage 2: 专项流水线] 针对向头部开源项目(如Zed)提交高穿透力Bug Report的标准流程、置顶前言破局、内核级取证与三重对照实验设计
 ├── 080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md # [Stage 2: 专项排障·架构设计] 针对提级暴露技能过度加disable导致Kiro Spec/Plan规范失盲故障、时序软失效与知识库自愈元数据标准契约
 ├── 081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md # [Stage 2: 专项排障] 针对 dsh 启动 Cursor ACP 裸命令 agent 与 xAI Grok CLI 命名冲突致强制弹窗 accounts.x.ai 排障
-├── 082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md # [Stage 2: 专项流水线] 针对 Go 单二进制四位一体架构（CLI秒退+HTTP服务+嵌入WebUI+Wails桌面托盘）、任务栏PE图标绑定、dev/release 构建通道五件套隔离（产物名/版本号/数据目录/单实例/图标双通道）、开机自启门禁、关窗释放内存与双击瞬时重建及-H windowsgui无控制台排障
+├── 082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md # [已转正 → sh-go-wails-desktop，本文件仅存根] 原 Go 单二进制四位一体架构、任务栏PE图标、dev/release 通道隔离、图标双通道、开机自启门禁与无控制台排障
 ├── 083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md # [Stage 2: 专项排障] 针对 Zed 外接 ACP Agent（如 antigravity-acp）在经历 600+ 步长会话或 502 网络重试后，模型文本已全部输出但界面永久转圈、正文末尾挂三点脉冲、输入框死锁无法发送下一条及 $/cancel_request 缺失排障
 └── ...（后续顺次扩充）
 ```
@@ -265,8 +265,6 @@ kb-engineering-notes/
 | 想给头部开源项目（如 Zed / VS Code / Rust）提交高质量 Bug Report，希望避免被当成杀毒/环境问题误杀、让官方核心维护者几分钟内迅速接单立项 | [`079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md) | 开源提 issue, GitHub Issue, bug report, 官方秒接单, 置顶前言, 对照实验, Restart Manager 内核取证, 标题工程学, 隐私脱敏, Zed issue 实战 |
 | 提级暴露技能配置了 disable-model-invocation 导致自然语言交互中 Kiro Spec / Plan 等规范失盲、AI 自由发挥破坏三件套交付基线 | [`080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md) | disable-model-invocation, 规范失盲, 知识库过时, 元数据防腐, Kiro Spec, SPEC.md 自由发挥, 时序软失效 |
 | dsh 启动时明明加了 `--no-open` 却弹出 accounts.x.ai 设备登录网页，或报错 Cursor ACP communication failed / CURSOR_BINARY_UNAVAILABLE | [`081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md) | accounts.x.ai, dsh web, --no-open 弹窗, Cursor ACP communication failed, CURSOR_BINARY_UNAVAILABLE, agent.exe, Grok CLI 命名冲突 |
-| 想要用 Go 构建单个可执行文件兼顾 CLI 子命令与 Wails v3 桌面窗口，双击或有参均禁止黑框弹窗（`-H windowsgui`），但不知道无控制台下如何看日志定位 Bug、或想在 PowerShell 中正常回显 CLI 输出与捕获 GUI 日志 | [`082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md) | Go CLI Wails 二合一, 单二进制, -H windowsgui, 无控制台看日志, AttachConsole, windowsgui标准输出丢失, PowerShell无法捕获GUI日志, logf落盘, WebView2 DevTools, anatomymanager |
-| dev 构建的 exe 顶替了正式版同名词、从版本号看不出通道、dev 与正式版共用一份数据库/单实例互相踩踏，或想让 dev 版换个一眼能认出的图标 | [`082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md) | dev release 通道隔离, -dev 后缀, v1.0.0-dev-dirty, 工作区干净判定, git tag 精确匹配, 数据目录 dev prod 隔离, 单实例 UniqueID, 地鼠图标, build tag embed 图标, IsRelease 双真源 |
 | Zed 外接 ACP Agent（如 antigravity-acp）生成完文本后界面持续转圈、正文末尾挂三点脉冲 `⋮`、输入框锁定无法发下一条，点击停止报错 `method=$/cancel_request Method not found`，重启后发消息又卡死 | [`083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md) | Zed外接ACP卡死, 永久转圈, 三点脉冲, 输入框锁定, PromptResponse丢失, receive_steps, STATE_FULLY_IDLE, cancel_request Method not found, 长会话失步, 502网络重试, antigravity-acp, 新Thread恢复 |
 
 ---
@@ -378,7 +376,7 @@ kb-engineering-notes/
 | 079 | [`079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md) | `079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md` | `dev` | `flow` | 开源上游 Issue 高穿透提交、置顶前言破局与证据链设计流水线 |
 | 080 | [`080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md) | `080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md` | `agent` | `fix` | 提级暴露过度 disable 致规范失盲故障与知识库时序元数据防腐治理 |
 | 081 | [`081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md) | `081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md` | `agent` | `fix` | dsh 启动 Cursor ACP 裸命令 agent 与 Grok CLI 冲突致 accounts.x.ai 弹窗修复 |
-| 082 | [`082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md) | `082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md` | `dev` | `flow` | Go 单二进制 CLI 与 Wails v3 双模融合架构、dev/release 构建通道隔离与图标双通道、无弹窗编译及无控制台日志排障 SOP |
+| 082 | [`082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md) | `082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md` | `dev` | `flow` | [已转正 → `sh-go-wails-desktop`] Go 单二进制 CLI 与 Wails v3 双模融合架构、通道隔离与图标双通道（正文已迁移，本条目为存根） |
 | 083 | [`083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md) | `083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md` | `ide` | `fix` | Zed 外接 ACP 长会话生成完毕转圈卡死与 PromptResponse 丢失排障 |
 
 

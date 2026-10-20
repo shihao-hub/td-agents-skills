@@ -1,0 +1,23 @@
+{
+  "skill_name": "sh-go-wails-desktop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我起一个 Go 单二进制桌面项目：既能在终端跑 CLI 子命令，双击又能开 Wails 托盘窗口，内嵌一个本地 WebUI；dev 版和正式版要能同时运行、数据分开存，双击都不能弹黑框。",
+      "expected_output": "产出完整骨架：cmd/<app> 下 main.go 分流（无参 GUI / --hidden 静默 / 子命令）、console_windows.go 用 AttachConsole 绑定父控制台；internal/app 下 gui.go（托盘常驻、单实例）。dev 与 release 五维隔离：产物名 <app>-dev.exe vs <app>.exe、版本 vX.Y.Z-dev[-dirty] vs vX.Y.Z、数据目录 %APPDATA%\\language_projects\\<app>\\{dev,prod}、单实例 UniqueID dev 追加 .dev、图标 dev 地鼠 / release 专属；build.py 默认 dev，仅精确 tag + 干净工作区才 release，--release 条件不足退出码 2。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我已经打了 tag，但 uv run scripts/build.py --release 一直报拒绝发布构建，退出码 2，怎么排查？",
+      "expected_output": "按四条线索定位并给出可执行检查：git tag --points-at HEAD 确认 tag 是否精确命中且带 <project>/ 前缀；git status --porcelain 是否仍有未提交文件（构建生成物需在 .gitignore 中且根路径写成 /icon.ico，避免误伤 internal/app/icon.ico）；git check-ignore -v 复核忽略规则；确认 --version 只覆盖基线、不改变通道判定。修复后 release 产出正式名 <app>.exe，dev 产物不被覆盖。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "dev 版 exe 的文件图标和正式版一模一样，我分不清哪个是开发版；想让 dev 用 Go 地鼠图标，窗口和托盘图标也要一起换。",
+      "expected_output": "同时切换两条通道：rsrc 编译 syso 时按通道选 ico（dev 用 internal/app/icon_dev.ico 静态地鼠资产，release 用 render_icon.py 生成的 icon.ico）；窗口/托盘用 build tag 拆 icon_release.go（//go:build !dev）与 icon_dev.go（//go:build dev）两个 //go:embed 变量，dev 构建加 -tags dev。提醒 gofmt 要求文档注释与 //go:embed 之间有空 // 行。验证方式：PowerShell ExtractAssociatedIcon 取 32x32 图标算哈希，两个通道必须不同，并可再用 Pillow 比对 dev 图标与 icon_dev.ico 的 32x32 帧像素一致。",
+      "files": []
+    }
+  ]
+}
