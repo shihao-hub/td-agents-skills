@@ -130,6 +130,7 @@ kb-engineering-notes/
 ├── 077_ide_zed_fix_Zed外部ACP线程不自动命名与首消息标题链路.md # [Stage 2: 专项排障] 针对 Zed 外部 ACP 线程不自动命名与首消息标题链路（横幅抢占 entry + agent 侧命名插件）
 ├── 078_ide_zed_fix_Zed信任表家目录污染致全盘监听与Defender死锁.md # [Stage 2: 专项排障·特大高危] 针对 Zed 工作区信任表(trusted_worktrees)被父级家目录污染致后台强挂16个Live Worktree、File Watcher打爆、10G内存暴涨与Defender 60%+ CPU死锁
 ├── 079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md # [Stage 2: 专项流水线] 针对向头部开源项目(如Zed)提交高穿透力Bug Report的标准流程、置顶前言破局、内核级取证与三重对照实验设计
+├── 080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md # [Stage 2: 专项排障·架构设计] 针对提级暴露技能过度加disable导致Kiro Spec/Plan规范失盲故障、时序软失效与知识库自愈元数据标准契约
 └── ...（后续顺次扩充）
 ```
 
