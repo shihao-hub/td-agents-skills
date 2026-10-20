@@ -2,9 +2,9 @@
 name: sh-skill-authoring-rules
 description: |
   技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/ID置顶五段式分面命名与时序解耦/Type A与Type B极简双轨/虚拟路径分层契约/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
-version: 2.8.0
+version: 2.9.0
 created: 2026-10-07
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # SKILL-AUTHORING-RULES：技能与工程知识库创作总规范
@@ -155,6 +155,38 @@ uv run expose_user_skill.py <name>           # 实跑
 - **槽位 5 `<slug>`（自解释主题短语）**：
   `[核心问题/技术词] + [解决动作/交付物]`，剔除“指南/实战”等空洞后缀，中文 $\le 25$ 字符。
 
+### 3. 知识库时序防腐与生命周期元数据契约（Temporal Anti-Corrosion Spec）
+
+为彻底根治“知识库沉淀后随时间推移出现过时、错误、僵化误导 AI”的顽疾，参考 Zep 双时间图谱与 Mem0 衰减自愈机制，**所有知识库条目文件头统一强制/推荐引入标准时序元数据（YAML Frontmatter）**：
+
+``yaml
+---
+id: "080"
+domain: "agent"
+scope: "skills"
+type: "fix"                        # [fix 故障排障 | flow 方案流水线]
+slug: "自定义自解释主题"
+status: "verified"                 # 核心状态机：[verified 已验证 | draft 草案 | suspect 存疑 | deprecated 已废弃]
+created: "YYYY-MM-DD"
+last_verified: "YYYY-MM-DD"        # 重点：最后一次实机验证通过时间
+superseded_by: null                # 若废弃，指向替代者的编号（如 "095"）
+deprecation_reason: null           # 废弃原因（如："新版系统已内置"）
+compatibility:
+  os: ["windows"]
+falsification_signals:             # 可证伪信号：告诉 AI 什么时候必须果断放弃/停止套用本知识！
+  - "若现场报错信息不包含 XXX，说明不是该根因，立即退出本 SOP"
+invocation:
+  auto_trigger: true
+  trigger_keywords: ["关键词1", "关键词2"]
+---
+``
+
+#### 核心防腐三大准则：
+1. **时序软失效（严禁物理删除）**：当某条历史经验被推翻或废弃时，**严禁直接删除 .md 文件**（删除会导致认知断层，后人极易重走老路）。必须将其置为 status: "deprecated"，并注明 superseded_by。AI 检索时将其作为**负面防坑教材（Negative Constraints）**向用户预警。
+2. **双时间感知（The Two-Date Model）**：updated 记录文本变动，last_verified 记录真实命令测试通过时间。超期未验证的条目，AI 引用时必须采取防御性探测态度。
+3. **遇坑即修闭环（In-situ Rectification）**：任何 Agent 在执行知识库 SOP 时若被现场报错证伪，必须顺手将该条目降级为 suspect 或更新文档并刷新 last_verified。
+
+---
 正文严格执行双轨四段论：
 - **Type A：疑难排障型条目**：
   1. `一、现象与报错直击`（贴出真实终端错误文本、exit code 或 UI 截图）；
