@@ -4,6 +4,17 @@ description: 针对 Answer me with HTML 可视化技能的全景架构剖析、�
 version: 1.0.0
 created: 2026-10-17
 updated: 2026-10-17
+id: "070"
+domain: ide
+scope: amwhtml
+type: fix
+slug: "AnswerMeWithHTML架构与DarkReader暗黑冲突排障"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 70-AnswerMeWithHTML单页可视化技能全景架构与DarkReader暗黑冲突排障及新环境配置指南

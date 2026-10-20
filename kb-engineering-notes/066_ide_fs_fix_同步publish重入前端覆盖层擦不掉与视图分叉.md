@@ -1,6 +1,18 @@
 ---
 name: kb-reentrant-publish-stale-layer
 description: 前端主题/皮肤/覆盖层切回基础配色后页面仍是旧样式、界面提示与实际渲染自相矛盾：宿主 API 同步 publish 重入、旧 disposer 被文档化为 no-op 导致生效层无人持有，含三方对照、控制组实验与受限擦除修法。
+id: "066"
+domain: ide
+scope: fs
+type: fix
+slug: "同步publish重入前端覆盖层擦不掉与视图分叉"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 66-同步publish重入与陈旧句柄导致前端覆盖层擦不掉与视图分叉排障指南

@@ -5,6 +5,17 @@ description: |
 version: 1.0.0
 created: 2026-10-20
 updated: 2026-10-20
+id: "079"
+domain: dev
+scope: core
+type: flow
+slug: "开源上游Issue高穿透提交与证据链设计SOP"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # dev_flow_079_开源上游Issue高穿透提交与证据链设计SOP

@@ -4,6 +4,17 @@ description: Sublime Text 4 全局搜索（Find in Files）无差别扫描与穿
 version: 1.1.0
 created: 2026-10-11
 updated: 2026-10-17
+id: "047"
+domain: ide
+scope: sublime
+type: fix
+slug: "Sublime全局搜索穿透Gitignore慢查排障"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Sublime Text 全局搜索 Find in Files 穿透 .gitignore 慢查排障与配置防线指南

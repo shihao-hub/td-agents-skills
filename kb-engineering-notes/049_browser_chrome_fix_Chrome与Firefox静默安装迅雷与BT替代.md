@@ -1,6 +1,18 @@
 ---
 name: kb-browser-thunder-plugin-removal-and-bt-alternative
 description: Chrome与Firefox静默自动安装迅雷插件根因剖析、注册表与BHO常驻残留清理SOP，以及裸磁力链Tracker加速与便携BT下载方案。当浏览器被静默植入迅雷扩展或需免客户端解析种子时查阅。
+id: "049"
+domain: browser
+scope: chrome
+type: fix
+slug: "Chrome与Firefox静默安装迅雷与BT替代"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 49-Chrome与Firefox静默安装迅雷插件根因排障与注册表清理及免迅雷BT方案指南

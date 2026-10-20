@@ -1,6 +1,18 @@
 ---
 name: kb-sublime-context-menu
 description: Windows 11 经典/新型右键菜单注册 Sublime 打开操作，注册表项添加与安全清理指南。
+id: "034"
+domain: ide
+scope: sublime
+type: flow
+slug: "Win11右键菜单注册Sublime与注册表快捷管理"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows11右键菜单注册Sublime与注册表快捷管理指南

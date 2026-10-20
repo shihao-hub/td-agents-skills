@@ -4,6 +4,17 @@ description: DSH 通过 profile 补丁挂载 stdio MCP 时，npx/uvx 启动包�
 version: 1.0.0
 created: 2026-10-13
 updated: 2026-10-13
+id: "056"
+domain: agent
+scope: dsh
+type: fix
+slug: "DSH挂载MCP包装层内存膨胀治理与直连改造"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # DSH 挂载 MCP 服务 npx 与 uvx 启动包装层进程内存膨胀治理与直连入口改造指南

@@ -4,6 +4,17 @@ description: Zed 终端无会话滚动恢复机制导致 agy 历史会话 ID 丢
 version: 1.1.0
 created: 2026-10-16
 updated: 2026-10-17
+id: "060"
+domain: ide
+scope: zed
+type: fix
+slug: "Zed终端无会话恢复agy历史ID丢失与选号恢复"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Zed 终端无会话恢复 agy 历史 ID 丢失排障与 PowerShell 交互选号恢复指南

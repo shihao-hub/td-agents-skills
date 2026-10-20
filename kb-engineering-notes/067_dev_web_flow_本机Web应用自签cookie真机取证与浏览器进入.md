@@ -1,6 +1,18 @@
 ---
 name: kb-local-web-gui-selfsigned-session-cookie
 description: 本机 Web 应用只认启动横幅里的令牌与签名 cookie、自动化浏览器（独立 profile）进不去时，如何只读存档密钥自签会话 cookie 进入 GUI 做真机 DOM 取证，全程不回显密钥与 cookie 值。
+id: "067"
+domain: dev
+scope: web
+type: flow
+slug: "本机Web应用自签cookie真机取证与浏览器进入"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 67-本机Web应用无凭证真机取证与自签会话cookie进入独立浏览器指南

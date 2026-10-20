@@ -1,6 +1,18 @@
 ---
 name: kb-sublimemerge-squash-reorder
 description: 在 Sublime Merge 里把两个不相邻的提交合并或重排：Ctrl 多选 Squash/fixup、Move Commit Down 物理重排、"后台无感变基"是否真的生效的判定，以及拖拽为什么没反应。当需要在 GUI 中整理提交历史、拖拽合并无响应、或怀疑重排没生效时查阅本条目。
+id: "001"
+domain: git
+scope: smerge
+type: fix
+slug: "SublimeMerge非相邻提交Squash合并重排"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 01-SublimeMerge非相邻提交Squash合并与移动重排操作指南

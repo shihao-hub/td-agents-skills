@@ -1,6 +1,18 @@
 ---
 name: kb-uwp-proxy-loopback
 description: Windows 开启代理时微软应用商店与 UWP 应用无法联通、网络初始化失败时的 CheckNetIsolation 容器回环豁免排障指南。
+id: "018"
+domain: win
+scope: uwp
+type: fix
+slug: "Win代理下微软商店与UWP回环豁免"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows代理下微软商店与UWP回环网络豁免排障指南

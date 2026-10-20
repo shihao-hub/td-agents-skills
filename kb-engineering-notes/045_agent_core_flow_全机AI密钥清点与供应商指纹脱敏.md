@@ -1,6 +1,18 @@
 ---
 name: kb-secret-inventory-scan
 description: 知识库：在单机范围内清点某厂商 API Key 与模型供应商配置的全流程流水线——rg 粗筛 + Python 密钥指纹分组脱敏 + SQLite 只读核查，识别「表面已清空、key 却藏在迁移槽/应用数据库/历史会话」的残留。当需要确认「某个 key 是否只配在指定工具里」、做密钥收敛或泄露面盘点时查阅。
+id: "045"
+domain: agent
+scope: core
+type: flow
+slug: "全机AI密钥清点与供应商指纹脱敏"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 全机 AI 密钥与模型供应商配置清点排查指南

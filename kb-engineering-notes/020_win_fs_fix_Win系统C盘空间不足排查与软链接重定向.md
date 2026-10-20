@@ -1,6 +1,18 @@
 ---
 name: kb-disk-space-cleanup
 description: Windows 系统 C 盘空间爆满排查、安全清理目录扫描（Temp/缓存/WSL）与软链接/环境变量重定向迁移指南。
+id: "020"
+domain: win
+scope: fs
+type: fix
+slug: "Win系统C盘空间不足排查与软链接重定向"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows系统C盘空间不足排查与安全清理软链接重定向指南

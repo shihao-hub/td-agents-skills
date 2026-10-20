@@ -1,9 +1,20 @@
-﻿---
+---
 name: kb-cli-ephemeral-daemon-lifecycle
 description: CLI 工具本地后台服务按需拉起、双重防泄漏兜底与零残留优雅关停流水线。涵盖已有常驻实例探活复用、临时专属 daemon 编排、defer 独立 context 回收、以及服务端短空闲超时自毁保底机制。
 version: 1.0.0
 created: 2026-10-17
 updated: 2026-10-17
+id: "073"
+domain: dev
+scope: cli
+type: flow
+slug: "CLI临时daemon按需拉起与零残留优雅关停"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # dev_flow_073_CLI临时daemon按需拉起与零残留优雅关停

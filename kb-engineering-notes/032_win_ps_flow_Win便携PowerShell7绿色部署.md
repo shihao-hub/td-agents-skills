@@ -1,6 +1,18 @@
 ---
 name: kb-pwsh7-portable-install
 description: PowerShell 7 绿色便携版 ZIP 安装、环境变量初始化与零系统污染无残留卸载配置指南。
+id: "032"
+domain: win
+scope: ps
+type: flow
+slug: "Win便携PowerShell7绿色部署"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows便携免安装PowerShell7绿色部署与环境初始化指南

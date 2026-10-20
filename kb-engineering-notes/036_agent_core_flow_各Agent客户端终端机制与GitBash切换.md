@@ -1,6 +1,18 @@
 ---
 name: kb-windows-agent-shell
 description: Windows 各 Agent 客户端（Codex/Claude/OpenCode/Pi/AGY）终端机制与 Git Bash 切换指南。
+id: "036"
+domain: agent
+scope: core
+type: flow
+slug: "各Agent客户端终端机制与GitBash切换"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows各Agent客户端终端机制与GitBash环境切换指南

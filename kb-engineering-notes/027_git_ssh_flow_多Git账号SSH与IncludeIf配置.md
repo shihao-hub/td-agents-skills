@@ -1,6 +1,18 @@
 ---
 name: kb-github-gitlab-coexist
 description: 个人 GitHub 与公司 GitLab 多账号共存，SSH Key 隔离与 includeIf 身份自动切换配置避坑指南。
+id: "027"
+domain: git
+scope: ssh
+type: flow
+slug: "多Git账号SSH与IncludeIf配置"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 多Git账号GitHub与GitLab共存及SSHIncludeIf配置指南

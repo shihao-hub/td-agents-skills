@@ -1,6 +1,18 @@
 ---
 name: kb-antigravity-paste-keybindings
 description: Antigravity CLI (agy)/Pi 「粘贴图片」改键：keybindings.json、edit.paste、WT 扩展协议 (Kitty CSI-u) 解决组合键失效、PowerShell 写 UTF-8 BOM 致「invalid character '\ufeff'」报错。当 Alt+V 被占、Alt+Shift+V 无反应或 keybindings 报 ufeff 时查阅。
+id: "010"
+domain: ide
+scope: terminal
+type: fix
+slug: "CLI粘贴图片Kitty透传与BOM排障"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Antigravity CLI 粘贴图片改键、Windows 终端 Kitty 协议透传与 BOM 排障指南

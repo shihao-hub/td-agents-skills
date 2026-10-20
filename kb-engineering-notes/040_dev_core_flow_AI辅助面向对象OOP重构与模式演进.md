@@ -1,6 +1,18 @@
 ---
 name: kb-oop-refactor-playbook
 description: AI 辅助面向对象(OOP)与设计模式重构落地实战指南：涵盖坏味道诊断、接缝测试筑底、模式演进与分层治理。当需对遗留系统重构、消除大类长函数与条件分支、引入设计模式或提升工程内聚度时查阅。
+id: "040"
+domain: dev
+scope: core
+type: flow
+slug: "AI辅助面向对象OOP重构与模式演进"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 40-AI 辅助面向对象 OOP 重构与设计模式落地演进实战指南

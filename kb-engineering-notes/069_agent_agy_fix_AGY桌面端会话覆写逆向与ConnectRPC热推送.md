@@ -4,6 +4,17 @@ description: 针对 Google Antigravity 桌面端应用（Antigravity App）离�
 version: 1.0.0
 created: 2026-10-17
 updated: 2026-10-17
+id: "069"
+domain: agent
+scope: agy
+type: fix
+slug: "AGY桌面端会话覆写逆向与ConnectRPC热推送"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 69-Antigravity 桌面端会话持久化覆写机制逆向与官方 ConnectRPC 热推送实战指南

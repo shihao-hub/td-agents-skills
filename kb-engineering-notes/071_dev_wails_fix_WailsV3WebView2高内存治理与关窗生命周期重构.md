@@ -4,6 +4,17 @@ description: 针对 Go + Wails v3 (WebView2) 桌面小工具托盘常驻时底�
 version: 1.0.0
 created: 2026-10-17
 updated: 2026-10-17
+id: "071"
+domain: dev
+scope: wails
+type: fix
+slug: "WailsV3WebView2高内存治理与关窗生命周期重构"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 71-WailsV3 与 WebView2 桌面小工具常驻高内存治理与关窗按需生命周期重构指南

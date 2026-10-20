@@ -1,6 +1,18 @@
 ---
 name: kb-local-markdown-hybrid-search
 description: 本地离线 Markdown 与技能库轻量级语义检索系统搭建实战（FastEmbed + LanceDB + Watchdog），以及纯稠密向量专有词语义稀释漏检与混合重排优化排障指南。
+id: "051"
+domain: dev
+scope: core
+type: fix
+slug: "离线Markdown向量检索混合漏检排障"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 本地离线 Markdown 向量检索系统搭建与混合检索专有词漏检排障指南

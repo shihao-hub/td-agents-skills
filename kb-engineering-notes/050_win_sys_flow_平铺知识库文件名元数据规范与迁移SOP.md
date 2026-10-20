@@ -1,6 +1,18 @@
 ---
 name: kb-flat-filename-metadata-spec
 description: Windows平铺知识库文件名元数据嵌入规范、ID置顶顺序对齐、受控实体字典、极简双轨收敛与四维时序解耦架构。涵盖下划线分面槽位语法、ID首位排序设计、scope实体受控词典与兜底机制、fix/flow极简双轨、四维时间顺序感知体系、Explorer与侧边栏自动递增排序、正则秒级无损提取、未来子目录物理分层平滑演进契约，以及全库批量迁移与回滚 SOP。
+id: "050"
+domain: win
+scope: sys
+type: flow
+slug: "平铺知识库文件名元数据规范与迁移SOP"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 50-Windows平铺知识库文件名元数据嵌入架构与双端自解释命名规范

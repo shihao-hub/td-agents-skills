@@ -3,6 +3,17 @@ name: kb-windowless-service-launcher
 description: Windows 一键无窗口启动常驻服务的落地骨架（快捷方式 + 幂等启动器 + 自重启 helper），及 PowerShell 5.1 静默失败链路排障。当要双击启动本地 Web 服务、消除黑框 conhost、给服务加重启按钮，或遇到 Start-Process NO_PROXY 重复键、EnvironmentVariables 为 null、参数名不匹配致脚本静默终止时查阅。
 created: 2026-10-16
 updated: 2026-10-18
+id: "063"
+domain: win
+scope: sys
+type: flow
+slug: "Win无窗口服务快捷方式与自重启及PS5.1排障"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows 一键无窗口启动服务与自重启机制及 PowerShell 5.1 静默失败链路

@@ -4,6 +4,17 @@ description: Agent 在高思考档（High/Max）执行 Git 批量提交或 Monor
 version: 1.0.0
 created: 2026-10-13
 updated: 2026-10-13
+id: "058"
+domain: git
+scope: core
+type: fix
+slug: "Git批量提交高思考档分析瘫痪排障与灰色资产判决"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Git 批量提交代码 Agent 高思考档分析瘫痪根因排障与灰色资产判决指南

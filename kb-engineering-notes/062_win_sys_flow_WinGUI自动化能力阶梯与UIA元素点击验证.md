@@ -1,6 +1,18 @@
 ---
 name: kb-windows-gui-automation
 description: Windows GUI 自动化能力阶梯与脚本：UIA 无障碍树定位与 Invoke 点击、窗口枚举/还原/DPI 感知、PrintWindow 截图；含 Win32/WPF/Qt/WebView2 等栈对照与“只能模拟鼠标”边界。当需要脚本或 Agent 自动操作桌面软件、验证 GUI 行为，或遇到点不准/截图被裁/坐标错位/窗口最小化启动时查阅。
+id: "062"
+domain: win
+scope: sys
+type: flow
+slug: "WinGUI自动化能力阶梯与UIA元素点击验证"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows GUI 自动化：能力阶梯、UIA 点击与窗口取证截图

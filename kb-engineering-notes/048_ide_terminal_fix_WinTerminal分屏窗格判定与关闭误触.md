@@ -4,6 +4,17 @@ description: Windows Terminal 分屏窗格（Pane）布局判定与关闭治理�
 version: 1.0.0
 created: 2026-10-11
 updated: 2026-10-11
+id: "048"
+domain: ide
+scope: terminal
+type: fix
+slug: "WinTerminal分屏窗格判定与关闭误触"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows Terminal 分屏窗格布局判定与关闭误触治理指南

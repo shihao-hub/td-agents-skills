@@ -1,6 +1,18 @@
 ---
 name: kb-sublime-terminus-powershell
 description: Sublime Text 终端插件 Terminus 中文输入吞字/光标错位、Backspace 无法退格删除、右键侧边栏默认启动 CMD 假借 PowerShell 外壳的底层根因剖析，以及内置终端轻量化治愈、原生英文侧边栏经 PATH 优先解析拉起独立定制版 Windows Terminal/PowerShell 的双轨集成实战 SOP。
+id: "016"
+domain: ide
+scope: terminus
+type: fix
+slug: "SublimeTerminus退格失效与原生终端集成"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Sublime Text Terminus 中文退格失效与原生 PowerShell 侧边栏集成指南

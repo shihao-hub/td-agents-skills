@@ -5,6 +5,17 @@ description: |
 version: 1.0.0
 created: 2026-10-19
 updated: 2026-10-19
+id: "075"
+domain: dev
+scope: core
+type: flow
+slug: "发行版二进制嵌SHA溯源与上游源码取证"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # dev_flow_075_发行版二进制嵌SHA溯源与上游源码取证

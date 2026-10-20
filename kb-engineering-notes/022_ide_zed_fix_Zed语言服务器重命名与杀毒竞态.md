@@ -1,6 +1,18 @@
 ---
 name: kb-zed-lsp-install
 description: Zed 编辑器语言服务器 (LSP) 下载失败、rename os error 5 文件独占占用与杀毒软件竞态拦截排障指南。
+id: "022"
+domain: ide
+scope: zed
+type: fix
+slug: "Zed语言服务器重命名与杀毒竞态"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Zed语言服务器下载失败文件重命名占用与杀毒竞态排障指南

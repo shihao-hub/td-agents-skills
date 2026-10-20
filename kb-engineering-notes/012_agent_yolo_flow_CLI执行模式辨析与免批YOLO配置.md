@@ -1,6 +1,18 @@
 ---
 name: kb-agy-cli-permissions
 description: Antigravity CLI 执行模式（plan/accept-edits）辨析与免批 YOLO 模式配置指南。解决为什么状态栏没有 yolo、/permissions 全是 0 规则、/config 面板 Tool Permission 调整与 --dangerously-skip-permissions 启动参数配置。
+id: "012"
+domain: agent
+scope: yolo
+type: flow
+slug: "CLI执行模式辨析与免批YOLO配置"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Antigravity CLI 执行模式辨析、免批 YOLO 与配置面板排障指南

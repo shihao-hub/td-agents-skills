@@ -1,6 +1,18 @@
 ---
 name: kb-git-rebase-permission-denied
 description: Windows 下 Git 变基/改写历史报 `unable to append to logs/HEAD: Permission denied` 的根因（独占文件句柄锁）与安全抢救：进程占用排查、`git rebase --abort` 安全回滚、暂存区改动抢救。当变基卡在 onto 状态、暂存区凭空多出一批 Staged Files、或日志文件写不进去时查阅本条目。
+id: "002"
+domain: git
+scope: rebase
+type: fix
+slug: "变基PermissionDenied文件锁排障与安全恢复"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 02-Windows下Git变基PermissionDenied文件锁排障与Abort安全恢复

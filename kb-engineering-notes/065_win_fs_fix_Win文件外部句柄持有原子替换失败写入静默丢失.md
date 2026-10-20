@@ -1,6 +1,18 @@
 ---
 name: kb-windows-atomic-replace-held-file
 description: Windows 上「临时文件 + 原子 rename」被外部程序持有的文件拒绝（EPERM / Win32 5），表现为上层设置静默丢失：点了没反应、自动回滚、刷新不生效、HTTP 200 但 revision 不变。含 Restart Manager 反查持有者、同目录对照实验、编辑器缓冲区与 ACP agent 会话及 SQLite 孤儿行定位、客户端本地断言兜底。
+id: "065"
+domain: win
+scope: fs
+type: fix
+slug: "Win文件外部句柄持有原子替换失败写入静默丢失"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 65-Windows文件被外部程序持有导致原子替换失败与上层写入静默丢失排障指南

@@ -1,6 +1,18 @@
 ---
 name: kb-zed-acp-agent-env
 description: Zed 与 IDEA 外接 ACP agent 登录失败、代理 CA 不生效、旧进程复用与子进程池堆积吃内存排查指南。
+id: "023"
+domain: ide
+scope: zed
+type: fix
+slug: "Zed与IDEA外接ACP代理失效与进程堆积"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Zed与IDEA外接ACP代理环境失效与子进程池累积排查指南

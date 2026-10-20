@@ -1,6 +1,18 @@
 ---
 name: kb-windows-process-launch-forensics
 description: Windows 进程"谁拉起的"取证：explorer 父进程 + 无参数 ≠ 用户手动启动（排除法收敛）。含 UserAssist、Run 键/计划任务/Nilesoft/Win+R/Win+E 接管/事件日志（7001/1000）排查清单，及 sh-everything-search idle_exit 无时效上限致实例驻留 8.6 小时的永生漏洞与修复。排查后台常驻程序时查阅。
+id: "046"
+domain: win
+scope: everything
+type: fix
+slug: "Win进程启动来源取证与Everything闲置保护"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows 进程启动来源取证与 Everything 闲置退出保护永生实例漏洞排障指南

@@ -5,6 +5,17 @@ description: |
 version: 1.0.0
 created: 2026-10-19
 updated: 2026-10-19
+id: "077"
+domain: ide
+scope: zed
+type: fix
+slug: "Zed外部ACP线程不自动命名与首消息标题链路"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # ide_fix_077_Zed外部ACP线程不自动命名与首消息标题链路

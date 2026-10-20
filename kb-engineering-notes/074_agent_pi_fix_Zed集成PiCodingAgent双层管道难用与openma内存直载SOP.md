@@ -5,6 +5,17 @@ description: |
 version: 1.3.0
 created: 2026-10-19
 updated: 2026-10-19
+id: "074"
+domain: agent
+scope: pi
+type: fix
+slug: "Zed集成PiCodingAgent双层管道难用与openma内存直载SOP"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Zed 集成 Pi Coding Agent 双层管道难用排障与 openma-pi-acp 内存直载 SOP

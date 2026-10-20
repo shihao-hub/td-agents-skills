@@ -1,6 +1,18 @@
 ---
 name: kb-pi-terminal-keybindings
 description: Pi 终端快捷键改键、按键协议排障与鼠标滚轮误触命令历史冲突修复指南。
+id: "035"
+domain: ide
+scope: pi
+type: fix
+slug: "Pi终端改键与滚轮协议冲突修复"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Pi终端快捷键映射改键与滚轮协议冲突修复指南

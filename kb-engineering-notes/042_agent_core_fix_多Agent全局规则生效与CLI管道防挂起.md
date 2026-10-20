@@ -4,6 +4,17 @@ description: 多 Agent（Codex、Claude Code、OpenCode、Pi、DSH、AGY）全�
 version: 1.0.0
 created: 2026-10-11
 updated: 2026-10-11
+id: "042"
+domain: agent
+scope: core
+type: fix
+slug: "多Agent全局规则生效与CLI管道防挂起"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 42-多Agent全局规则跨端分发与CLI管道防挂起及隔离探针验证指南

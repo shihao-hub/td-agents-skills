@@ -1,6 +1,18 @@
 ---
 name: kb-anc-vocal-masking-audio-download
 description: 降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南。解决主动降噪耳机无法消除突发人声谈话、普通轻音乐空白休止符漏音痛点，提供 Wikimedia Commons API 免鉴权检索下载公有领域名曲与纯 Python 合成立体声褐噪音/雨声的完整 SOP。
+id: "013"
+domain: media
+scope: audio
+type: flow
+slug: "降噪耳机人声泄露声学掩蔽与公有音频"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 降噪耳机人声泄露声学掩蔽与公有领域高音质音频下载实战指南

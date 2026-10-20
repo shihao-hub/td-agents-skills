@@ -5,6 +5,17 @@ description: |
 version: 2.0.0
 created: 2026-10-20
 updated: 2026-10-20
+id: "078"
+domain: ide
+scope: zed
+type: fix
+slug: "Zed信任表家目录污染致全盘监听与Defender死锁"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # ide_fix_078_Zed信任表家目录污染致全盘监听与Defender死锁

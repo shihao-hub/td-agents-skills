@@ -4,6 +4,17 @@ description: Sublime Text 中 Markdown 预览切窗口自动反复跳转浏览�
 version: 1.1.0
 created: 2026-10-11
 updated: 2026-10-11
+id: "044"
+domain: ide
+scope: sublime
+type: fix
+slug: "SublimeMarkdown预览抢焦点与静默改键"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Sublime Text Markdown 预览切窗口自动跳转浏览器排障与静默快捷键配置指南

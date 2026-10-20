@@ -1,6 +1,18 @@
 ---
 name: kb-chrome-devtools-mcp
 description: opencode 配置 chrome-devtools-mcp 浏览器自动化控制、跨域与 DevTools 协议调试配置指南。
+id: "037"
+domain: browser
+scope: devtools
+type: flow
+slug: "opencode集成chrome-devtools-mcp浏览器控制"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # opencode集成chrome-devtools-mcp浏览器控制调试配置指南

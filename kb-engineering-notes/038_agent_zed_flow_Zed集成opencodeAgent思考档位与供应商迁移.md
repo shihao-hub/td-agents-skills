@@ -1,6 +1,18 @@
 ---
 name: kb-zed-opencode-setup
 description: Zed 编辑器集成 opencode Agent 安装修复、思考档位控制、供应商配置与迁移指南。
+id: "038"
+domain: agent
+scope: zed
+type: flow
+slug: "Zed集成opencodeAgent思考档位与供应商迁移"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Zed集成opencodeAgent环境思考档位与供应商迁移指南

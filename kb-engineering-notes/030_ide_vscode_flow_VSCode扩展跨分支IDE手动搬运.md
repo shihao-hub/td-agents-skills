@@ -1,6 +1,18 @@
 ---
 name: kb-vscode-ext-port
 description: VS Code 体系扩展跨分支 IDE（Cursor/Antigravity/Trae）手工搬运、解压修补与本地注册生效指南。
+id: "030"
+domain: ide
+scope: vscode
+type: flow
+slug: "VSCode扩展跨分支IDE手动搬运"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # VSCode扩展跨分支IDE手动搬运与注册生效指南

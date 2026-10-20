@@ -4,6 +4,17 @@ description: 直接读写 cc-switch 的 SQLite 数据库，绕过 UI 批量配�
 version: 1.2.0
 created: 2026-09-06
 updated: 2026-10-20
+id: "029"
+domain: agent
+scope: ccswitch
+type: flow
+slug: "cc-switch直接读写SQLite模型迁移"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # cc-switch 配置 SQLite 直接读写与跨应用模型迁移指南

@@ -1,6 +1,18 @@
 ---
 name: kb-opencode-glm-auth
 description: opencode 连接智谱 GLM 模型报 401 身份验证失败、API Key 优先级与编码双端点映射排障指南。
+id: "021"
+domain: agent
+scope: opencode
+type: fix
+slug: "opencode连接GLM鉴权401与端点排障"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # opencode连接GLM模型401鉴权失败与端点排障指南

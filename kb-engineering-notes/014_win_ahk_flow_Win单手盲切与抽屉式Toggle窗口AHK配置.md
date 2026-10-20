@@ -1,6 +1,18 @@
 ---
 name: kb-autohotkey-app-switcher
 description: Windows 单手盲切与抽屉式 Toggle 应用窗口的 AutoHotkey v2 自动化实践指南。解决任务栏应用过多鼠标甩动疲劳、原生 Alt+Tab 轮转不可预测、PowerToys 强制冷启动应用等问题，包含未运行静默、前台置顶/最小化 Toggle、多窗口轮转、开机自启与 Feishu 知识库排障。
+id: "014"
+domain: win
+scope: ahk
+type: flow
+slug: "Win单手盲切与抽屉式Toggle窗口AHK配置"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows 单手盲切与抽屉式 Toggle 应用窗口自动化配置指南 (AutoHotkey v2)

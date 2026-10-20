@@ -1,6 +1,18 @@
 ---
 name: kb-docx-practice-generator
 description: 基于 python-docx 的试卷与教辅「举一反三」变式题自动化生成与精细排版指南：涵盖多源逆向解析(PDF/DOCX)、考点拆解映射、中西文字体分离(w:eastAsia)、页边距与行距控制、化学式与方程式排版、及批量自动化生成流水线。需批量生成试卷、Word 教辅或自动化排版时查阅。
+id: "015"
+domain: dev
+scope: docx
+type: flow
+slug: "docx自动化生成试卷与排版流水线"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # python-docx 自动化生成举一反三试卷与格式精细排版指南

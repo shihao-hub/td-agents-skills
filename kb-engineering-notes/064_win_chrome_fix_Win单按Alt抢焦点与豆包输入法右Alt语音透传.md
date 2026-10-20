@@ -4,6 +4,17 @@ description: Windows单按或松开Alt/右Alt键激活Chrome三点菜单抢走�
 version: 1.0.0
 created: 2026-10-16
 updated: 2026-10-16
+id: "064"
+domain: win
+scope: chrome
+type: fix
+slug: "Win单按Alt抢焦点与豆包输入法右Alt语音透传"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows 单按 Alt 激活 Chrome 三点菜单抢焦点与豆包输入法右 Alt 语音透传 AutoHotkey 排障指南

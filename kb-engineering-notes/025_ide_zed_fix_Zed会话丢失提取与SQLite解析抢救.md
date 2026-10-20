@@ -1,6 +1,18 @@
 ---
 name: kb-zed-session-db
 description: Zed 编辑器对话会话丢失、崩溃抢救与从底层 SQLite sidebar_threads 表解析提取历史对话指南。
+id: "025"
+domain: ide
+scope: zed
+type: fix
+slug: "Zed会话丢失提取与SQLite解析抢救"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Zed会话丢失提取与SQLite数据库表解析抢救指南

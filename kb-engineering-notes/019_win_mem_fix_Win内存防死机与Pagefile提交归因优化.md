@@ -1,6 +1,18 @@
 ---
 name: kb-windows-memory-guard
 description: Windows 内存过载防死机、Pagefile 虚拟内存扩容调优、提交内存 (Commit Charge) 归因与内存条扩容判断指南。
+id: "019"
+domain: win
+scope: mem
+type: fix
+slug: "Win内存防死机与Pagefile提交归因优化"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows内存防死机与Pagefile提交内存归因优化指南

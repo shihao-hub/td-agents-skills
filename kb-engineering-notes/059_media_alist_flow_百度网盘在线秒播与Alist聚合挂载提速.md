@@ -1,6 +1,18 @@
 ---
 name: kb-baidu-netdisk-alist-mount-and-streaming
 description: 百度网盘免客户端原画秒播、Alist 本地部署挂载与开放平台 OAuth 鉴权 SOP，以及公开分享外链转存机制与后台 P2P 防驻留。当需免客户端播放网盘视频、挂载 WebDAV 或纯净提速时查阅。
+id: "059"
+domain: media
+scope: alist
+type: flow
+slug: "百度网盘在线秒播与Alist聚合挂载提速"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 59-百度网盘分享链接免客户端在线秒播与Alist聚合挂载及提速方案指南

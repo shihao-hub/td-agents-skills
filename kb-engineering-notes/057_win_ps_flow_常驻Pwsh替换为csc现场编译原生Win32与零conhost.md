@@ -4,6 +4,17 @@ description: 把常驻轮询型 PowerShell 看护脚本（窗口记忆、看门�
 version: 1.0.0
 created: 2026-10-13
 updated: 2026-10-13
+id: "057"
+domain: win
+scope: ps
+type: flow
+slug: "常驻Pwsh替换为csc现场编译原生Win32与零conhost"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 常驻 PowerShell 轮询助手替换为 csc 现场编译原生 Win32 小程序与零 conhost 集成指南

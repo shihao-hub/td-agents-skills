@@ -1,6 +1,18 @@
 ---
 name: kb-web-factcheck-pipeline
 description: 知识库：无第三方搜索 API 时，用单文件脚本抓 DuckDuckGo HTML 端点做公开信息事实核查，并经 site: 收敛到第一方信源的三段式流水线。当需要核实「某公开信息到底有没有/是什么」、手上只有终端、或担心把「我没查到」误当「不存在」时查阅。
+id: "039"
+domain: agent
+scope: core
+type: flow
+slug: "无搜索API时DDG端点核查与一手信源收敛"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 无搜索 API 时抓 DuckDuckGo HTML 端点做事实核查与第一方信源收敛指南

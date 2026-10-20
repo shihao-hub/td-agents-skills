@@ -1,6 +1,18 @@
 ---
 name: kb-sublime-font-setup
 description: YaHei Consolas Hybrid 字体下载安装与 Sublime Text/Merge 界面高清等宽字体渲染配置指南。
+id: "033"
+domain: ide
+scope: sublime
+type: flow
+slug: "YaHeiConsolasHybrid字体渲染与Sublime配置"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # YaHeiConsolasHybrid字体安装与Sublime界面高清字体渲染配置指南

@@ -4,6 +4,17 @@ description: Windows 11 25H2 任务栏「输入指示」图标（豆包输入法
 version: 1.0.0
 created: 2026-10-13
 updated: 2026-10-13
+id: "054"
+domain: win
+scope: windhawk
+type: fix
+slug: "Win11任务栏输入指示图标隐藏与Windhawk代码注入"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows 11 豆包输入法任务栏「输入指示」图标隐藏与 Windhawk 运行时代码注入指南

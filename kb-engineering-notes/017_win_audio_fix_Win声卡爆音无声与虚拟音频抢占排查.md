@@ -1,6 +1,18 @@
 ---
 name: kb-windows-audio-diagnose
 description: Windows 声卡无声、嗡嗡爆音或默认输出被虚拟声卡（如 Voicemeeter）抢占时的设备排查与端点修复 SOP。
+id: "017"
+domain: win
+scope: audio
+type: fix
+slug: "Win声卡爆音无声与虚拟音频抢占排查"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows声卡爆音无声与虚拟音频抢占排查指南

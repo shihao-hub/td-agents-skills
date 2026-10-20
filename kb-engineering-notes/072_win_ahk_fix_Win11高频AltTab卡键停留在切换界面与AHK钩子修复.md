@@ -4,6 +4,17 @@ description: Windows 11高频快速按Alt+Tab切换窗口卡在任务切换界�
 version: 1.0.0
 created: 2026-10-17
 updated: 2026-10-17
+id: "072"
+domain: win
+scope: ahk
+type: fix
+slug: "Win11高频AltTab卡键停留在切换界面与AHK钩子修复"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 72-Windows 11 高频 Alt+Tab 卡键停留在切换界面根因排查与 AutoHotkey 钩子竞态修复指南

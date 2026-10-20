@@ -1,6 +1,18 @@
 ---
 name: kb-windows-java-maven-zed-setup
 description: Windows 下 Java 21 与 Maven 零污染便携子目录配置、C 盘本地仓重定向防膨胀、Zed 编辑器动态 LSP 与 tasks.json JDWP 任务调试配置 SOP。
+id: "008"
+domain: dev
+scope: zed
+type: flow
+slug: "Win下Java与Maven便携配置及Zed集成"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows 下 Java 21 与 Maven 便携子目录配置及 Zed 任务调试集成指南

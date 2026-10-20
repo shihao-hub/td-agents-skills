@@ -4,6 +4,17 @@ description: 桌面划词工具（Manggo等）全局快捷键通过 SendInput �
 version: 1.0.0
 created: 2026-10-13
 updated: 2026-10-13
+id: "055"
+domain: win
+scope: sys
+type: fix
+slug: "划词工具CtrlC误杀终端与AltShift切语言排障"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Manggo 划词工具快捷键盲发 Ctrl+C 误杀终端会话与 Windows 默认 Alt+Shift 切语言排障指南

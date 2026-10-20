@@ -4,6 +4,17 @@ description: Windows Terminal 拆分窗格与会话恢复在 cd 切换目录后�
 version: 1.0.0
 created: 2026-10-13
 updated: 2026-10-13
+id: "053"
+domain: ide
+scope: terminal
+type: fix
+slug: "WinTerminal拆分窗格cd目录丢失与OSC99上报"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows Terminal 拆分窗格 cd 目录重启不保留与 OSC 9;9 路径上报排障指南

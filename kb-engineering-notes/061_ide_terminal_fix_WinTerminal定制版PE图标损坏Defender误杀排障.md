@@ -3,6 +3,17 @@ name: kb-wt-pe-patch-defender-false-positive
 description: Windows Terminal 定制版 PE 资源图标注入后数字签名失效，触发 Windows Defender 实时保护云端机器学习启发式木马误杀（Trojan:Win32/Bearfoos.A!ml）排障。当定制版 WT 无故消失、快捷方式报错“WindowsTerminal.exe 已经更改或移动”时查阅。
 version: 1.0.0
 created: 2026-10-16
+id: "061"
+domain: ide
+scope: terminal
+type: fix
+slug: "WinTerminal定制版PE图标损坏Defender误杀排障"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 61-WindowsTerminal定制版PE图标注入签名破损触发Defender启发式木马Bearfoos误杀排障指南

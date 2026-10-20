@@ -1,6 +1,18 @@
 ---
 name: kb-vscode-gitlg-panel
 description: VS Code 底部终端面板配置 GitLG 提交图（IDEA 提交视图体验）与多分支配色调优指南。
+id: "031"
+domain: git
+scope: vscode
+type: flow
+slug: "VSCode底部面板GitLG配色调优"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # VSCode底部面板Git提交图与分支配色调优配置指南

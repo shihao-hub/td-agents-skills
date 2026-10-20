@@ -1,6 +1,18 @@
 ---
 name: kb-windows-console-handoff-flash
 description: Windows 11 计划任务触发时，已运行的 Windows Terminal 内闪现并激活一个空白 PowerShell 标签页（弹终端；-WindowStyle Hidden 与任务"隐藏"属性无效、窗口事件钩子不可见）。含控制台委托 handoff 根因、WT 标题轮询/录屏检测法、conhost --headless 无窗口注册与一条命令手动配置；想手动重注册无窗口任务时查阅。
+id: "011"
+domain: win
+scope: conhost
+type: fix
+slug: "计划任务控制台委托闪窗与conhost注册"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows 计划任务控制台委托闪窗排障与 conhost 无窗口注册指南

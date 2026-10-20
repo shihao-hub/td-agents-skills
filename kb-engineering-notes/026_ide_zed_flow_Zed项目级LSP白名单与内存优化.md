@@ -1,6 +1,18 @@
 ---
 name: kb-zed-lsp-config
 description: Zed 项目级 .zed/settings.json 配置 LSP 白名单，按需开启语言服务器以规避内存膨胀排障指南。
+id: "026"
+domain: ide
+scope: zed
+type: flow
+slug: "Zed项目级LSP白名单与内存优化"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Zed项目级LSP白名单配置与内存占用规避指南

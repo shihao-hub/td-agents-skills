@@ -1,6 +1,18 @@
 ---
 name: kb-atuin-pwsh-history
 description: Windows 下 Atuin 命令历史配置、Ctrl+R 无法唤起与 PowerShell Profile 语法冲突修复指南。
+id: "028"
+domain: ide
+scope: atuin
+type: fix
+slug: "Win终端Atuin历史同步与Profile修复"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Windows终端Atuin命令历史同步与PwshProfile排障指南

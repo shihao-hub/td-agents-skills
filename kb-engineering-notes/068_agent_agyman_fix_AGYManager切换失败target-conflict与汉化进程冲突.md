@@ -1,6 +1,18 @@
-﻿---
+---
 name: kb-antigravity-manager-switch-conflict
 description: Antigravity Manager 切换客户端报错“操作失败，请查看诊断详情后重试”、target-conflict 进程冲突归因排障与 App/CLI 凭证体系深度解析指南。
+id: "068"
+domain: agent
+scope: agyman
+type: fix
+slug: "AGYManager切换失败target-conflict与汉化进程冲突"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Antigravity Manager 切换客户端失败 target-conflict 根因排障与汉化工具进程冲突解决指南

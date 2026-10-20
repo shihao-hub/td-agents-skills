@@ -4,6 +4,17 @@ description: OpenCode Go 访问 deepseek-v4.1-flash 的 TTFT 首字延迟提速�
 version: 1.0.0
 created: 2026-10-11
 updated: 2026-10-11
+id: "043"
+domain: agent
+scope: opencode
+type: fix
+slug: "OpenCodeGo模型提速与关闭思考reasoningEffort"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # OpenCode Go 访问 DeepSeek V4.1 Flash 提速实测报告

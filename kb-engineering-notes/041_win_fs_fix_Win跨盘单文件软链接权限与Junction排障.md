@@ -4,6 +4,17 @@ description: Windows 下符号链接 (Symlink)、目录联接 (Junction) 与硬�
 version: 1.0.0
 created: 2026-10-11
 updated: 2026-10-11
+id: "041"
+domain: win
+scope: fs
+type: fix
+slug: "Win跨盘单文件软链接权限与Junction排障"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 41-Windows跨盘单文件软链接权限与Junction及硬链接底层机制排障指南

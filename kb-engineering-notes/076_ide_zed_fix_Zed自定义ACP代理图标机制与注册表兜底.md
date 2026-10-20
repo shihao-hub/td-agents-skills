@@ -5,6 +5,17 @@ description: |
 version: 1.0.0
 created: 2026-10-19
 updated: 2026-10-19
+id: "076"
+domain: ide
+scope: zed
+type: fix
+slug: "Zed自定义ACP代理图标机制与注册表兜底"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # ide_fix_076_Zed自定义ACP代理图标机制与注册表兜底

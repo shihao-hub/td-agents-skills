@@ -3,6 +3,17 @@ name: kb-windows-defterm-mcp-windowless
 description: Windows 11 控制台委托（DefTerm/Console handoff）与便携版终端断层排障，及原生 PE CUI 后台服务无窗口镜像（Subsystem 2 GUI）架构。当无控制台父进程拉起原生二进制 MCP（如 aoci.exe）触发原版 WT 弹窗或 conhost 黑框时查阅。
 version: 1.0.0
 created: 2026-10-12
+id: "052"
+domain: win
+scope: conhost
+type: fix
+slug: "PE控制台委托DefTerm断层与MCP无窗口镜像"
+status: verified
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 52-Windows原生PE控制台委托DefTerm断层与MCP服务无窗口镜像机制指南

@@ -1,6 +1,18 @@
 ---
 name: kb-zed-agent-triage
 description: Zed Agent Panel 报 Internal error、Session is closing 等服务端错误时的日志定位、进程对齐与锁竞态归因指南。
+id: "024"
+domain: ide
+scope: zed
+type: fix
+slug: "Zed面板InternalError会话中断与锁竞态"
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-20"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Zed面板InternalError会话中断与ACP线程锁竞态归因指南
