@@ -1,7 +1,7 @@
 ---
 name: sh-go-wails-desktop
 description: Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口不做 CLI、CLI(-cli) 只跑终端不开窗口，内嵌 WebUI 与 Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用
-version: 1.4.0
+version: 1.5.0
 created: 2026-10-21
 updated: 2026-10-21
 disable-model-invocation: true
@@ -104,6 +104,39 @@ func main() {
 
 **校验**：``.\<app>-cli-dev.exe version`` 回显通道后秒退，且 prompt 正常返回、末尾无悬空光标。
 
+#### 硬约束：`serve` 必须同时托管 WebUI，不得只起裸 API
+
+`serve` 是 CLI 通道里唯一会阻塞的常驻命令，它必须与 GUI 打开的是**同一个 HTTP handler**：根路径返回内嵌 WebUI（`internal/web/assets`），`/api/*` 返回 REST。正确做法是把 HTTP 层放在独立包（如 `internal/api` 或 `internal/webui`），GUI 与 CLI 都调用同一个 `Handler()`：
+
+```go
+// internal/api/server.go —— 不依赖 Wails，GUI 与 CLI serve 共用
+func (s *Server) Handler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/artworks", s.handleArtworks)
+	subFS, _ := fs.Sub(web.Assets, "assets")
+	mux.Handle("/", http.FileServer(http.FS(subFS)))
+	return mux
+}
+```
+
+```go
+// cli.go :: handleServe
+listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *port))
+if err != nil {
+	fmt.Fprintf(os.Stderr, "绑定监听失败: %v\n", err)
+	os.Exit(1)
+}
+url := "http://" + listener.Addr().String()
+fmt.Printf("%s WebUI is running at %s\n", appName, url) // console 通道直接打印
+log.Fatal(http.Serve(listener, api.NewServer(store).Handler()))
+```
+
+- **禁止**把 `serve` 实现成只有 `/v1/*`、`/api/*` 的裸 API 端口：根路径 `404 page not found` 就是典型症状（历史项目 `agyquota` 踩过）。
+- 端口语义：`serve --port` 可默认 0（动态探测）或项目约定固定端口；GUI 的窗口 URL 与 CLI 打印的 URL 必须来自**同一次 `net.Listen` 结果**，禁止「以为的端口」。
+- 若项目另有后台 daemon 架构（CLI 客户端 + daemon），daemon 的 HTTP 层也必须挂同一个 WebUI handler，让 `serve` 根路径可用；**不要出现 WebUI 只属于 GUI、CLI/daemon 只能 curl JSON 的分裂**。
+- 拆包方向：`webui`/`api` 包只依赖 `internal/web`、业务核心与日志注入点，**不得 import `internal/app`**（否则会把 Wails 拖进 console 产物）。
+- 验收：`serve` 后浏览器打开打印的地址必须是完整工作台页面，同时 `/v1/ping` 或 `/api/*` 仍正常；`/v1/` 下的未知路径保持 404，不能被静态文件服务吞掉。
+
 ### Step 4 桌面壳（`gui.go`）
 
 托盘常驻、单实例、窗口关闭销毁 + 双击重建、任务栏图标在 HWND 就绪后绑定。完整实现见 `references/architecture.md`。关键点：
@@ -111,7 +144,7 @@ func main() {
 - `DisableQuitOnLastWindowClosed: true` 保持托盘常驻；
 - dev 的 `SingleInstanceOptions.UniqueID` 必须追加 `.dev`，否则与常驻正式版互斥；
 - 关闭窗口放行 `WindowClosing`，延时 `runtime.GC()` + `debug.FreeOSMemory()`；
-- **端口默认 `port=0` 动态探测**，不要写死固定端口（如 8765）：GUI 必须先 `net.Listen` 拿到真实端口才能构造窗口 `URL:`，CLI `serve` 则绑定后阻塞；两处共用同一个绑定函数，杜绝「以为的端口」与「实际端口」两份真相。实际 URL 必须走 `logf`（`-H windowsgui` 下 stdout 不可见），固定端口仅作为可选参数保留。
+- **端口默认 `port=0` 动态探测**，不要写死固定端口（如 8765）：GUI 必须先 `net.Listen` 拿到真实端口才能构造窗口 `URL:`，CLI `serve` 则绑定后阻塞；两处共用同一个绑定函数与同一个 `Handler()`（见 Step 3 硬约束），杜绝「以为的端口」与「实际端口」两份真相，也杜绝 GUI 有页面、CLI 只有裸 API 的分裂。实际 URL 必须走 `logf`（`-H windowsgui` 下 stdout 不可见）或 console 通道的 `fmt.Printf`，固定端口仅作为可选参数保留。
 
 **校验**：dev 与 release 可同时运行且互不唤醒。
 
@@ -252,6 +285,7 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 | dev 与正式版互相挤掉 | 单实例 ID 未隔离 | dev `UniqueID` 追加 `.dev` |
 | `go:embed` 资产被忽略 | `.gitignore` 写成 `icon.ico` | 改为 `/icon.ico`，用 `git check-ignore -v` 复核 |
 | `gofmt -l` 一直报图标文件 | doc comment 与 `//go:embed` 间缺空 `//` 行 | 补一行 `//` |
+| `serve` 根路径 `404 page not found` | CLI serve 只挂了裸 API，WebUI handler 只被 GUI 使用 | HTTP 层抽独立包，GUI 与 CLI/daemon 共用同一 `Handler()`（Step 3 硬约束） |
 | 并发写报 `database is locked (SQLITE_BUSY)` | 裸 DSN：`busy_timeout=0` + rollback journal | 统一 DSN 加 `busy_timeout`/WAL（Step 7、troubleshooting §8） |
 | 每次打开窗口都是默认尺寸、位置也不记得 | wails v3 不内置窗口状态记忆；关窗只销毁窗口（进程留托盘），重建走同一份默认 options | 落 `window.json` + 几何事件防抖保存（Step 4b、troubleshooting §9） |
 | 最大化后重开，点还原变成满屏或尺寸错乱 | 把最大化尺寸写进了「还原几何」 | 保存时先判 `IsMaximised()`，最大化只翻标记不采集尺寸（Step 4b） |
@@ -283,6 +317,7 @@ git tag -d <project>/vX.Y.Z                                                     
 | 并发写不冲突 | 并行两个 `ingest`，其间请求 `/api/artworks` | 两条都 success，API 200 |
 | 单实例隔离 | 两者同时运行 | 互不唤醒、可并存 |
 | 端口零冲突 | dev 与 release 同时启动看日志 URL | 各自不同动态端口，互不串台 |
+| CLI serve WebUI | `.\<app>-cli.exe serve` 后浏览器打开输出地址 | 根路径 200 显示完整工作台；`/api/*` 正常 |
 | 自启门禁 | dev 勾选自启 | 菜单置灰 + 注册表无写入 |
 | 关窗释放 | 关窗后看任务管理器 | WebView2 子进程退出，内存回落 |
 | 窗口记忆 | 移窗 + 缩放 → 关窗 → 从托盘重开 | 恢复上次尺寸与位置 |

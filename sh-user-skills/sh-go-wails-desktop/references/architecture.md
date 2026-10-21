@@ -24,13 +24,13 @@
   ┌────────────────────────────┐                                   ┌────────────────────────────┐
   │ 不解析子命令                │                                   │ 子命令派发                 │
   │ 双击/任意参数 → 出窗口       │                                   │ ingest/list/get/...       │
-  │ --hidden → 静默托盘        │                                   │ serve       → 阻塞服务    │
-  └─────────────┬──────────────┘                                   │ --hidden    → 无窗服务    │
-                │                                                                 │
-                ▼                                                                 ▼
+  │ --hidden → 静默托盘        │                                   │ serve → WebUI + REST      │
+  └─────────────┬──────────────┘                                   │ --hidden → 无窗服务        │
+                │                                                  └─────────────┬──────────────┘
+                ▼                                                                │
   ┌────────────────────────────┐                                   ┌────────────────────────────┐
-  │ 嵌入 HTTP / WebUI           │                                   │ 结果写 stdout/stderr      │
-  │ (net.Listen + embed)        │                                   │ (shell 正常等待 + 管道合规)│
+  │ 嵌入 HTTP / WebUI           │                                   │ 打印 WebUI URL + 阻塞      │
+  │ (net.Listen + embed)        │                                   │ (同一 Handler，无窗口)     │
   └─────────────┬──────────────┘                                   └────────────────────────────┘
                 ▼
   ┌────────────────────────────┐
@@ -46,7 +46,7 @@
 └──────────────────────┘             └──────────────────────┘
 ```
 
-两端共享 `internal/api`（HTTP 层）、`internal/storage`（持久层）、`internal/web`（embed 前端资产）与 `internal/app`（托盘、自启、数据目录、日志），因此两条通道看到的是同一个数据库与同一套 REST。
+两端共享 `internal/api`（HTTP 层，GUI 与 CLI `serve` 调用同一个 `Handler()`，静态 WebUI + REST）、`internal/storage`（持久层）、`internal/web`（embed 前端资产）与 `internal/app`（托盘、自启、数据目录、日志），因此两条通道看到的是同一个数据库与同一套 REST。**CLI `serve` 必须打开与 GUI 相同的 WebUI 根路径，不得退化成裸 API 端口。**
 
 ---
 
@@ -60,7 +60,7 @@ your_app/
 │       ├── cli.go                      # CLI 入口 (//go:build cli)：子命令派发与全部 handler
 │       └── rsrc_windows_amd64.syso     # 编译生成的 PE 资源段 (必须与入口文件同目录!)
 ├── internal/
-│   ├── api/                            # HTTP REST API 服务
+│   ├── api/                            # HTTP 层：静态 WebUI + REST，GUI 与 CLI serve 共用 Handler()
 │   ├── app/
 │   │   ├── gui.go                      # Wails v3 托盘与窗口生命周期
 │   │   ├── autostart.go                # 开机自启封装与 Dev 防呆
@@ -185,7 +185,7 @@ func LaunchGUI(dbPath string, port int, hidden bool) error {
 	}
 	serverURL := "http://" + listener.Addr().String()
 	logf("WebUI 已启动: %s", serverURL) // 落日志（实现见 troubleshooting §3）
-	go http.Serve(listener, nil)        // 挂载你的 mux
+	go http.Serve(listener, api.NewServer(store).Handler()) // 与 CLI serve 共用同一 handler
 
 	var appInstance *App
 
