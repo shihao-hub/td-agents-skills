@@ -1,7 +1,7 @@
 ---
 name: sh-go-wails-desktop
 description: Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口不做 CLI、CLI(-cli) 只跑终端不开窗口，内嵌 WebUI 与 Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用
-version: 1.5.0
+version: 1.6.0
 created: 2026-10-21
 updated: 2026-10-21
 disable-model-invocation: true
@@ -25,7 +25,8 @@ disable-model-invocation: true
 ```powershell
 go version          # ≥ 1.23（Wails v3 要求）
 uv --version        # 构建脚本使用 PEP 723 内联依赖（Pillow）
-Get-Command rsrc    # 缺则 go install github.com/akavel/rsrc@latest，确认 %GOPATH%\bin 在 PATH
+go install github.com/tc-hib/go-winres@latest   # PE 资源（VERSIONINFO+manifest+图标），确认 %GOPATH%\bin 在 PATH
+# 不用 rsrc：它不读 info.json、不支持 VERSIONINFO，exe 属性面板版本/描述会全空
 ```
 
 - **WebView2 Runtime**：查 `HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}`，不存在则安装 Evergreen Runtime。
@@ -34,7 +35,27 @@ Get-Command rsrc    # 缺则 go install github.com/akavel/rsrc@latest，确认 %
 
 ---
 
-## 二、分步执行 SOP
+## 二、适用范围：新项目强制，旧项目评估
+
+**新项目：必须完整遵循本 SOP。** 双通道产物、GUI 与 `serve` 共用同一 HTTP Handler、业务通信只走 HTTP/SSE、Wails 仅承担宿主能力，四项缺一不可。
+
+**旧项目改造：先评估成本收益，不强制全量对齐。** 旧项目的技术债可能来自历史架构，改造前先分类：
+
+| 旧项目现状 | 建议 | 代价 |
+|---|---|---|
+| 已有 HTTP 层 / 静态前端，只是 `serve` 漏挂 WebUI | 补 WebUI（Step 3 硬约束），推荐 | 低 |
+| Wails-only，前端依赖 bindings/Events，无浏览器入口需求 | 保持现状，在 README 明确「无浏览器入口」 | 零 |
+| Wails-only，但明确需要 CLI + 浏览器/远程入口 | 单独立项做 HTTP 化 + SSE + 单写者锁 | 中高 |
+| HTTP 层已就绪，只差浏览器打开方式 | 加 `--open` / Chrome `--app` | 低 |
+
+- **不得为了形式统一强行重构**：bindings/Events 换成 HTTP 是数据通道迁移，不是补一个页面；没有明确需求时保持 Wails-only 是合法形态。
+- **例外必须显式记录**：Wails-only 项目要在 README 写明「仅 Wails 窗口，无浏览器入口」，避免使用者误以为可以浏览器访问。
+- **一旦决定改造**，按本 SOP 的新项目标准执行，不保留双通道业务路径（bindings 与 HTTP 并存）。
+- **判断锚点**：先问「有没有 HTTP 层」和「有没有浏览器入口需求」，两个答案都否，就保持现状；只有其一或都满足，才进入对应改造。
+
+---
+
+## 三、分步执行 SOP
 
 ### Step 1 建骨架
 
@@ -105,6 +126,8 @@ func main() {
 **校验**：``.\<app>-cli-dev.exe version`` 回显通道后秒退，且 prompt 正常返回、末尾无悬空光标。
 
 #### 硬约束：`serve` 必须同时托管 WebUI，不得只起裸 API
+
+**适用条件**：本约束适用于新项目，以及已提供 `serve` / HTTP 层的旧项目。Wails-only 项目（前端依赖 bindings/Events、没有 HTTP 层）豁免本节，但必须按「二、适用范围」在 README 标注「无浏览器入口」；一旦决定加浏览器入口，就按新项目标准执行。
 
 `serve` 是 CLI 通道里唯一会阻塞的常驻命令，它必须与 GUI 打开的是**同一个 HTTP handler**：根路径返回内嵌 WebUI（`internal/web/assets`），`/api/*` 返回 REST。正确做法是把 HTTP 层放在独立包（如 `internal/api` 或 `internal/webui`），GUI 与 CLI 都调用同一个 `Handler()`：
 
@@ -254,7 +277,7 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 
 ---
 
-## 三、反模式警示：禁止单产物双模
+## 四、反模式警示：禁止单产物双模
 
 **症状族**（出现任意一条就说明踩了这个坑）：
 
@@ -274,7 +297,7 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 
 ---
 
-## 四、常见踩坑与回滚
+## 五、常见踩坑与回滚
 
 | 症状 | 根因 | 处置 |
 |---|---|---|
@@ -287,6 +310,7 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 | `go:embed` 资产被忽略 | `.gitignore` 写成 `icon.ico` | 改为 `/icon.ico`，用 `git check-ignore -v` 复核 |
 | `gofmt -l` 一直报图标文件 | doc comment 与 `//go:embed` 间缺空 `//` 行 | 补一行 `//` |
 | `serve` 根路径 `404 page not found` | CLI serve 只挂了裸 API，WebUI handler 只被 GUI 使用 | HTTP 层抽独立包，GUI 与 CLI/daemon 共用同一 `Handler()`（Step 3 硬约束） |
+| 旧 Wails-only 项目被要求补 `serve`/WebUI | 前端依赖 bindings/Events、没有 HTTP 层，补 serve 等于换数据通道 | 先按「二、适用范围」评估；无浏览器需求则保持现状并在 README 标注「无浏览器入口」 |
 | 并发写报 `database is locked (SQLITE_BUSY)` | 裸 DSN：`busy_timeout=0` + rollback journal | 统一 DSN 加 `busy_timeout`/WAL（Step 7、troubleshooting §8） |
 | 每次打开窗口都是默认尺寸、位置也不记得 | wails v3 不内置窗口状态记忆；关窗只销毁窗口（进程留托盘），重建走同一份默认 options | 落 `window.json` + 几何事件防抖保存（Step 4b、troubleshooting §9） |
 | 最大化后重开，点还原变成满屏或尺寸错乱 | 把最大化尺寸写进了「还原几何」 | 保存时先判 `IsMaximised()`，最大化只翻标记不采集尺寸（Step 4b） |
@@ -302,7 +326,7 @@ git tag -d <project>/vX.Y.Z                                                     
 
 ---
 
-## 五、交付验收清单
+## 六、交付验收清单
 
 | 验证项 | 操作 | 预期 |
 |---|---|---|
@@ -318,7 +342,7 @@ git tag -d <project>/vX.Y.Z                                                     
 | 并发写不冲突 | 并行两个 `ingest`，其间请求 `/api/artworks` | 两条都 success，API 200 |
 | 单实例隔离 | 两者同时运行 | 互不唤醒、可并存 |
 | 端口零冲突 | dev 与 release 同时启动看日志 URL | 各自不同动态端口，互不串台 |
-| CLI serve WebUI | `.\<app>-cli.exe serve` 后浏览器打开输出地址 | 根路径 200 显示完整工作台；`/api/*` 正常 |
+| CLI serve WebUI（新项目 / 有 serve 的项目） | `.\<app>-cli.exe serve` 后浏览器打开输出地址 | 根路径 200 显示完整工作台；`/api/*` 正常 |
 | 自启门禁 | dev 勾选自启 | 菜单置灰 + 注册表无写入 |
 | 关窗释放 | 关窗后看任务管理器 | WebView2 子进程退出，内存回落 |
 | 窗口记忆 | 移窗 + 缩放 → 关窗 → 从托盘重开 | 恢复上次尺寸与位置 |
@@ -327,7 +351,7 @@ git tag -d <project>/vX.Y.Z                                                     
 
 ---
 
-## 六、参考索引
+## 七、参考索引
 
 | 文件 | 内容 |
 |---|---|

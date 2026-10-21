@@ -1,6 +1,8 @@
 # 构建流水线参考：dev / release 通道隔离与图标双通道
 
-> 归属：`sh-go-wails-desktop`。脚本以 Windows + uv + rsrc 为准，其他平台自行替换资源编译环节。
+> 归属：`sh-go-wails-desktop`。脚本以 Windows + uv + go-winres 为准，其他平台自行替换资源编译环节。
+>
+> **工具选型（踩过坑）**：不要用 `rsrc` 做版本资源——`rsrc v0.10.2` 只支持 `-manifest` / `-ico`，**不读 `info.json`、不支持 VERSIONINFO**，exe 属性面板的版本/描述会全空。改 `go-winres`：`go install github.com/tc-hib/go-winres@latest`；它能同时产出 VERSIONINFO + manifest + 图标，并支持按产物给不同 FileDescription。
 
 ---
 
@@ -37,7 +39,7 @@ exe 文件图标（PE 资源）与窗口/托盘图标（内存）是两条独立
 
 ### 1. PE 静态资源
 
-`rsrc -ico` 按通道选择：release 用根 `icon.ico`，dev 用 `internal/app/icon_dev.ico`（Go 地鼠，静态入库）。
+图标按通道选择（写进 `winres/{gui,cli}.json` 的 `__ICON__` 占位）：release 用根 `icon.ico`，dev 用 `internal/app/icon_dev.ico`（Go 地鼠，静态入库）。
 
 ### 2. 窗口/托盘（build tag 切换 embed）
 
@@ -137,6 +139,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -144,6 +147,10 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 TAG_PREFIX = "your_app/"          # monorepo 项目 tag 前缀；单仓项目置空，tag 直接写 vX.Y.Z
+
+# PE 资源工具与模板（go-winres 才能写 VERSIONINFO）
+WINRES_EXE = shutil.which("go-winres") or str(Path(os.environ.get("GOPATH", "")) / "bin" / "go-winres.exe")
+WINRES_DIR = PROJECT_ROOT / "winres"        # gui.json / cli.json：占位 __ICON__ / __MANIFEST__ / __VERSION__ / __ORIGINAL_NAME__
 ICON_RELEASE = PROJECT_ROOT / "icon.ico"
 ICON_DEV = PROJECT_ROOT / "internal" / "app" / "icon_dev.ico"
 RENDER_ICON = PROJECT_ROOT / "scripts" / "render_icon.py"
@@ -163,6 +170,7 @@ GENERATED_SUFFIXES = (
     "/icon.ico",
     "/icon.png",
     "/cmd/your_app/rsrc_windows_amd64.syso",
+    "/winres/.tmp-winres.json",
 )
 
 
@@ -207,20 +215,49 @@ def worktree_dirty() -> bool:
     return False
 
 
-def build_resources(release: bool, rsrc: str) -> int:
-    """PE 资源段：图标按通道切换，必须落在 main 包目录。"""
-    if release and RENDER_ICON.exists():
-        subprocess.run(["uv", "run", str(RENDER_ICON)], cwd=str(PROJECT_ROOT), check=True)
+def four_part_version(version: str) -> str:
+    """v1.2.1 / 1.2.1-dev → VERSIONINFO 要求的 4 段数字。"""
+    core = version.lstrip("v").split("-")[0]
+    return ".".join((core.split(".") + ["0", "0", "0"])[:4])
+
+
+def build_resources(release: bool, gui: bool, out_exe: Path, version: str) -> int:
+    """PE 资源段：VERSIONINFO + manifest + 图标，落在 main 包目录。
+
+    关键坑：GUI 与 CLI 在同一个 Go 包里，而一个包只能链接一份 syso，
+    所以必须在**每个产物 go build 之前**重新生成一次，两者才能有各自的
+    FileDescription / OriginalFilename。
+    """
     icon = ICON_RELEASE if release else ICON_DEV
-    if not icon.exists():
-        print(f"❌ 缺少图标文件: {icon}", file=sys.stderr)
+    template = WINRES_DIR / ("gui.json" if gui else "cli.json")
+    if not (icon.exists() and template.exists()):
+        print(f"❌ 缺少图标或资源模板: {icon} / {template}", file=sys.stderr)
         return 4
-    r = subprocess.run(
-        [rsrc, "-manifest", str(MANIFEST), "-ico", str(icon), "-arch", "amd64", "-o", str(SYSO_OUT)],
-        cwd=str(PROJECT_ROOT),
+
+    # go-winres 按「相对 JSON 所在目录」解析资源路径，故临时 JSON 必须放 winres/
+    rel_icon = Path(os.path.relpath(icon, WINRES_DIR)).as_posix()
+    rel_manifest = Path(os.path.relpath(MANIFEST, WINRES_DIR)).as_posix()
+    rendered = (
+        template.read_text(encoding="utf-8")
+        .replace("__ICON__", rel_icon)
+        .replace("__MANIFEST__", rel_manifest)
+        .replace("__FIXED_VERSION__", four_part_version(version))
+        .replace("__VERSION__", version.lstrip("v"))
+        .replace("__ORIGINAL_NAME__", out_exe.name)
     )
+    tmp_json = WINRES_DIR / ".tmp-winres.json"
+    try:
+        tmp_json.write_text(rendered, encoding="utf-8", newline="
+")
+        r = subprocess.run(
+            [WINRES_EXE, "make", "--in", str(tmp_json), "--arch", "amd64",
+             "--out", str(SYSO_OUT.parent / "rsrc")],
+            cwd=str(PROJECT_ROOT),
+        )
+    finally:
+        tmp_json.unlink(missing_ok=True)
     if r.returncode != 0:
-        print(f"❌ rsrc 编译失败（exit {r.returncode}）", file=sys.stderr)
+        print(f"❌ go-winres 生成失败（exit {r.returncode}）", file=sys.stderr)
     return r.returncode
 
 
@@ -237,26 +274,22 @@ def main() -> int:
         print("❌ 拒绝发布构建：需同时满足 精确 tag + 工作区干净", file=sys.stderr)
         return 2
 
-    # 2. PE 资源段（图标按通道切换）
-    rsrc = shutil.which("rsrc")
-    if not rsrc:
-        print("❌ 未找到 rsrc：go install github.com/akavel/rsrc@latest 并确认 %GOPATH%\\bin 在 PATH", file=sys.stderr)
-        return 4
-    rc = build_resources(release, rsrc)
-    if rc != 0:
-        return rc
-
-    # 3. 版本与通道
+    # 2. 版本与通道（PE VERSIONINFO 要用版本号，必须先算）
     base = args.version.lstrip("v") or base_version()
     version = f"v{base}" if release else f"v{base}-dev" + ("-dirty" if dirty else "")
     build_mode = "release" if release else "dev"
 
-    # 4. 逐通道 go build：同一通道内 GUI 与 Console 各一个产物
+    # 3. 逐通道 go build：同一通道内 GUI 与 Console 各一个产物
     targets = (
         (EXE_GUI_RELEASE if release else EXE_GUI_DEV, True),
         (EXE_CLI_RELEASE if release else EXE_CLI_DEV, False),
     )
     for out_exe, gui in targets:
+        # 每个产物前重建 syso（GUI/CLI 的 FileDescription 不同）
+        rc = build_resources(release, gui, out_exe, version)
+        if rc != 0:
+            return rc
+
         flags = ["-w", "-s"]
         if gui:
             flags.append("-H windowsgui")                      # GUI 通道：双击零黑框

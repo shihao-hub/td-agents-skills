@@ -170,7 +170,8 @@ git check-ignore -v icon.ico internal/app/icon.ico
 | Python 构建脚本首行报 `invalid non-printable character U+FEFF` | 文件被写入 BOM | 去 BOM（`UTF8Encoding($false)` 或写后自检） |
 | `uv run scripts/build.py` 报无 Pillow | 直接用 `python` 而非 `uv run` | 用 `uv run`（PEP 723 自动装依赖） |
 | 构建后 `git status` 变脏 | 图标渲染非确定性 | 固定渲染参数，确保同源码同字节 |
-| `rsrc.exe` 找不到 | `%GOPATH%\bin` 不在 PATH | `go install github.com/akavel/rsrc@latest` 后补 PATH |
+| `rsrc.exe` / `go-winres.exe` 找不到 | `%GOPATH%\bin` 不在 PATH | 用 `go install github.com/tc-hib/go-winres@latest` 后补 PATH |
+| exe 属性面板版本/描述全空 | rsrc 不支持 VERSIONINFO，或 syso 未按产物重建 | 改用 go-winres，并在每个产物 go build 前重建 syso（见 build-pipeline.md） |
 
 ---
 

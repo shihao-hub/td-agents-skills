@@ -30,6 +30,12 @@
       "prompt": "我的 Wails 桌面版每次打开窗口都是 1280x850 默认大小，我把窗口拖到副屏、缩放成 1100x700 后关掉，再从托盘打开又变回默认，最大化状态也不记得，怎么让它记住？",
       "expected_output": "先定性根因：wails v3（beta.33）不提供窗口状态持久化，WebviewWindowOptions 只有 Width/Height/X/Y/InitialPosition，且本架构「关窗=销毁窗口、进程留托盘」，重建走同一条 buildWindowLocked → 永远默认尺寸（不要等 wails 升级解决）。给出落地 SOP：新增 internal/app/window_state.go 存 window.json 到 <appDataDir>（字段 width/height/x/y/hasPosition/maximised，dev/prod 隔离）；几何取自 win.Size()/win.Position() 的 DIP 值，与 options 单位一致，不要叠加 DPI 换算；采集用 events.Common.WindowDidResize/WindowDidMove/WindowMaximise/WindowUnMaximise + 700ms 防抖，WindowClosing 钩子里停定时器并同步保存（销毁后 Size() 归零）；保存分支必须跳过 IsMinimised/IsFullscreen，IsMaximised 只翻标记不覆盖还原几何，过小尺寸视为脏数据；恢复时 hasPosition 才设 InitialPosition: WindowXY，最大化在 Show() 之后调 Maximise()；WindowShow 里用 app.Screen.GetAll() 的 WorkArea 判断窗口中心是否在屏内，不在则 Center() 兜底（拔掉外接屏后旧坐标窗口不可见）。并给出验证：go test 覆盖快照往返/脏 JSON/过小尺寸/无坐标，实机验证移动缩放、最大化、还原三条链路。",
       "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "一个旧 Wails 项目的前端通过 bindings/Events 调 Go，README 没写浏览器入口；同事要求按本 skill 补一套 serve 和 WebUI，是否应该直接照做？",
+      "expected_output": "先按「适用范围」分类，不要照搬新项目标准：检查是否已有 HTTP 层/静态前端、前端是否依赖 Wails bindings/Events、是否明确需要浏览器入口。三种结论：已有 HTTP 层只是 serve 漏挂 WebUI → 低成本补上；Wails-only 且无浏览器需求 → 保持现状，在 README 显式标注「无浏览器入口」，这是合法例外；Wails-only 且确有浏览器/远程需求 → 单独立项做 HTTP 化 + SSE + 单写者锁，按新项目标准执行，不保留 bindings 与 HTTP 双路径。强调不得为了形式统一强行重构：bindings/Events 换 HTTP 是数据通道迁移，不是补一个页面。",
+      "files": []
     }
   ]
 }

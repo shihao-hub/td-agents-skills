@@ -48,6 +48,8 @@
 
 两端共享 `internal/api`（HTTP 层，GUI 与 CLI `serve` 调用同一个 `Handler()`，静态 WebUI + REST）、`internal/storage`（持久层）、`internal/web`（embed 前端资产）与 `internal/app`（托盘、自启、数据目录、日志），因此两条通道看到的是同一个数据库与同一套 REST。**CLI `serve` 必须打开与 GUI 相同的 WebUI 根路径，不得退化成裸 API 端口。**
 
+> **例外（旧项目）**：Wails-only 项目（前端依赖 bindings/Events、没有 HTTP 层）不强制改造成上述形态；保持现状时必须在 README 声明「无浏览器入口」。只有明确需要 CLI + 浏览器/远程入口时，才单独立项做 HTTP 化 + SSE + 单写者锁。新项目不适用此例外。
+
 ---
 
 ## 二、目录结构
