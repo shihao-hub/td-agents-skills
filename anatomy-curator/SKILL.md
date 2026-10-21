@@ -14,8 +14,8 @@ version: 1.0.1
 ## 🛠️ 底座工具链位置契约
 
 本包装器默认依赖已编译就绪的 Go 二进制管理工具与单文件数据库：
-- **管理器执行程序**：`D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe`
-- **默认数据库落盘路径**：按构建通道隔离，`%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomy.db`。`ingest` / `list` / `get` / `export` 不传 `--db` 时自动落到当前通道库；`anatomymanager.exe` 属 release 通道 → `prod`，`anatomymanager-dev.exe` → `dev`。
+- **管理器执行程序**：`D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe`（Console 通道，shell 会正常等待、管道 / `--json` 可捕获）。同目录下的 `anatomymanager.exe` 是 GUI 通道，**仅用于用户双击打开桌面工作台**，Agent 一律不得用它跑 CLI（GUI 子系统在 pwsh 里异步启动，prompt 与光标会错位、管道捕获会拿到空内容）。dev 通道对应 `anatomymanager-cli-dev.exe`（数据库落 `dev` 子目录）。
+- **默认数据库落盘路径**：按构建通道隔离，`%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomy.db`。`ingest` / `list` / `get` / `export` 不传 `--db` 时自动落到当前通道库；`anatomymanager-cli.exe` 属 release 通道 → `prod`，`anatomymanager-cli-dev.exe` → `dev`。
 
 ---
 
@@ -28,7 +28,7 @@ version: 1.0.1
        │ 委托原生 anatomy 规范，在独立临时目录产出 HTML/SVG/MJS/PNG 与 Markdown 原理文档
        ▼
 [ 阶段二：自动化持久化归档 ]
-       │ 调用 anatomymanager.exe ingest --json 将全部产物整块归档进 SQLite BLOB
+       │ 调用 anatomymanager-cli.exe ingest --json 将全部产物整块归档进 SQLite BLOB
        ▼
 [ 阶段三：交付验证与一键启动 ]
        │ 输出归档回执 JSON，提供 WebUI 启动命令与离线导出命令
@@ -53,7 +53,7 @@ version: 1.0.1
 
 执行命令：
 ```powershell
-D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe ingest `
+D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe ingest `
   --name "<唯一短标识，如 connection-pool>" `
   --title "<人类可读完整标题，如 高并发连接池流道定压阀测控台>" `
   --dir "<产物所在的完整绝对路径>" `
@@ -71,10 +71,10 @@ D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe ingest 
 
 归档成功后，Agent 需在最终回复中向用户汇报：
 1. **作品基本信息**：标题、唯一标识（ID）、分类、涵盖的物理组件；
-2. **数据库归档确认**：说明已全量入库至当前构建通道的规范数据库（`anatomymanager.exe` 对应 `%APPDATA%\language_projects\anatomymanager\prod\anatomy.db`）；
+2. **数据库归档确认**：说明已全量入库至当前构建通道的规范数据库（`anatomymanager-cli.exe` 对应 `%APPDATA%\language_projects\anatomymanager\prod\anatomy.db`）；
 3. **查阅方式**：
-   - 启动本地可视化服务：`anatomymanager serve --open`（端口默认动态探测，`--open` 会自动开浏览器；若需在回复中给出地址，从终端输出或 `%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomymanager.log` 读取，不要写死 8765），或在 `D:\Users\language_projects\go_projects\anatomymanager` 下双击运行 `anatomymanager.exe`；
-   - 或单独离线导出：`anatomymanager export <name> --out ./dist/<name>`。
+   - 启动本地可视化服务：`anatomymanager-cli serve --open`（端口默认动态探测，`--open` 会自动开浏览器；若需在回复中给出地址，从终端输出或 `%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomymanager.log` 读取，不要写死 8765），或在 `D:\Users\language_projects\go_projects\anatomymanager` 下双击运行 GUI 通道的 `anatomymanager.exe`；
+   - 或单独离线导出：`anatomymanager-cli export <name> --out ./dist/<name>`。
 
 ---
 
@@ -84,20 +84,20 @@ D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe ingest 
 
 ### 1. 列出已有图谱库
 ```powershell
-D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe list --json
+D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe list --json
 ```
 
 ### 2. 查询特定图谱详情与包含文件
 ```powershell
-D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe get <name> --json
+D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe get <name> --json
 ```
 
 ### 3. 导出数据库中的图谱到本地文件夹
 ```powershell
-D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe export <name> --out "<目标导出目录>"
+D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe export <name> --out "<目标导出目录>"
 ```
 
 ### 4. 调取 Agent 协同参数 Schema
 ```powershell
-D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe schema ingest
+D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe schema ingest
 ```
