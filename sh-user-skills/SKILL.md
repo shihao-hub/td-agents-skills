@@ -58,7 +58,7 @@ updated: 2026-10-21
 | 饥荒mod下载/脱壳/解密/反编译/DaxSg脱壳/奎姆/3152990521/内存提取 | `sh-dst-mod-workshop`（实验性探索/未完全解密） |
 | Python 项目打包成免安装绿色版 | `sh-pystand-pack` |
 | Python 单脚本打包 exe／uv 脚本编译／Nuitka 单文件加速／打包成一个 exe | `sh-nuitka-pack` |
-| Go 单二进制桌面应用／CLI+GUI 二合一／Wails 托盘窗口／dev release 打包隔离／无控制台看日志 | `sh-go-wails-desktop` |
+| Go 双通道桌面应用／GUI 与 CLI 拆两个 exe／Wails 托盘窗口／Wails 窗口尺寸位置不记忆／每次打开都是默认大小／最大化状态不保存／dev release 打包隔离／无控制台看日志 | `sh-go-wails-desktop` |
 | 把这个能力沉淀成 skill／书转 skill | `sh-book2skill-sop`（书/文档）或 `skill-creator` |
 | Windows Terminal换图标／修改终端图标／WT定制／右键在终端中打开修改 | `sh-wt-customizer` |
 | agy会话标题批量治理／汉化agy对话标题／修改会话为中文／批量重命名agy会话／antigravity app会话改中文／桌面版会话汉化／侧边栏会话标题中文化 | `sh-agy-session-governance` |
@@ -98,7 +98,7 @@ updated: 2026-10-21
 | `sh-frontend-deai` | 前端去 AI 味：反蓝紫渐变、暗底霓虹与模板化套路，场景导向设计界面。已提级暴露为根级技能，点名使用 |
 | `sh-pystand-pack` | PyStand+嵌入式 Python 把 Python 项目打包成免安装绿色文件夹。点名使用 |
 | `sh-nuitka-pack` | uv 单脚本+Nuitka 打包 Windows 单文件 exe 与启动加速缓存。点名使用 |
-| `sh-go-wails-desktop` | Go 单二进制桌面应用脚手架：CLI+WebUI+Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用 |
+| `sh-go-wails-desktop` | Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口、CLI(-cli) 只跑终端，内嵌 WebUI 与 Wails v3 托盘，窗口尺寸位置与最大化状态记忆、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用 |
 | `sh-wt-customizer` | Windows Terminal (wt) 独立版定制：PE 图标注入、任务栏守卫、右键菜单与 Win+R 全链路接管及一键原生复原。点名使用 |
 | `sh-wt-session-guard` | Windows Terminal (wt) 与 agy CLI 会话恢复守卫：右上角关闭全部标签页时双保险保底追加恢复命令、无窗口静默守护与开机自启动治理。点名使用 |
 | `sh-agy-session-governance` | Antigravity (App 与 CLI 双端) 会话标题批量治理与汉化：支持导出待治理会话、AI 协同生成中文标题、SQLite/Protobuf/annotations 四重原子双写、常驻 language_server 进程 ConnectRPC 实时热推送、自动前置快照与一键还原。点名使用 |

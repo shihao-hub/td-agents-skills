@@ -1,44 +1,52 @@
-# 架构参考：四位一体单二进制与桌面壳实现
+# 架构参考：双通道产物与桌面壳实现
 
 > 归属：`sh-go-wails-desktop`。本文是深度材料，日常执行以 `README.md` 的 SOP 为准。
 > 验证环境：Windows 11 24H2、Go 1.26、Wails v3.0.0-beta.33、Edge WebView2。
 
 ---
 
-## 一、四位一体蓝图
+## 一、双通道蓝图
+
+同一份源码，用 build tag 编译出**两个子系统不同的二进制**（详见 `README.md` Step 2 / Step 3）：
 
 ```text
-                     ┌───────────────────────────────────────────────┐
-                     │          单一可执行文件 (Single Binary)        │
-                     │                 your_app.exe                  │
-                     └───────────────────────┬───────────────────────┘
-                                             │
-                       ┌─────────────────────┴─────────────────────┐
-                       ▼ 启动参数判断 (os.Args)                    ▼
-            ┌──────────────────────┐                     ┌──────────────────────┐
-            │ 带有业务子命令 / 传参  │                     │   无参数 (双击) 或   │
-            │ 如: ingest / list    │                     │   --hidden (开机自启)│
-            └──────────┬───────────┘                     └──────────┬───────────┘
-                       │                                            │
-                       ▼                                            ▼
-            ┌──────────────────────┐                     ┌──────────────────────┐
-            │    CLI 子命令解析    │                     │  嵌入 HTTP / WebUI   │
-            │ (AttachConsole 附着) │                     │ (net.Listen + embed) │
-            │ 执行完毕秒级退出     │                     └──────────┬───────────┘
-            └──────────────────────┘                                │
-                                                                    ▼
-                                                         ┌──────────────────────┐
-                                                         │   Wails v3 消息循环  │
-                                                         │  系统托盘 + 菜单守护 │
-                                                         └──────────┬───────────┘
-                                        ┌───────────────────────────┴───────────────────────────┐
-                                        ▼ 点击 "打开工作台" / 双击托盘                           ▼ 点击 "X" 关闭窗口
-                             ┌──────────────────────┐                                ┌──────────────────────┐
-                             │ 按需创建/展示主窗口   │                                │ 彻底销毁 WebviewWindow│
-                             │ (WebView2 渲染 DOM)  │                                │ 6个 Chromium 进程退出│
-                             │ 内存占用: ~350MB     │                                │ GC释放, 常驻降至~25MB│
-                             └──────────────────────┘                                └──────────────────────┘
+                 ┌─────────────────────── 同一份 internal/ 源码 ───────────────────────┐
+                 │                                                                     │
+   -H windowsgui │                                                     -tags cli       │
+                 ▼                                                                     ▼
+  ┌────────────────────────────┐                                   ┌────────────────────────────┐
+  │ <app>-gui.exe              │                                   │ <app>-cli.exe              │
+  │ PE Subsystem = 2 (GUI)     │                                   │ PE Subsystem = 3 (Console) │
+  │ main.go (//go:build !cli)  │                                   │ cli.go (//go:build cli)    │
+  └─────────────┬──────────────┘                                   └─────────────┬──────────────┘
+                │                                                                 │
+                ▼                                                                 ▼
+  ┌────────────────────────────┐                                   ┌────────────────────────────┐
+  │ 不解析子命令                │                                   │ 子命令派发                 │
+  │ 双击/任意参数 → 出窗口       │                                   │ ingest/list/get/...       │
+  │ --hidden → 静默托盘        │                                   │ serve       → 阻塞服务    │
+  └─────────────┬──────────────┘                                   │ --hidden    → 无窗服务    │
+                │                                                                 │
+                ▼                                                                 ▼
+  ┌────────────────────────────┐                                   ┌────────────────────────────┐
+  │ 嵌入 HTTP / WebUI           │                                   │ 结果写 stdout/stderr      │
+  │ (net.Listen + embed)        │                                   │ (shell 正常等待 + 管道合规)│
+  └─────────────┬──────────────┘                                   └────────────────────────────┘
+                ▼
+  ┌────────────────────────────┐
+  │ Wails v3 消息循环            │
+  │ 系统托盘 + 菜单守护          │
+  └─────────────┬──────────────┘
+       ┌─────────┴───────────────────────────┐
+       ▼ 点击“打开工作台”/双击托盘            ▼ 点击“X”关闭窗口
+┌──────────────────────┐             ┌──────────────────────┐
+│ 按需创建/展示主窗口   │             │ 彻底销毁 WebviewWindow│
+│ (WebView2 渲染 DOM)  │             │ 6 个 Chromium 进程退出│
+│ 内存占用: ~350MB     │             │ GC 释放, 常驻降至~25MB│
+└──────────────────────┘             └──────────────────────┘
 ```
+
+两端共享 `internal/api`（HTTP 层）、`internal/storage`（持久层）、`internal/web`（embed 前端资产）与 `internal/app`（托盘、自启、数据目录、日志），因此两条通道看到的是同一个数据库与同一套 REST。
 
 ---
 
@@ -48,9 +56,9 @@
 your_app/
 ├── cmd/
 │   └── your_app/
-│       ├── main.go                     # CLI 分流与启动入口
-│       ├── console_windows.go          # AttachConsole 标准流绑定 (必须在 main 包的 init 中)
-│       └── rsrc_windows_amd64.syso     # 编译生成的 PE 资源段 (必须与 main.go 同目录!)
+│       ├── main.go                     # GUI 入口 (//go:build !cli)：不解析子命令，只拉桌面壳
+│       ├── cli.go                      # CLI 入口 (//go:build cli)：子命令派发与全部 handler
+│       └── rsrc_windows_amd64.syso     # 编译生成的 PE 资源段 (必须与入口文件同目录!)
 ├── internal/
 │   ├── api/                            # HTTP REST API 服务
 │   ├── app/
@@ -67,7 +75,7 @@ your_app/
 │   └── web/                            # 嵌入式 WebUI 前端资产 (HTML/JS/CSS)
 ├── scripts/
 │   ├── render_icon.py                  # 专属图标渲染流水线 (Pillow，仅 release 图标)
-│   └── build.py                        # 一键构建：通道判定 + 图标选择 + rsrc + go build
+│   └── build.py                        # 一键构建：通道判定 + 图标选择 + rsrc + 双通道 go build（GUI/Console 各一）
 ├── icon.png                            # 1024x1024 原图
 ├── icon.ico                            # 多尺寸 Windows 图标
 ├── info.json                           # PE 版本与版权元数据
@@ -384,6 +392,136 @@ func (a *App) quit() {
 
 ---
 
+## 四·补 窗口几何记忆（`window_state.go` + 接入点）
+
+wails v3 beta.33 未提供窗口状态持久化，需要在 `gui.go` 的建窗路径自己接入。
+
+### 快照与读写（`internal/app/window_state.go` 核心）
+
+```go
+const (
+	windowStateFileName = "window.json"
+	defaultWindowWidth  = 1280
+	defaultWindowHeight = 850
+	minWindowWidth      = 900   // 读到比这更小的值视为脏数据
+	minWindowHeight     = 600
+	windowStateSaveDelay = 700  // ms，几何事件防抖窗口
+)
+
+type windowState struct {
+	Width     int  `json:"width"`
+	Height    int  `json:"height"`
+	X         int  `json:"x"`
+	Y         int  `json:"y"`
+	HasPos    bool `json:"hasPosition"`
+	Maximised bool `json:"maximised"`
+}
+
+func windowStatePath() string { /* appDataDir() + windowStateFileName，目录空则返回 "" */ }
+func loadWindowState() windowState {
+	/* 无文件 / 解析失败 / 尺寸过小 → defaultWindowState()；HasPos 仅在文件里为真时置位 */
+}
+func writeWindowState(state windowState) error {
+	/* MkdirAll(dir) + json.MarshalIndent + os.WriteFile(…, 0o644) → 无 BOM UTF-8 */
+}
+```
+
+### `App` 新增字段与建窗接入
+
+```go
+type App struct {
+	// …原有字段
+	stateMu    sync.Mutex
+	stateTimer *time.Timer
+	winState   windowState // 启动时 loadWindowState()，之后随操作回写
+}
+
+func (a *App) buildWindowLocked(hidden bool) {
+	state := a.currentWindowState()
+	opts := application.WebviewWindowOptions{
+		Title:    windowTitle,
+		Width:    state.Width,
+		Height:   state.Height,
+		MinWidth: minWindowWidth,
+		MinHeight: minWindowHeight,
+		Hidden:   hidden,
+		URL:      a.serverURL,
+	}
+	if state.HasPos {
+		opts.InitialPosition = application.WindowXY
+		opts.X, opts.Y = state.X, state.Y
+	}
+	win := a.app.Window.NewWithOptions(opts)
+
+	// 图标 + 屏幕可见性兜底
+	win.RegisterHook(events.Windows.WindowShow, func(*application.WindowEvent) {
+		a.applyWindowIcon(win)
+		a.ensureWindowOnScreen(win)
+	})
+	// 几何变更防抖落盘
+	for _, evt := range []events.WindowEventType{
+		events.Common.WindowDidResize, events.Common.WindowDidMove,
+		events.Common.WindowMaximise, events.Common.WindowUnMaximise,
+	} {
+		win.OnWindowEvent(evt, func(*application.WindowEvent) { a.scheduleSaveWindowState(win) })
+	}
+	// 关闭前同步落盘（窗口销毁后 Size() 归零）
+	win.RegisterHook(events.Common.WindowClosing, func(*application.WindowEvent) {
+		a.stopWindowStateTimer()
+		a.saveWindowState(win)
+		// …原有放行逻辑
+	})
+}
+```
+
+### 保存判定（关键分支）
+
+```go
+func (a *App) saveWindowState(win *application.WebviewWindow) {
+	state := a.currentWindowState()
+	switch {
+	case win.IsMinimised(), win.IsFullscreen():
+		return // 最小化坐标是 -32000 之类，不能入库
+	case win.IsMaximised():
+		state.Maximised = true // 只翻标记，保留上一次的还原几何
+	default:
+		w, h := win.Size()
+		if w < minWindowWidth || h < minWindowHeight {
+			return
+		}
+		x, y := win.Position()
+		state.Width, state.Height = w, h
+		state.X, state.Y, state.HasPos = x, y, true
+		state.Maximised = false
+	}
+	// 与 a.winState 比较，有变化才写文件
+}
+```
+
+### 屏幕外兜底
+
+```go
+func (a *App) ensureWindowOnScreen(win *application.WebviewWindow) {
+	screens := a.app.Screen.GetAll()
+	if len(screens) == 0 {
+		return // Run() 之前屏幕缓存可能还是空的，别据此判"不可见"
+	}
+	x, y := win.Position()
+	w, h := win.Size()
+	cx, cy := x+w/2, y+h/2
+	for _, s := range screens {
+		area := s.WorkArea // 已是 DIP
+		if cx >= area.X && cx < area.X+area.Width && cy >= area.Y && cy < area.Y+area.Height {
+			return
+		}
+	}
+	win.Center() // 拔掉外接屏后旧坐标会让窗口彻底不可见
+	a.scheduleSaveWindowState(win)
+}
+```
+
+---
+
 ## 五、窗口生命周期与图标绑定时序
 
 - **创建时机**：`Window.NewWithOptions` 返回时底层 `HWND` 尚未创建（`NativeWindow() == 0`），此刻调用 Win32 设图标会静默失效。
@@ -391,6 +529,8 @@ func (a *App) quit() {
 - **大小图标语义**：`WM_SETICON + ICON_BIG` 影响任务栏与 Alt+Tab；`ICON_SMALL` 影响标题栏；`SetApplicationIcon` 把大图标固化到窗口类（`GCLP_HICON`）。
 - **关闭行为**：放行 `WindowClosing`（不 `Cancel`）使 Wails 销毁窗口，Chromium 子进程随之退出；250ms 后 GC 把常驻内存从 ~350MB 拉回 25~40MB。
 - **重建行为**：`showMainWindow` 用 `ensureMu` 防连击，`win == nil` 时重新 `buildWindowLocked(false)` 并立即补刷图标。
+- **几何记忆时序**：`NewWithOptions`（带记忆尺寸/坐标）→ `Show` → 若 `Maximised` 则 `Maximise()` → `Focus`；`WindowShow` 钩子里做屏幕可见性兜底。**切勿**在 `Show()` 前 `Maximise()`：隐藏窗口的 `ShowWindow(SW_MAXIMIZE)` 行为不稳定。
+- **关闭时序**：`WindowClosing` 先同步保存几何（此后 `Size()`/`Position()` 归零），再放行销毁；`stateTimer` 必须 `Stop()`，否则定时器会在窗口销毁后回写 0 尺寸。
 
 ---
 
@@ -398,7 +538,7 @@ func (a *App) quit() {
 
 - `appDataDir()`：`%APPDATA%\language_projects\<app>\{dev,prod}`，回退 `~/.language_projects/<app>/<通道>`。
 - `webviewDataPath()`：`<appDataDir>/webview2`，避免 WebView2 缓存散落到可执行文件目录。
-- 日志：`<appDataDir>/<app>.log`，`logf()` 同时写 `os.Stderr` 与追加文件，供 `-H windowsgui` 无控制台场景排障。
+- 日志：`<appDataDir>/<app>.log`，`logf()` 同时写 `os.Stderr` 与追加文件；GUI 产物（`-H windowsgui`）无控制台，日志文件是唯一事后取证入口。
 - 旧库迁移：新库不存在且旧库存在时复制主库与 `-wal`/`-shm`，旧文件保留。
 - **并发**：同一通道库被 GUI 与多个 CLI 共用，DSN 必须带 `busy_timeout(5000)` + `journal_mode(WAL)`；GUI 退出前 `store.Close()` 触发 checkpoint（详见 README Step 7）。
 - **写的唯一入口是 CLI**：GUI 的 HTTP 层保持只读，这是「WAL 足够、无需跨进程写锁」的前提。

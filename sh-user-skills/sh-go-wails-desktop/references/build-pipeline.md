@@ -10,13 +10,13 @@ dev 与 release 必须在以下五个维度同时隔离，缺一项就会出现"
 
 | 维度 | dev | release |
 |:---|:---|:---|
-| 产物名 | `<app>-dev.exe` | `<app>.exe` |
+| 产物名 | `<app>-gui-dev.exe` + `<app>-cli-dev.exe` | `<app>-gui.exe` + `<app>-cli.exe` |
 | 版本号 | `vX.Y.Z-dev[-dirty]` | `vX.Y.Z` |
 | 数据目录 | `%APPDATA%\language_projects\<app>\dev` | `...\prod` |
 | 单实例 ID | `<team>.<app>.gui.dev` | `<team>.<app>.gui` |
 | exe / 窗口图标 | Go 地鼠（一眼可辨） | 项目专属图标 |
 
-### 八条铁律
+### 九条铁律
 
 1. **判定单一入口**：仅当 HEAD 精确命中项目 tag 且工作区干净才产 release，其余一律 dev；`--release` 只做断言（条件不足 `exit 2`），不得改写判定。
 2. **严禁 dev 覆盖正式名**：不要为了"方便双击"把 dev 产物 `copy` 成正式名——正式名必须只由 release 构建产生。
@@ -26,6 +26,8 @@ dev 与 release 必须在以下五个维度同时隔离，缺一项就会出现"
 6. **旧库一次性迁移**：复制主库与 `-wal`/`-shm`，旧文件保留并写日志。
 7. **dirty 判定过滤构建生成物**：`git -c status.relativePaths=false status --porcelain` 剔除 `*.exe`、图标、`rsrc_*.syso` 后为空才算干净；git 异常时保守按脏处理。
 8. **`.gitignore` 根路径限定**：`/icon.ico`、`/icon.png` 必须带前导斜杠，否则会误忽略 `internal/app/icon.ico`（`go:embed` 必需资产）。
+9. **双通道契约**：GUI 产物（`-H windowsgui`）只开窗口、不解析任何子命令；Console 产物（`-tags cli`，console 子系统）只跑终端、不开窗口。一条通道必须出两个二进制，严禁用 `AttachConsole` 合成单产物（原因见 `README.md` 反模式警示与 `references/troubleshooting.md` §3）。
+
 
 ---
 
@@ -70,8 +72,8 @@ function Get-IconHash($path) {
   $sha = [System.Security.Cryptography.SHA256]::Create().ComputeHash($ms.ToArray())
   [BitConverter]::ToString($sha).Replace('-','').Substring(0,16)
 }
-Get-IconHash ".\<app>.exe"        # 与下面必须不同
-Get-IconHash ".\<app>-dev.exe"
+Get-IconHash ".\<app>-gui.exe"        # 与下面必须不同（GUI 通道）
+Get-IconHash ".\<app>-gui-dev.exe"
 ```
 
 再用 Pillow 取 `icon_dev.ico` 的 32×32 帧与 dev exe 图标做像素比对（`uv run --with pillow python`），可确认 dev 图标确实是地鼠。
@@ -117,21 +119,25 @@ if __name__ == "__main__":
 
 ## 四、`scripts/build.py`（完整实现）
 
+> 通用模板：把 `your_app` 换成项目名、`TAG_PREFIX` 换成 monorepo 前缀即可直接用。
+> 关键点：同一通道内循环构建两次，只有 GUI 目标追加 `-H windowsgui`，只有 CLI 目标追加 `-tags cli`。
+
 ```python
 # /// script
 # requires-python = ">=3.11"
 # dependencies = ["pillow>=11.0"]
 # ///
-"""构建单二进制：dev 默认，仅 精确 tag + 干净工作区 才 release。
+"""双通道构建：每条通道各出 GUI（-H windowsgui）与 Console（-tags cli）两个二进制。
 
 用法：
-  uv run scripts/build.py              # dev     → <app>-dev.exe  vX.Y.Z-dev[-dirty]
-  uv run scripts/build.py --release    # release → <app>.exe      vX.Y.Z（条件不足 exit 2）
+  uv run scripts/build.py              # dev     → <app>-gui-dev.exe + <app>-cli-dev.exe
+  uv run scripts/build.py --release    # release → <app>-gui.exe     + <app>-cli.exe（条件不足 exit 2）
 """
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -143,11 +149,17 @@ ICON_DEV = PROJECT_ROOT / "internal" / "app" / "icon_dev.ico"
 RENDER_ICON = PROJECT_ROOT / "scripts" / "render_icon.py"
 MANIFEST = PROJECT_ROOT / "wails.exe.manifest"
 SYSO_OUT = PROJECT_ROOT / "cmd" / "your_app" / "rsrc_windows_amd64.syso"
-EXE_RELEASE = PROJECT_ROOT / "your_app.exe"
-EXE_DEV = PROJECT_ROOT / "your_app-dev.exe"
+
+EXE_GUI_RELEASE = PROJECT_ROOT / "your_app-gui.exe"
+EXE_GUI_DEV = PROJECT_ROOT / "your_app-gui-dev.exe"
+EXE_CLI_RELEASE = PROJECT_ROOT / "your_app-cli.exe"
+EXE_CLI_DEV = PROJECT_ROOT / "your_app-cli-dev.exe"
+
 GENERATED_SUFFIXES = (
-    "/your_app.exe",
-    "/your_app-dev.exe",
+    "/your_app-gui.exe",
+    "/your_app-gui-dev.exe",
+    "/your_app-cli.exe",
+    "/your_app-cli-dev.exe",
     "/icon.ico",
     "/icon.png",
     "/cmd/your_app/rsrc_windows_amd64.syso",
@@ -195,62 +207,90 @@ def worktree_dirty() -> bool:
     return False
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="构建单二进制（dev / release 严格隔离）")
-    parser.add_argument("--release", action="store_true", help="声明发布构建；tag 或干净条件不满足即报错")
-    parser.add_argument("--version", default="", help="仅覆盖版本基线，不改变通道判定")
-    args = parser.parse_args()
-
-    # 1. 先判定通道（图标与产物名都依赖它）；--release 只做断言
-    release = exact_project_tag() is not None and not worktree_dirty()
-    if args.release and not release:
-        print("❌ 拒绝发布构建：需同时满足 精确 tag + 工作区干净", file=sys.stderr)
-        return 2
-
-    # 2. 图标：release 重绘专属图标；dev 直接用地鼠静态资产
+def build_resources(release: bool, rsrc: str) -> int:
+    """PE 资源段：图标按通道切换，必须落在 main 包目录。"""
     if release and RENDER_ICON.exists():
         subprocess.run(["uv", "run", str(RENDER_ICON)], cwd=str(PROJECT_ROOT), check=True)
     icon = ICON_RELEASE if release else ICON_DEV
     if not icon.exists():
         print(f"❌ 缺少图标文件: {icon}", file=sys.stderr)
         return 4
-
-    # 3. PE 资源段必须落在 main 包目录，且 -ico 按通道选择
-    r = subprocess.run([
-        r"C:\Users\29580\go\bin\rsrc.exe",
-        "-manifest", str(MANIFEST),
-        "-ico", str(icon),
-        "-arch", "amd64",
-        "-o", str(SYSO_OUT),
-    ], cwd=str(PROJECT_ROOT))
+    r = subprocess.run(
+        [rsrc, "-manifest", str(MANIFEST), "-ico", str(icon), "-arch", "amd64", "-o", str(SYSO_OUT)],
+        cwd=str(PROJECT_ROOT),
+    )
     if r.returncode != 0:
         print(f"❌ rsrc 编译失败（exit {r.returncode}）", file=sys.stderr)
-        return r.returncode
+    return r.returncode
 
-    # 4. 版本与产物名
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="双通道构建（dev / release 严格隔离）")
+    parser.add_argument("--release", action="store_true", help="声明发布构建；tag 或干净条件不满足即报错")
+    parser.add_argument("--version", default="", help="仅覆盖版本基线，不改变通道判定")
+    args = parser.parse_args()
+
+    # 1. 先判定通道（图标与产物名都依赖它）；--release 只做断言
     dirty = worktree_dirty()
+    release = exact_project_tag() is not None and not dirty
+    if args.release and not release:
+        print("❌ 拒绝发布构建：需同时满足 精确 tag + 工作区干净", file=sys.stderr)
+        return 2
+
+    # 2. PE 资源段（图标按通道切换）
+    rsrc = shutil.which("rsrc")
+    if not rsrc:
+        print("❌ 未找到 rsrc：go install github.com/akavel/rsrc@latest 并确认 %GOPATH%\\bin 在 PATH", file=sys.stderr)
+        return 4
+    rc = build_resources(release, rsrc)
+    if rc != 0:
+        return rc
+
+    # 3. 版本与通道
     base = args.version.lstrip("v") or base_version()
     version = f"v{base}" if release else f"v{base}-dev" + ("-dirty" if dirty else "")
-    out_exe = EXE_RELEASE if release else EXE_DEV
-
-    # 5. 编译（dev 额外注入 -tags dev，切换窗口/托盘图标）
     build_mode = "release" if release else "dev"
-    cmd = ["go", "build", "-trimpath"]
-    if not release:
-        cmd += ["-tags", "dev"]
-    cmd += [
-        f"-ldflags=-w -s -H windowsgui "
-        f"-X your_app/internal/app.Version={version} "
-        f"-X your_app/internal/app.BuildMode={build_mode}",
-        "-o", str(out_exe),
-        "./cmd/your_app",
-    ]
-    r = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
-    if r.returncode != 0:
-        print(f"❌ go build 失败（exit {r.returncode}）", file=sys.stderr)
-        return r.returncode
 
-    print(f"🎉 {out_exe.name} ({out_exe.stat().st_size / 1048576:.2f} MB, {version}, {build_mode})")
+    # 4. 逐通道 go build：同一通道内 GUI 与 Console 各一个产物
+    targets = (
+        (EXE_GUI_RELEASE if release else EXE_GUI_DEV, True),
+        (EXE_CLI_RELEASE if release else EXE_CLI_DEV, False),
+    )
+    for out_exe, gui in targets:
+        flags = ["-w", "-s"]
+        if gui:
+            flags.append("-H windowsgui")                      # GUI 通道：双击零黑框
+        flags.append(f"-X your_app/internal/app.Version={version}")
+        flags.append(f"-X your_app/internal/app.BuildMode={build_mode}")
+
+        tags = [] if release else ["dev"]
+        if not gui:
+            tags.append("cli")                                 # Console 通道：走 cli.go 入口
+
+        cmd = ["go", "build", "-trimpath"]
+        if tags:
+            cmd += ["-tags", ",".join(tags)]
+        cmd += [f"-ldflags={' '.join(flags)}", "-o", str(out_exe), "./cmd/your_app"]
+
+        channel = "GUI" if gui else "Console"
+        print(f"🔨 [{channel}] {out_exe.name}")
+        r = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
+        if r.returncode != 0:
+            print(f"❌ go build 失败（exit {r.returncode}）: {out_exe.name}", file=sys.stderr)
+            return r.returncode
+
+    # 5. 产物名守卫：dev 必须以 -dev 结尾，release 不得含 dev
+    for out_exe, _gui in targets:
+        if release and "dev" in out_exe.stem:
+            print(f"❌ 产物命名违规: {out_exe}", file=sys.stderr)
+            return 3
+        if not release and not out_exe.stem.endswith("-dev"):
+            print(f"❌ 产物命名违规: {out_exe}", file=sys.stderr)
+            return 3
+
+    for out_exe, gui in targets:
+        size_mb = out_exe.stat().st_size / 1048576
+        print(f"🎉 {out_exe.name} ({size_mb:.2f} MB, {version}, {build_mode}, {'GUI' if gui else 'Console'})")
     return 0
 
 
@@ -264,6 +304,10 @@ if __name__ == "__main__":
 
 ```gitignore
 # 构建生成物（脚本自动重建，不入库）
+/your_app-gui.exe
+/your_app-gui-dev.exe
+/your_app-cli.exe
+/your_app-cli-dev.exe
 /icon.ico
 /icon.png
 /cmd/your_app/rsrc_windows_amd64.syso
