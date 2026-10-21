@@ -1,7 +1,7 @@
 ---
 name: sh-go-wails-desktop
 description: Go 单二进制桌面应用脚手架：CLI+WebUI+Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用
-version: 1.0.0
+version: 1.1.0
 created: 2026-10-21
 updated: 2026-10-21
 disable-model-invocation: true
@@ -54,12 +54,12 @@ scripts/            render_icon.py / build.py
 ### Step 2 入口分流（`main.go`）
 
 ```go
-if len(os.Args) < 2 {                       // 双击：GUI
-    _ = app.LaunchGUI("", 8765, false)
+if len(os.Args) < 2 {                       // 双击：GUI（port=0 → 动态探测可用端口）
+    _ = app.LaunchGUI("", 0, false)
     return
 }
 if os.Args[1] == "--hidden" {               // 开机自启：静默托盘
-    _ = app.LaunchGUI("", 8765, true)
+    _ = app.LaunchGUI("", 0, true)
     return
 }
 switch os.Args[1] { /* ingest / list / get / export / serve / schema / version */ }
@@ -79,7 +79,8 @@ switch os.Args[1] { /* ingest / list / get / export / serve / schema / version *
 
 - `DisableQuitOnLastWindowClosed: true` 保持托盘常驻；
 - dev 的 `SingleInstanceOptions.UniqueID` 必须追加 `.dev`，否则与常驻正式版互斥；
-- 关闭窗口放行 `WindowClosing`，延时 `runtime.GC()` + `debug.FreeOSMemory()`。
+- 关闭窗口放行 `WindowClosing`，延时 `runtime.GC()` + `debug.FreeOSMemory()`；
+- **端口默认 `port=0` 动态探测**，不要写死固定端口（如 8765）：GUI 必须先 `net.Listen` 拿到真实端口才能构造窗口 `URL:`，CLI `serve` 则绑定后阻塞；两处共用同一个绑定函数，杜绝「以为的端口」与「实际端口」两份真相。实际 URL 必须走 `logf`（`-H windowsgui` 下 stdout 不可见），固定端口仅作为可选参数保留。
 
 **校验**：dev 与 release 可同时运行且互不唤醒。
 
@@ -160,6 +161,7 @@ git tag -d <project>/vX.Y.Z                                # 误打 tag（远端
 | release 门禁 | 无 tag / 脏工作区执行 `--release` | 退出码 2，不产正式名 |
 | 通道数据隔离 | dev 与 release 各跑一次 | 分别落 `dev` / `prod` 目录 |
 | 单实例隔离 | 两者同时运行 | 互不唤醒、可并存 |
+| 端口零冲突 | dev 与 release 同时启动看日志 URL | 各自不同动态端口，互不串台 |
 | 自启门禁 | dev 勾选自启 | 菜单置灰 + 注册表无写入 |
 | 关窗释放 | 关窗后看任务管理器 | WebView2 子进程退出，内存回落 |
 | 构建幂等 | 连续两次 release 后 `git status` | 输出为空 |

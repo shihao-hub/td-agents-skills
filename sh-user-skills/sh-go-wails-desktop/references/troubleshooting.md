@@ -108,7 +108,7 @@ func logf(format string, args ...any) {
 
 ### 3.3 前端白屏 / 交互异常
 
-- 确认内置 HTTP 服务已监听（`net.Listen` 失败会回退随机端口，日志里有实际 URL）。
+- 确认内置 HTTP 服务已监听：默认 `port=0` 由内核探测端口，日志里有实际 URL（`WebUI 已启动: http://127.0.0.1:<port>`）。显式传入固定端口却被占用时，GUI 直接启动失败并落 `logf`、CLI 直接报错退出——不再提供「失败后偷偷换端口」的兜底，否则外部无法确定到底连到了哪个实例。
 - 需要看 WebView2 控制台时，用 Wails v3 的 Debug 选项开启 DevTools（不同 beta 版本字段名有差异，以 `go doc` 为准），不要为此改动 release 构建。
 
 ---

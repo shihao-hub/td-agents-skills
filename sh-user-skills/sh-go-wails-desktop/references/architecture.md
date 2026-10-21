@@ -167,12 +167,17 @@ type App struct {
 	exiting   atomic.Bool
 }
 
-func LaunchGUI(dbPath string, defaultPort int, hidden bool) error {
-	// 启动内置 HTTP 服务
-	listener, _ := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", defaultPort))
-	port := listener.Addr().(*net.TCPAddr).Port
-	serverURL := fmt.Sprintf("http://127.0.0.1:%d", port)
-	go http.Serve(listener, nil) // 挂载你的 mux
+// LaunchGUI 启动 WebUI + Wails 桌面壳。port 传 0 由内核动态探测可用端口
+// （默认行为：dev / release 乃至同机多实例各占不同端口，无需端口约定）。
+func LaunchGUI(dbPath string, port int, hidden bool) error {
+	// 先绑定再建窗口：窗口 URL 需要真实端口，不能先构造地址后监听。
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		return fmt.Errorf("启动 HTTP 监听失败: %w", err)
+	}
+	serverURL := "http://" + listener.Addr().String()
+	logf("WebUI 已启动: %s", serverURL) // 落日志（实现见 troubleshooting §3）
+	go http.Serve(listener, nil)        // 挂载你的 mux
 
 	var appInstance *App
 
