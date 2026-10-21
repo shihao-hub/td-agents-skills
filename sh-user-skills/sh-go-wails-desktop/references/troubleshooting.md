@@ -160,3 +160,24 @@ git check-ignore -v icon.ico internal/app/icon.ico
 | `uv run scripts/build.py` 报无 Pillow | 直接用 `python` 而非 `uv run` | 用 `uv run`（PEP 723 自动装依赖） |
 | 构建后 `git status` 变脏 | 图标渲染非确定性 | 固定渲染参数，确保同源码同字节 |
 | `rsrc.exe` 找不到 | `%GOPATH%\bin` 不在 PATH | `go install github.com/akavel/rsrc@latest` 后补 PATH |
+
+---
+
+## 8. 并发写入报 `database is locked (SQLITE_BUSY)`
+
+**症状**：GUI 桌面壳运行中，另一个终端跑 `ingest`（或两个 `ingest` 并行）偶尔直接报 `database is locked (5) (SQLITE_BUSY)`，而不是等待。
+
+**根因**：`sql.Open("sqlite", dbPath)` 用裸 DSN 时，上游 `busy_timeout` 默认为 **0**，且默认 rollback journal 下写者互斥，第二个写者拿不到锁就立即失败。这跟端口、单实例都无关——动态端口下多进程共存是常态。
+
+**处置**：
+
+1. 统一 DSN（存储层一处改完，所有入口共享）：
+   ```go
+   const sqliteDSNParams = "?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
+   db, err := sql.Open("sqlite", dbPath+sqliteDSNParams)
+   ```
+2. 保持 GUI 的 HTTP 层只读（写只走 CLI），这样 WAL 足以覆盖全部场景；给 GUI 加写接口后才需要跨进程写锁。
+3. GUI 退出路径补 `store.Close()`，让 WAL checkpoint 及时落盘。
+4. 补回归测试（三条）：带守卫的第二个写者需等待成功；裸 DSN 必须立即失败；`NewStore` 必须 `journal_mode=wal`、`busy_timeout=5000`。
+
+**验证**：并行两个 `ingest`（各含数 MB 产物，含首次建表 DDL 竞争）+ 同时请求 `/api/artworks`，三者均成功。

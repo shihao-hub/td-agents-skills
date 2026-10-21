@@ -1,7 +1,7 @@
 ---
 name: sh-go-wails-desktop
 description: Go 单二进制桌面应用脚手架：CLI+WebUI+Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用
-version: 1.1.0
+version: 1.2.0
 created: 2026-10-21
 updated: 2026-10-21
 disable-model-invocation: true
@@ -105,7 +105,21 @@ HEAD 精确命中 <project>/v* tag  且  工作区干净（剔除构建生成物
 
 `appDataDir()` 返回 `%APPDATA%\language_projects\<app>\{dev,prod}`（取不到则 `~/.language_projects/<app>/<通道>`）；首次启动把旧库及 `-wal`/`-shm` 复制到新目录，**旧文件保留不删**。
 
-**校验**：dev 与 release 各执行一次 `list`，两个通道目录各自出现数据库文件。
+**同通道多进程并发（必做，别用单实例/端口去解决）**：同一通道的库会被「GUI 内嵌服务 + 多个 CLI（`serve` / `ingest`）」同时打开。动态端口下多进程共存是常态，因此数据层必须自带守卫：
+
+```go
+// 上游默认 busy_timeout=0 + rollback journal，并发写会直接报 database is locked。
+const sqliteDSNParams = "?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
+db, err := sql.Open("sqlite", dbPath+sqliteDSNParams)
+```
+
+- **并发模型前提**：GUI 的 HTTP 层保持只读（写只走 CLI），这样 WAL 下「读不阻塞写、写不阻塞读」即可覆盖全部场景；将来给 GUI 加写接口时，才需要引入跨进程写锁（命名 Mutex）。
+- **`busy_timeout` 是每连接的 busy handler**，跨进程同样生效；WAL 是持久化到库文件的设置，写一次后对新连接持续有效。
+- **驱动注意**：`modernc.org/sqlite` 在 DSN 不以 `file:` 开头时，`?` 之后按 query 解析、路径原样保留，Windows 反斜杠路径可直接拼接。
+- **GUI 退出前 `store.Close()`**：让 WAL 及时 checkpoint，避免 `-wal` 膨胀到下次启动。
+- **回归测试三断言**（少一条就可能被后人删掉参数）：带守卫的第二个写者必须等持锁方释放后成功；裸 DSN 必须立即失败；`NewStore` 产出的连接必须 `journal_mode=wal` 且 `busy_timeout=5000`。
+
+**校验**：dev 与 release 各执行一次 `list`，两个通道目录各自出现数据库文件；再并行跑两个 `ingest`（含首次建表 DDL 竞争）并其间请求 `/api/artworks`，应全部成功。
 
 ### Step 8 开机自启门禁
 
@@ -138,6 +152,7 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 | dev 与正式版互相挤掉 | 单实例 ID 未隔离 | dev `UniqueID` 追加 `.dev` |
 | `go:embed` 资产被忽略 | `.gitignore` 写成 `icon.ico` | 改为 `/icon.ico`，用 `git check-ignore -v` 复核 |
 | `gofmt -l` 一直报图标文件 | doc comment 与 `//go:embed` 间缺空 `//` 行 | 补一行 `//` |
+| 并发写报 `database is locked (SQLITE_BUSY)` | 裸 DSN：`busy_timeout=0` + rollback journal | 统一 DSN 加 `busy_timeout`/WAL（Step 7、troubleshooting §8） |
 
 **回滚**：
 
@@ -160,6 +175,7 @@ git tag -d <project>/vX.Y.Z                                # 误打 tag（远端
 | dev 图标 | 看文件管理器 | Go 地鼠；release 为专属图标 |
 | release 门禁 | 无 tag / 脏工作区执行 `--release` | 退出码 2，不产正式名 |
 | 通道数据隔离 | dev 与 release 各跑一次 | 分别落 `dev` / `prod` 目录 |
+| 并发写不冲突 | 并行两个 `ingest`，其间请求 `/api/artworks` | 两条都 success，API 200 |
 | 单实例隔离 | 两者同时运行 | 互不唤醒、可并存 |
 | 端口零冲突 | dev 与 release 同时启动看日志 URL | 各自不同动态端口，互不串台 |
 | 自启门禁 | dev 勾选自启 | 菜单置灰 + 注册表无写入 |

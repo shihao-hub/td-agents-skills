@@ -400,3 +400,5 @@ func (a *App) quit() {
 - `webviewDataPath()`：`<appDataDir>/webview2`，避免 WebView2 缓存散落到可执行文件目录。
 - 日志：`<appDataDir>/<app>.log`，`logf()` 同时写 `os.Stderr` 与追加文件，供 `-H windowsgui` 无控制台场景排障。
 - 旧库迁移：新库不存在且旧库存在时复制主库与 `-wal`/`-shm`，旧文件保留。
+- **并发**：同一通道库被 GUI 与多个 CLI 共用，DSN 必须带 `busy_timeout(5000)` + `journal_mode(WAL)`；GUI 退出前 `store.Close()` 触发 checkpoint（详见 README Step 7）。
+- **写的唯一入口是 CLI**：GUI 的 HTTP 层保持只读，这是「WAL 足够、无需跨进程写锁」的前提。
