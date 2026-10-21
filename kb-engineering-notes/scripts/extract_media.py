@@ -87,8 +87,8 @@ def probe_size(data: bytes) -> tuple[int, int] | None:
                     dims[tag] = struct.unpack(endian + "H", entry[i * 12 + 8:i * 12 + 10])[0]
                 elif tag in (256, 257) and typ == 4:
                     dims[tag] = val
-            if 256 in dims and 257 in dims:
-                return dims[256], dims[257]
+                if 256 in dims and 257 in dims:
+                    return dims[256], dims[257]
             return None
 
         if data[:4] == b"RIFF" and data[8:12] == b"WEBP":          # WebP
@@ -117,7 +117,7 @@ def probe_size(data: bytes) -> tuple[int, int] | None:
                     i += 2
                     continue
                 seg_len = struct.unpack(">H", data[i + 2:i + 4])[0]
-                if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
+                if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCCC):
                     h, w = struct.unpack(">HH", data[i + 5:i + 9])
                     return int(w), int(h)
                 i += 2 + seg_len
