@@ -144,6 +144,7 @@ log.Fatal(http.Serve(listener, api.NewServer(store).Handler()))
 - `DisableQuitOnLastWindowClosed: true` 保持托盘常驻；
 - dev 的 `SingleInstanceOptions.UniqueID` 必须追加 `.dev`，否则与常驻正式版互斥；
 - 关闭窗口放行 `WindowClosing`，延时 `runtime.GC()` + `debug.FreeOSMemory()`；
+- **单实例互斥可被外部探测**：Wails 建锁名固定为 `wails-app-<UniqueID>-sim`，CLI 侧用 `OpenMutex` 即可判定「哪个通道的 GUI 在跑」，建锁与探测必须共用同一个 ID 真源（详见 `references/architecture.md` §四·补二）；
 - **端口默认 `port=0` 动态探测**，不要写死固定端口（如 8765）：GUI 必须先 `net.Listen` 拿到真实端口才能构造窗口 `URL:`，CLI `serve` 则绑定后阻塞；两处共用同一个绑定函数与同一个 `Handler()`（见 Step 3 硬约束），杜绝「以为的端口」与「实际端口」两份真相，也杜绝 GUI 有页面、CLI 只有裸 API 的分裂。实际 URL 必须走 `logf`（`-H windowsgui` 下 stdout 不可见）或 console 通道的 `fmt.Printf`，固定端口仅作为可选参数保留。
 
 **校验**：dev 与 release 可同时运行且互不唤醒。

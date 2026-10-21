@@ -522,6 +522,48 @@ func (a *App) ensureWindowOnScreen(win *application.WebviewWindow) {
 
 ---
 
+## 四·补二 单实例互斥探测（让外部工具判断 GUI 是否在跑）
+
+Wails v3 的 Windows 单实例实现（`single_instance_windows.go`）建锁命名是固定的：
+
+```go
+id         := "wails-app-" + uniqueID
+mutexName  := id + "-sim"   // CreateMutex 创建，进程存活期间一直存在
+className  := id + "-sic"   // 隐藏的 event target 窗口
+windowName := id + "-siw"
+```
+
+因此外部 CLI 可以用 `OpenMutex` 探测某个通道的 GUI 是否在运行，比按进程名匹配可靠（exe 改名、僵死进程都不影响）：
+
+```go
+//go:build windows
+package app
+
+func guiSingleInstanceID(release bool) string {
+	id := "shihao.langproj.<app>.gui"
+	if !release {
+		id += ".dev"
+	}
+	return id
+}
+
+func GUIRunning(release bool) bool {
+	name := "wails-app-" + guiSingleInstanceID(release) + "-sim"
+	handle, err := windows.OpenMutex(windows.SYNCHRONIZE, false, windows.StringToUTF16Ptr(name))
+	if err != nil {
+		return false
+	}
+	_ = windows.CloseHandle(handle)
+	return true
+}
+```
+
+- **单一真源**：`LaunchGUI` 建锁与外部探测必须共用同一个 `guiSingleInstanceID()`，否则改名后探测静默失效（GUI 在跑却报未运行）；
+- **非 Windows 留桩**：另一份 `//go:build !windows` 实现返回 `false`，保持调用方逻辑统一；
+- **典型用途**：dev/prod 双通道桌面应用里，CLI 写入前先探测「用户窗口在看哪个通道的库」，避免归档进用户看不见的那一个。
+
+---
+
 ## 五、窗口生命周期与图标绑定时序
 
 - **创建时机**：`Window.NewWithOptions` 返回时底层 `HWND` 尚未创建（`NativeWindow() == 0`），此刻调用 Win32 设图标会静默失效。
