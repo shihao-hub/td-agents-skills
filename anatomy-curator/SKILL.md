@@ -14,7 +14,7 @@ version: 1.0.1
 ## 🛠️ 底座工具链位置契约
 
 本包装器默认依赖已编译就绪的 Go 二进制管理工具与单文件数据库：
-- **管理器执行程序**：`D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe`（Console 通道，shell 会正常等待、管道 / `--json` 可捕获）。同目录下的 `anatomymanager.exe` 是 GUI 通道，**仅用于用户双击打开桌面工作台**，Agent 一律不得用它跑 CLI（GUI 子系统在 pwsh 里异步启动，prompt 与光标会错位、管道捕获会拿到空内容）。dev 通道对应 `anatomymanager-cli-dev.exe`（数据库落 `dev` 子目录）。
+- **管理器执行程序**：`D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe`（Console 通道，shell 会正常等待、管道 / `--json` 可捕获）。同目录下的 `anatomymanager-gui.exe` 是 GUI 通道，**只负责双击打开桌面工作台，不接受任何子命令**（传参也会被忽略、直接出窗口）。dev 通道对应 `anatomymanager-cli-dev.exe`（数据库落 `dev` 子目录）。
 - **默认数据库落盘路径**：按构建通道隔离，`%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomy.db`。`ingest` / `list` / `get` / `export` 不传 `--db` 时自动落到当前通道库；`anatomymanager-cli.exe` 属 release 通道 → `prod`，`anatomymanager-cli-dev.exe` → `dev`。
 
 ---
@@ -73,7 +73,7 @@ D:\Users\language_projects\go_projects\anatomymanager\anatomymanager-cli.exe ing
 1. **作品基本信息**：标题、唯一标识（ID）、分类、涵盖的物理组件；
 2. **数据库归档确认**：说明已全量入库至当前构建通道的规范数据库（`anatomymanager-cli.exe` 对应 `%APPDATA%\language_projects\anatomymanager\prod\anatomy.db`）；
 3. **查阅方式**：
-   - 启动本地可视化服务：`anatomymanager-cli serve --open`（端口默认动态探测，`--open` 会自动开浏览器；若需在回复中给出地址，从终端输出或 `%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomymanager.log` 读取，不要写死 8765），或在 `D:\Users\language_projects\go_projects\anatomymanager` 下双击运行 GUI 通道的 `anatomymanager.exe`；
+   - 启动本地可视化服务：`anatomymanager-cli serve --open`（端口默认动态探测，`--open` 会自动开浏览器；若需在回复中给出地址，从终端输出或 `%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomymanager.log` 读取，不要写死 8765），或在 `D:\Users\language_projects\go_projects\anatomymanager` 下双击运行 GUI 通道的 `anatomymanager-gui.exe`（它会同时起内置服务并开窗口）；
    - 或单独离线导出：`anatomymanager-cli export <name> --out ./dist/<name>`。
 
 ---
