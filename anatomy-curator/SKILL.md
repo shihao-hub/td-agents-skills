@@ -1,7 +1,7 @@
 ---
 name: anatomy-curator
-description: 精密机械图谱策展人与生命周期管理包装器：端到端统筹 isometric 交互式机械原理图谱（anatomy）的生成与自动化入库归档。当用户需要绘制技术原理的拟物机械仪态图（如仪表、阀门、限流器、排队机、储能腔等）、或需要检索、导出、展示和管理已收录的 anatomy 机械图谱资产时使用。自动委托原生 anatomy 技能完成高质量制图与原理解析文档编写，并在完成后立即调用 anatomymanager CLI 将全套代码与多媒体资产持久化至 SQLite 数据库（C:\Users\29580\.anatomy\anatomy.db），实现生命周期闭环与一键 WebUI 预览。
-version: 1.0.0
+description: 精密机械图谱策展人与生命周期管理包装器：端到端统筹 isometric 交互式机械原理图谱（anatomy）的生成与自动化入库归档。当用户需要绘制技术原理的拟物机械仪态图（如仪表、阀门、限流器、排队机、储能腔等）、或需要检索、导出、展示和管理已收录的 anatomy 机械图谱资产时使用。自动委托原生 anatomy 技能完成高质量制图与原理解析文档编写，并在完成后立即调用 anatomymanager CLI 将全套代码与多媒体资产持久化至本地 SQLite 单文件数据库，实现生命周期闭环与一键 WebUI 预览。
+version: 1.0.1
 ---
 
 # anatomy-curator：精密机械图谱策展与资产归档包装器
@@ -15,7 +15,7 @@ version: 1.0.0
 
 本包装器默认依赖已编译就绪的 Go 二进制管理工具与单文件数据库：
 - **管理器执行程序**：`D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe`
-- **默认数据库落盘路径**：`C:\Users\29580\.anatomy\anatomy.db`
+- **默认数据库落盘路径**：按构建通道隔离，`%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomy.db`。`ingest` / `list` / `get` / `export` 不传 `--db` 时自动落到当前通道库；`anatomymanager.exe` 属 release 通道 → `prod`，`anatomymanager-dev.exe` → `dev`。
 
 ---
 
@@ -71,9 +71,9 @@ D:\Users\language_projects\go_projects\anatomymanager\anatomymanager.exe ingest 
 
 归档成功后，Agent 需在最终回复中向用户汇报：
 1. **作品基本信息**：标题、唯一标识（ID）、分类、涵盖的物理组件；
-2. **数据库归档确认**：说明已全量入库至 `C:\Users\29580\.anatomy\anatomy.db`；
+2. **数据库归档确认**：说明已全量入库至当前构建通道的规范数据库（`anatomymanager.exe` 对应 `%APPDATA%\language_projects\anatomymanager\prod\anatomy.db`）；
 3. **查阅方式**：
-   - 启动本地可视化服务：`anatomymanager serve --open`（或在 `D:\Users\language_projects\go_projects\anatomymanager` 下双击运行 `anatomymanager.exe`）；
+   - 启动本地可视化服务：`anatomymanager serve --open`（端口默认动态探测，`--open` 会自动开浏览器；若需在回复中给出地址，从终端输出或 `%APPDATA%\language_projects\anatomymanager\<dev|prod>\anatomymanager.log` 读取，不要写死 8765），或在 `D:\Users\language_projects\go_projects\anatomymanager` 下双击运行 `anatomymanager.exe`；
    - 或单独离线导出：`anatomymanager export <name> --out ./dist/<name>`。
 
 ---
