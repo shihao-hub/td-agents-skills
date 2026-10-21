@@ -41,6 +41,47 @@ exe 文件图标（PE 资源）与窗口/托盘图标（内存）是两条独立
 
 图标按通道选择（写进 `winres/{gui,cli}.json` 的 `__ICON__` 占位）：release 用根 `icon.ico`，dev 用 `internal/app/icon_dev.ico`（Go 地鼠，静态入库）。
 
+### 1.1 PE 版本资源（VERSIONINFO）与 winres 模板
+
+exe 属性面板里的「文件说明 / 文件版本 / 产品名称 / 公司 / 版权」来自 VERSIONINFO 资源，必须由 `go-winres` 生成（rsrc 没有这个能力）。模板放 `winres/`，**GUI 与 CLI 各一份**（FileDescription 必须不同）：
+
+```json
+{
+  "RT_GROUP_ICON": { "APP": { "0000": "__ICON__" } },
+  "RT_MANIFEST":   { "#1":  { "0409": "__MANIFEST__" } },
+  "RT_VERSION": {
+    "#1": { "0000": {
+      "fixed": { "file_version": "__FIXED_VERSION__", "product_version": "__FIXED_VERSION__" },
+      "info": { "0409": {
+        "CompanyName": "Your Company",
+        "FileDescription": "AppName - 桌面工作台",
+        "FileVersion": "__VERSION__",
+        "InternalName": "app-gui",
+        "LegalCopyright": "© 2026 Your Company",
+        "OriginalFilename": "__ORIGINAL_NAME__",
+        "ProductName": "app",
+        "ProductVersion": "__VERSION__"
+      } }
+    } }
+  }
+}
+```
+
+- `cli.json` 只需改 `FileDescription`（如「AppName CLI - 命令行」）与 `InternalName`；
+- `RT_MANIFEST` 指向现成的 `wails.exe.manifest` 文件（**路径相对 JSON 所在目录**，即 `"../wails.exe.manifest"`），manifest 内容原样嵌入，DPI/Common-Controls 设置不受影响；
+- `__FIXED_VERSION__` 必须是 4 段纯数字（`1.2.1.0`），`__VERSION__` 可带后缀（`1.2.1-dev-dirty`），便于在属性面板区分 dev；
+- `__ICON__` / `__MANIFEST__` 用正斜杠相对路径（`../icon.ico`、`../internal/app/icon_dev.ico`）。
+
+**校验**（构建后立刻跑）：
+
+```powershell
+Get-Item .\<app>-gui.exe | ForEach-Object {
+  $v = $_.VersionInfo
+  "{0} | {1} | {2} | {3}" -f $v.FileDescription, $v.FileVersion, $v.ProductName, $v.OriginalFilename
+}
+# 期望：GUI 与 CLI 的 FileDescription 不同，版本与 tag 一致，OriginalFilename 等于实际文件名
+```
+
 ### 2. 窗口/托盘（build tag 切换 embed）
 
 `//go:embed` 编译期固化，无法用 ldflags 替换，用 build tag 拆两个同名变量：

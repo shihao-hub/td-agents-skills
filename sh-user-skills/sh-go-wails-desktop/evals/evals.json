@@ -36,6 +36,12 @@
       "prompt": "一个旧 Wails 项目的前端通过 bindings/Events 调 Go，README 没写浏览器入口；同事要求按本 skill 补一套 serve 和 WebUI，是否应该直接照做？",
       "expected_output": "先按「适用范围」分类，不要照搬新项目标准：检查是否已有 HTTP 层/静态前端、前端是否依赖 Wails bindings/Events、是否明确需要浏览器入口。三种结论：已有 HTTP 层只是 serve 漏挂 WebUI → 低成本补上；Wails-only 且无浏览器需求 → 保持现状，在 README 显式标注「无浏览器入口」，这是合法例外；Wails-only 且确有浏览器/远程需求 → 单独立项做 HTTP 化 + SSE + 单写者锁，按新项目标准执行，不保留 bindings 与 HTTP 双路径。强调不得为了形式统一强行重构：bindings/Events 换 HTTP 是数据通道迁移，不是补一个页面。",
       "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "我构建出来的 exe 右键属性里「文件版本」「文件说明」「公司」都是空的，任务管理器里也只有文件名，怎么让 GUI 和 CLI 两个 exe 各自带上正确的版本信息？",
+      "expected_output": "先定性根因：rsrc v0.10.2 只支持 -manifest/-ico，不读 info.json 也不生成 VERSIONINFO，所以属性面板全空；info.json 现在只能当无 tag 时的版本基线。修复用 go-winres：go install github.com/tc-hib/go-winres@latest，建 winres/gui.json 与 winres/cli.json 两份模板（RT_GROUP_ICON 引 __ICON__、RT_MANIFEST 以相对 JSON 目录的 ../wails.exe.manifest 引用现有清单、RT_VERSION 写 CompanyName/FileDescription/ProductName/FileVersion/ProductVersion/LegalCopyright/OriginalFilename 占位），FileDescription 两通道必须不同（GUI=桌面工作台，CLI=命令行）。关键实现点：GUI 与 CLI 在同一个 Go 包，一个包只能链接一份 rsrc_windows_amd64.syso，所以必须在每个产物 go build 之前重新生成一次 syso（固定版本用 4 段数字 1.2.1.0，info 里的 Version 可带 -dev 后缀便于区分）；go-winres 的资源路径按「相对 JSON 所在目录」解析，所以临时渲染的 JSON 要落在 winres/ 下并用正斜杠相对路径。验证：Get-Item exe 的 VersionInfo 读 FileDescription/FileVersion/OriginalFilename，两通道描述不同且与 tag 版本一致；并确认 DPI/Common-Controls manifest 仍生效（窗口 DPI 正常）。",
+      "files": []
     }
   ]
 }

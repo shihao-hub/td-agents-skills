@@ -77,11 +77,14 @@ your_app/
 │   └── web/                            # 嵌入式 WebUI 前端资产 (HTML/JS/CSS)
 ├── scripts/
 │   ├── render_icon.py                  # 专属图标渲染流水线 (Pillow，仅 release 图标)
-│   └── build.py                        # 一键构建：通道判定 + 图标选择 + rsrc + 双通道 go build（GUI/Console 各一）
+│   └── build.py                        # 一键构建：通道判定 + 图标 + go-winres 资源段 + 双通道 go build（GUI/Console 各一）
+├── winres/
+│   ├── gui.json                        # VERSIONINFO + manifest + 图标模板（GUI 产物）
+│   └── cli.json                        # 同上，FileDescription/InternalName 换成 CLI 文案
 ├── icon.png                            # 1024x1024 原图
 ├── icon.ico                            # 多尺寸 Windows 图标
-├── info.json                           # PE 版本与版权元数据
-└── wails.exe.manifest                  # 4段式 WinSxS 清单文件
+├── info.json                           # 无 tag 时的版本基线（PE 资源由 winres 模板生成，不读此文件）
+└── wails.exe.manifest                  # 4段式 WinSxS 清单文件（由 winres 模板以 RT_MANIFEST 引用）
 ```
 
 ---
@@ -115,9 +118,9 @@ your_app/
 </assembly>
 ```
 
-### `info.json`
+### `info.json`（仅作版本基线，不再写入 PE）
 
-`fixed.file_version` 同时是 dev 版本基线（无 tag 时的回退值）。
+**注意：`rsrc` 不读 `info.json`**，所以它现在只承担一件事——无 git tag 时的版本基线回退值（`fixed.file_version`）。真正的 PE VERSIONINFO 由 `winres/{gui,cli}.json` 模板 + `go-winres` 生成（见 `build-pipeline.md` §1.1）；两者版本号必须同步递增，别只改一处。
 
 ```json
 {

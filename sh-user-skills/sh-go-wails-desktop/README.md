@@ -235,7 +235,15 @@ HEAD 精确命中 <project>/v* tag  且  工作区干净（剔除构建生成物
 其余情况（含无 tag、脏工作区、--release 但条件不足）            → dev / 退出码 2
 ```
 
-**校验**：无 tag 时 `uv run scripts/build.py --release` 退出码 2，且不产出正式名。
+**PE 版本资源（必做，别用 rsrc）**：属性面板的「文件说明/文件版本/公司/版权」来自 VERSIONINFO，只有 `go-winres` 能生成。模板放 `winres/{gui,cli}.json`（占位 `__ICON__` / `__MANIFEST__` / `__FIXED_VERSION__` / `__VERSION__` / `__ORIGINAL_NAME__`），**每个产物 `go build` 之前都要重建一次 syso**——GUI 与 CLI 在同一个 Go 包里，一个包只能链接一份 `rsrc_windows_amd64.syso`，否则两者只能共享同一份 FileDescription。模板与脚本见 `references/build-pipeline.md` §1.1 与 §三。
+
+**校验**：
+
+```powershell
+uv run scripts/build.py --release   # 无 tag/脏工作区应退出码 2，且不产出正式名
+(Get-Item .\<app>-gui.exe).VersionInfo | Select-Object FileDescription, FileVersion, ProductName
+# 期望：GUI 与 CLI 的 FileDescription 不同；版本与 tag 一致
+```
 
 ### Step 7 运行数据隔离
 
@@ -336,6 +344,7 @@ git tag -d <project>/vX.Y.Z                                                     
 | CLI 管道 | `.\<app>-cli.exe list --json \| ConvertFrom-Json` | 正常拿到 JSON，非空 |
 | GUI 忽略参数 | `.\<app>-gui.exe list --json` | 只出窗口，零 CLI 输出 |
 | 双通道子系统 | 读 PE 头 Subsystem | gui=2(WINDOWS_GUI)、cli=3(CONSOLE) |
+| PE 版本资源 | 右键 exe → 属性 → 详细信息 | 文件说明/文件版本/产品名/公司/版权齐全；GUI 与 CLI 描述不同 |
 | dev 图标 | 看文件管理器 | Go 地鼠；release 为专属图标 |
 | release 门禁 | 无 tag / 脏工作区执行 `--release` | 退出码 2，不产正式名 |
 | 通道数据隔离 | dev 与 release 各跑一次 | 分别落 `dev` / `prod` 目录 |
