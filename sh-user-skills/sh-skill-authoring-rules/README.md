@@ -23,7 +23,8 @@ updated: 2026-10-20
 |---|:---:|---|---|
 | `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`） | **卷一** |
 | `~/.agents/skills/sh-user-skills/<name>/README.md` | ❌ | **个人沉淀类子技能**：通过 `README.md` 命名避开全局自动扫描，由 `sh-user-skills` 按需通过 `view_file` 调入 | **卷二** |
-| `~/.agents/skills/<name>/`（相对软链暴露，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的子技能**：需进全局清单的高频/关键入口（如 `sh-plan-driven-development`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，**相对软链随仓入库**（可直接 `git` 管理与同步）。**转正为根级独立技能后不再走此形态**（如 `kb-engineering-notes`：真身已迁至根级，`sh-user-skills/` 下不留目录） | **卷二·4** |
+| `~/.agents/skills/<name>/`（相对软链暴露，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的全局技能**：需进全局清单的方法论与规范（如 `sh-frontend-deai`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，**相对软链随仓入库** | **卷二·4** |
+| `~/.agents/skills/sh-cmd-<name>/SKILL.md`（零软链命令门面 Facade） | ✅ | **用户主动直调命令**：为 `sh-user-skills/` 子技能建立的根级纯文本轻量门面（如 `sh-cmd-plan-driven-development`、`sh-cmd-spec-driven-development`），用 `uv run expose_user_skill.py <name> --cmd` 生成，**零软链依赖**，仅供 `/skill:sh-cmd-*` 主动直调 | **卷二·4** |
 | `~/.agents/skills/<kb-dir>/<name>.md`（分面槽位/历史0N知识库条目） | ❌ | **隐形技能 / 实战手记**：单点深度排障或工程实现，自带合规 frontmatter 但不命名为 `SKILL.md`，靠 `SKILL.md` 动态索引 | **卷三** |
 | `<kb-dir>/_SKILL.md` | ❌ | **知识库母版 / 动态路由表**：草稿与二级分流器，转正时 `git mv` 为 `SKILL.md` | **卷三** |
 | 根目录下无 frontmatter 的 `.md`（`GUIDE-*`、`plans-*`） | ❌ | **纯文档与历史规划记事**：不参与任何技能注册 | - |
@@ -102,26 +103,36 @@ updated: YYYY-MM-DD
    ([regex]::Match($raw, '(?ms)^description: \|?\r?\n(.*?)^version:').Groups[1].Value).Length
    ```
 
-### 4. 提级暴露机制（expose_user_skill）
+### 4. 提级暴露与命令门面机制（expose_user_skill 双模暴露）
 
-子技能默认隐形；当某技能需要进入全局技能清单（高频点名，或需要常驻关键词钩子，如知识库入口 `kb-engineering-notes`）时，在仓库根执行：
+子技能默认收敛在 `sh-user-skills/` 下，通过 `README.md` 避开全局自动扫描。当需要将子技能向外提供全局访问时，根据性质选择**相对软链提级暴露**或**零软链命令门面包装**：
 
 ```powershell
+# 模式 A：相对软链暴露（全局方法论/规范技能，如 sh-frontend-deai、sh-skill-authoring-rules）
 uv run expose_user_skill.py <name> --check   # 预演
 uv run expose_user_skill.py <name>           # 实跑
+
+# 模式 B：零软链命令门面暴露（主动直调命令，如 sh-cmd-plan-driven-development）
+uv run expose_user_skill.py <name> --cmd               # 默认生成 sh-cmd-<name>/SKILL.md 门面
+uv run expose_user_skill.py <name> --cmd <custom-name> # 自定义门面名称 sh-cmd-<custom-name>
 ```
 
-脚本把 `sh-user-skills/<name>/` 以**相对软链**暴露为根级 `~/.agents/skills/<name>/`：`README.md` 改名链出为 `SKILL.md`，其余内容（`references/`、`evals/` 等）原名链出。**链接本身随仓入库**（git 以 mode 120000 记录链接文本），因此必须用相对目标，换机/换盘/双入口（本仓 `.agents/skills` 与 `~/.agents/skills` 的 junction）都无需重建；旧版的 `.gitkeep`/`.gitignore` 占位已废弃，脚本遇到即清理。暴露后：
+#### 两类暴露形态分工：
+1. **相对软链提级暴露（默认模式）**：
+   - **适用对象**：需常驻全局技能清单、含完整评估/参考资料或由 AI 自动感知的公共方法论与规范（如 `sh-frontend-deai`、`sh-skill-authoring-rules`）；
+   - **实现机制**：脚本把 `sh-user-skills/<name>/` 以**相对软链**暴露为根级 `~/.agents/skills/<name>/`：`README.md` 链出为 `SKILL.md`，其余目录（`references/` 等）原名链出。链接本身以 `mode 120000` 随仓入库；
+   - **维护原则**：真身仍在 `sh-user-skills/<name>/`，修改只动真身。
 
-- 该技能 description 进入全局 prompt，此后遵守卷一对根级技能的全部约束（≤1024、关键词集群规范等）；
-- 真身仍在 `sh-user-skills/<name>/`，**一切修改只动真身**；改后重跑脚本（`--check` 探测链接失联）；
-- 已暴露位：`sh-plan-driven-development`、`sh-spec-driven-development`、`sh-skill-authoring-rules`、`sh-agent-handoff`（`kb-engineering-notes` 已转正为根级真身，不再走此形态）；四者 frontmatter 均已声明 `disable-model-invocation: true`。
+2. **零软链命令门面暴露（`--cmd` 模式）**：
+   - **适用对象**：用户在聊天框通过 `/skill:sh-cmd-*` 主动点名触发的确定性工作流（如 `plan`、`spec`、`monorepo-commit-push`、`troubleshooting-recap`、`agent-handoff`）；
+   - **实现机制**：在根级生成轻量包装器目录 `sh-cmd-<name>/SKILL.md`（纯文本普通文件，**零软链依赖**），具有独立的 `name: sh-cmd-<name>`，声明 `disable-model-invocation: true`，正文内置调度协议，指令模型使用专用读文件工具调入 `sh-user-skills/<name>/README.md` 执行；
+   - **优势**：彻底根除 Windows 跨盘/跨环境下的软链失效隐患，且解耦了根级命令名与子技能真身目录名，方便命名自定义。
 
 **四条硬约束（踩过坑，勿违）**：
-1. **暴露目录内严禁再放 `.gitignore`**：Harness 的技能发现同样读 `.gitignore`/`.ignore`/`.fdignore`（pi 的 `loadSkillsFromDir` 直接复用 gitignore 语义），一旦写 `*` 屏蔽链接产物，被屏蔽的 `SKILL.md` 会**静默不进技能清单**（无任何告警，连 `/skill:name` 也一起失效）——这正是本机制曾整体失效的根因。
-2. **Windows 下相对软链目标禁用正斜杠**：目标含 `/` 时 Windows 原生 API（Node/PowerShell/.NET）解析即 ENOENT，必须用 `\`；POSIX 用 `/`。脚本的 `link_text()` 已按平台自动转换，手搓链接时务必照做。
-3. **仓库须 `git config core.symlinks true`**（Windows 无开发者模式时 git 可能探成 `false`，会把入库链接检出成纯文本文件，技能发现同样失败）；建链失败时脚本直接报错，不提供硬链接/junction 兜底——那两种形态 git 无法以链接模式入库，只会把真身内容复制进来造成双份漂移。
-4. **暴露即继承仅直调语义**：子技能真身已预置 `disable-model-invocation: true`，建链后自动生效，**无需二次改动**；若暴露位缺该字段，模型会对其自动路由，与 `sh-user-skills` 分流器形成双入口竞争，违背「提级是为了直调快捷」的初衷。description 保留 `点名使用` 文案作跨端兜底（机制 + 文案双保险）。`expose_user_skill.py` 在建链前会校验该字段，缺失时仅警告不阻断。
+1. **暴露目录内严禁放 `.gitignore`**：Harness 的技能发现同样读 `.gitignore`/`.ignore`/`.fdignore`，一旦写 `*` 屏蔽链接产物，被屏蔽的 `SKILL.md` 会**静默不进技能清单**（无任何告警，连 `/skill:name` 也一起失效）。
+2. **Windows 下相对软链目标禁用正斜杠**：目标含 `/` 时 Windows 原生 API 解析即 ENOENT，必须用 `\`；POSIX 用 `/`。脚本的 `link_text()` 已按平台自动转换。
+3. **软链模式仓库须 `git config core.symlinks true`**：Windows 无开发者模式时 git 可能把入库软链检出为纯文本文件导致失效；命令门面（`--cmd`）为普通文本文件，不受此限制。
+4. **直调语义双保险**：无论是软链暴露还是 `--cmd` 门面，均须在 frontmatter 声明 `disable-model-invocation: true`，且 description 结尾保留 `点名使用`，防止与 `sh-user-skills` 顶层分流器形成双入口竞争。
 
 ---
 

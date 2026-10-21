@@ -2,14 +2,18 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""把 sh-user-skills/<name>/ 以「相对软链」暴露为根级 <name>/：README.md 改名链出为 SKILL.md，其余内容原名链出。
+"""把 sh-user-skills/<name>/ 暴露为根级技能：
 
-链接本身随仓入库（git 以 mode 120000 记录链接文本），因此必须是**相对路径**链接：
-仓库换盘/换机/换工作副本（如 ~/.agents/skills 与本仓 .agents/skills 双入口）都不用重建。
+支持两种模式：
+1. 【默认全软链模式】：以「相对软链」暴露为根级 <name>/，README.md 改名链出为 SKILL.md，其余内容原名链出。
+   链接本身随仓入库（mode 120000），适合需要完整资产暴露的全局技能。
+2. 【命令门面 CMD 模式】（--cmd）：以「命令包装器 Facade」暴露为根级 sh-cmd-<name>/SKILL.md，
+   无需软链，纯文本轻量转发至 sh-user-skills/<name>/README.md，适合用户主动直调的指令。
 
 用法：
     uv run expose_user_skill.py <name> [--check] [--force]
-    uv run expose_user_skill.py sh-plan-driven-development --check
+    uv run expose_user_skill.py <name> --cmd [--check] [--force]
+    uv run expose_user_skill.py sh-plan-driven-development --cmd
 """
 
 from __future__ import annotations
@@ -17,6 +21,7 @@ from __future__ import annotations
 import argparse
 import ctypes
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -116,13 +121,33 @@ def check_core_symlinks() -> None:
         )
 
 
-def check_skill_flag(src: Path) -> None:
-    """校验真身是否预置 disable-model-invocation: true；缺失仅警告，不阻断建链。
+def extract_meta(src: Path) -> tuple[str, str]:
+    """从 src/README.md 提取 name 与 description"""
+    readme = src / "README.md"
+    try:
+        text = readme.read_text(encoding="utf-8-sig")
+    except OSError:
+        return src.name, ""
+    lines = text.splitlines()
+    name = src.name
+    desc = ""
+    if lines and lines[0].strip() == "---":
+        try:
+            end = lines.index("---", 1)
+            raw_fm = "\n".join(lines[1:end])
+            m_name = re.search(r"^name:\s*(.+)$", raw_fm, re.M)
+            if m_name:
+                name = m_name.group(1).strip()
+            m_desc = re.search(r"^description:\s*(?:\|?\s*\n)?(.*?)(?=\n[a-z0-9_-]+:|$)", raw_fm, re.M | re.S)
+            if m_desc:
+                desc = " ".join(m_desc.group(1).strip().splitlines())
+        except ValueError:
+            pass
+    return name, desc
 
-    子技能真身 README.md 在被 expose 之前不会进任何注册表，预置字段零副作用；
-    建链后 SKILL.md 软链指向同一文件，字段当场生效。缺字段即意味着暴露后会
-    参与模型自动路由，与 sh-user-skills 分流器竞争，故在此守护。
-    """
+
+def check_skill_flag(src: Path) -> None:
+    """校验真身是否预置 disable-model-invocation: true；缺失仅警告，不阻断建链。"""
     readme = src / "README.md"
     try:
         text = readme.read_text(encoding="utf-8-sig")
@@ -145,27 +170,67 @@ def check_skill_flag(src: Path) -> None:
         )
 
 
+def derive_cmd_name(name: str) -> str:
+    """生成合规的 sh-cmd-* 名称"""
+    if name.startswith("sh-cmd-"):
+        return name
+    if name.startswith("sh-"):
+        return f"sh-cmd-{name[3:]}"
+    return f"sh-cmd-{name}"
+
+
+def generate_cmd_facade(cmd_name: str, src_name: str, desc: str) -> str:
+    """生成命令门面 SKILL.md 内容"""
+    if not desc:
+        desc = "用户主动直调命令门面。点名使用"
+    else:
+        desc = re.sub(r"[。，\s]*(?:或|及)?点名(?:时|后)?使用[。，\s]*$", "", desc)
+        desc = re.sub(r"[。，\s]+$", "", desc)
+        desc = f"{desc}。点名使用"
+
+    facade_content = f"""---
+name: {cmd_name}
+description: {desc}
+disable-model-invocation: true
+---
+
+# {cmd_name} (Command Facade)
+
+> 本技能为用户直调命令门面包装器（Command Wrapper Facade）。  
+> 调度真身：`sh-user-skills/{src_name}/README.md`
+
+## 命令派发协议
+
+当用户通过 `/skill:{cmd_name}` 或显式输入点名唤起本命令时，AI 请遵循以下调度动作：
+
+1. **直接载入真身 SOP**：
+   使用文件查看工具载入执行真身：
+   `D:\\Users\\language_projects\\.agents\\skills\\sh-user-skills\\{src_name}\\README.md`
+2. **保持原语执行**：
+   严格按照真身文档所定义的前置检查、分步 SOP 步骤与确认门禁逐步推进，无需重复发问。
+"""
+    return facade_content
+
+
 def main() -> int:
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
         sys.stdout.reconfigure(encoding="utf-8")
 
-    ap = argparse.ArgumentParser(description=__doc__)
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("name", help="sh-user-skills 下的子目录名，如 sh-plan-driven-development")
+    ap.add_argument("--cmd", nargs="?", const=True, default=False, metavar="CMD_NAME",
+                    help="以命令门面（Command Facade）模式暴露为 sh-cmd-*，无需软链；可选指定命令名")
     ap.add_argument("--check", action="store_true", help="dry-run：只打印将执行的动作")
     ap.add_argument("--force", action="store_true", help="先清空目标目录再重建")
     args = ap.parse_args()
 
     src = ROUTER / args.name
-    dst = SKILLS_ROOT / args.name
     if not src.is_dir():
         print(f"错误: 源不存在: {src}")
         return 1
     if not (src / "README.md").is_file():
         print(f"错误: 源内没有 README.md: {src}")
         return 1
-
-    check_core_symlinks()
-    check_skill_flag(src)
 
     actions = 0
     skips = 0
@@ -181,6 +246,57 @@ def main() -> int:
         nonlocal skips
         print(f"SKIP {msg}")
         skips += 1
+
+    # -------------------------------------------------------------
+    # 模式 2：命令门面 CMD 模式
+    # -------------------------------------------------------------
+    if args.cmd is not False:
+        if args.cmd is True:
+            cmd_name = derive_cmd_name(args.name)
+        else:
+            cmd_name = str(args.cmd).strip()
+
+        dst = SKILLS_ROOT / cmd_name
+        _, desc = extract_meta(src)
+        facade_text = generate_cmd_facade(cmd_name, args.name, desc)
+
+        if args.force and dst.exists():
+            do(f"FORCE 清空目标目录 {dst}", lambda: remove_path(dst))
+
+        # 若目标是历史软链，必须先解除
+        if is_link(dst):
+            do(f"REMOVE 历史软链目录 {dst.name}", lambda: remove_path(dst))
+
+        dst.mkdir(parents=True, exist_ok=True)
+        target_file = dst / "SKILL.md"
+
+        if target_file.is_file() and not is_link(target_file):
+            current_text = target_file.read_text(encoding="utf-8")
+            if current_text == facade_text:
+                skip(f"{target_file.name} 内容已是对齐的命令门面（Command Facade）")
+            else:
+                do(f"UPDATE {cmd_name}/SKILL.md（更新命令门面内容）",
+                   lambda: target_file.write_text(facade_text, encoding="utf-8", newline="\n"))
+        else:
+            do(f"CREATE {cmd_name}/SKILL.md（生成命令门面 Facade）",
+               lambda: (remove_path(target_file) if is_link(target_file) else None,
+                        target_file.write_text(facade_text, encoding="utf-8", newline="\n")))
+
+        # 清理该门面目录下多余的子文件或软链
+        for entry in sorted(dst.iterdir()):
+            if entry.name != "SKILL.md":
+                do(f"REMOVE {cmd_name}/{entry.name}（门面模式无需附加文件）", lambda e=entry: remove_path(e))
+
+        print(f"\n完成命令门面暴露: {cmd_name} -> sh-user-skills/{args.name}/README.md")
+        print(f"状态: {actions} 个动作{'（dry-run）' if args.check else ''}，{skips} 个跳过")
+        return 0
+
+    # -------------------------------------------------------------
+    # 模式 1：默认全软链暴露模式
+    # -------------------------------------------------------------
+    dst = SKILLS_ROOT / args.name
+    check_core_symlinks()
+    check_skill_flag(src)
 
     if args.force and dst.exists():
         do(f"FORCE 清空 {dst}", lambda: remove_path(dst))
