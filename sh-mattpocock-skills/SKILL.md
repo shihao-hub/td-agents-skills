@@ -205,3 +205,42 @@ python sync_mattpocock_skills.py --restore
 python sync_skills.py
 ```
 所有子技能将安全、无损地移回根目录；随时重新运行 `python sync_mattpocock_skills.py` 即可再次收拢，全流程幂等可逆。
+
+---
+
+## 七、AI 自动维护与上游更新协议 (For Agent / Self-Updating Protocol)
+
+> 💡 **核心契约：用户只需一句话，其余全由 AI 自动化闭环**  
+> 当用户指示 **“更新 sh-mattpocock-skills”**、**“同步最新的 matt pocock skills”** 或 **“帮我把 Matt Pocock 技能更新到最新版”** 时，AI 必须严格执行以下六步闭环：
+
+### 1. 探针感知与上游对比
+- AI 通过搜索工具或 GitHub 探测 `github.com/mattpocock/skills` 的最新 Commit / Release；
+- 识别本次更新涉及哪些具体技能（修改了已有 prompt，还是增加了新技能）。
+
+### 2. 安全还原与覆盖拉取
+- 执行确定性命令将现有技能一键平退为散装形态：
+  ```powershell
+  uv run sync_mattpocock_skills.py --restore
+  ```
+- 从上游拉取或覆盖受影响的技能目录。
+
+### 3. 一键重新收割与物理绝缘
+- 执行收拢命令，将更新后的技能重新归集回本目录，并自动转为 `README.md` 绝缘文件名：
+  ```powershell
+  uv run sync_mattpocock_skills.py
+  ```
+
+### 4. 链路回填与流转契约加固
+- **保留下游流转指引**：检查更新后的子技能尾部，确保 `## 下游关联流转指引（Next Transitions）` 依然完整；
+- **新技能登记**：若上游发布了全新原子技能（如 `ask-matt`），AI 必须在第二节路由对照表追加该技能，并在 `sync_mattpocock_skills.py` 列表中补上该名字。
+
+### 5. 暴露位验证与全端软链刷新
+- 确认根目录暴露位 `research/` 正常解析（真实目录 `agents/` + `SKILL.md` 软链指向真身）；
+- 运行同步脚本刷新全端挂载：
+  ```powershell
+  uv run sync_skills.py
+  ```
+
+### 6. 输出更新摘要与提交建议
+- 向用户汇报本次上游更新的具体变更点（例如“上游增强了 to-tickets 的 DAG 判定规则”）；
+- 自动完成或建议执行原子化 Git 提交。
