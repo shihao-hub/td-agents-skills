@@ -1,6 +1,18 @@
 ---
 name: kb-localhost-pwa-standalone
 description: 本地 Web/CLI 服务桌面应用化改造流水线：利用 Chromium SSB（--app 模式）与 PWA 规范（manifest.json/icon.svg），实现零 Electron/PyQt 依赖的原生独立窗口面板与启动器 SOP。改造本地服务为桌面应用时查阅。
+id: "088"
+domain: browser
+scope: pwa
+type: flow
+slug: localhost_standalone_window
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-22"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 本地服务桌面应用化与 PWA 独立窗口改造流水线

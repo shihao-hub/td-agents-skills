@@ -1,6 +1,18 @@
 ---
 name: kb-bruno-api-collection
 description: 为后端 HTTP 接口生成 Bruno API 测试集合（OpenCollection YAML/.bru）与请求链流水线：包含路由挂载链提取、认证隔离、断言与语法校验 SOP。接口测试生成与自动化回归时查阅。
+id: "085"
+domain: dev
+scope: bruno
+type: flow
+slug: api_test_collection
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-22"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Bruno 接口测试集合生成流水线 (OpenCollection YAML)

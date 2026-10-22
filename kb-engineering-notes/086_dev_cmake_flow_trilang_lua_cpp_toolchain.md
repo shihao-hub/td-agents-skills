@@ -1,6 +1,18 @@
 ---
 name: kb-cmake-trilang-lua-toolchain
 description: C/C++/Lua 多语言项目工具链配置与构建避坑手册：含 FetchContent 集成 Lua 5.1、CMake Presets 模板、MSVC /utf-8 编码、clangd 与 Zed 深度集成 SOP。C/C++ 与 Lua 构建排错时查阅。
+id: "086"
+domain: dev
+scope: cmake
+type: flow
+slug: trilang_lua_cpp_toolchain
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-22"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # C/C++/Lua 多语言项目工具链与构建避坑流水线

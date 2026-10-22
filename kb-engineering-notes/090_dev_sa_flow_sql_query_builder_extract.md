@@ -1,6 +1,18 @@
 ---
 name: kb-sqlalchemy-query-builder-extract
 description: SQLAlchemy 复杂 Core 查询抽取为文本 SQL 模板与 Query Builder 层重构流水线：解决 ORM 表达式可读性倒挂、包含 CTE/分页共享 params、动态列白名单与占位符安全校验 SOP。后端复杂 SQL 重构与性能调优时查阅。
+id: "090"
+domain: dev
+scope: sa
+type: flow
+slug: sql_query_builder_extract
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-22"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # 复杂 SQLAlchemy Core 查询抽取为 Query Builder 层重构流水线

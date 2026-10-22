@@ -4,7 +4,7 @@ description: |
   开发者通用工程实战手记、疑难排障与自动化流水线知识库（两级渐进式检索总入口）：遇到系统/IDE/终端异常、底层报错或落地工程自动化时优先查阅。
    【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中复制Ctrl+C假死与剪贴板锁争用；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、【特大高危】Zed信任表家目录污染致全盘监听与10G内存暴涨及Defender死锁、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh启动误唤起Grok与accounts.x.ai弹窗等。
   【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计。
-  检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。
+  检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。命中条目后先看 frontmatter status：deprecated 直接弃用并改读 superseded_by，suspect 须先只读探测再执行。
 version: 2.1.2
 created: 2026-10-07
 updated: 2026-10-21
@@ -163,6 +163,30 @@ kb-engineering-notes/
 - `description` 按 skill-creator 写法：一句话功能语义 + “何时查阅”的触发场景，控制在 200 字符内，关键词尽量用用户真会说的症状词、技术词或目标交付词；
 - 本目录的 description 面向**路由与检索**（根级技能与族路由器的预算为 1–1024 字符，故本文件采用长描述）。若某条目将来真要转正为全局技能，除改名建目录外，还必须按 `sh-skill-authoring-rules` 把 description 重写成点名触发式（≤70 字符、结尾 `点名使用`）。
 
+### 条目状态门禁（status 语义与回写纪律）
+
+条目 frontmatter 携带 `status` / `created` / `last_verified` 时序字段。**读取条目时先按 `status` 决定动作，再决定是否照做**——字段就在文件头，零额外调用即可判定：
+
+| status | 含义 | 执行动作 |
+|:---|:---|:---|
+| `verified` | 已实测通过 | 直接照做 |
+| `draft` | 暂行草案，未经多场景验证 | 可参考，须标注“未实测” |
+| `suspect` | 近期结论或环境存疑 | 本会话先跑只读探测命令验证，再执行 |
+| `deprecated` | 已废弃 | **禁止执行**，改用 `superseded_by` 指向的条目 |
+
+回写纪律（借 `go_projects/kbman` 单文件 CLI，仅在**写入侧**调用，不在检索时调用）：
+
+```bash
+# 被证伪 / 环境变化导致方案失效：降级并追加现场证据
+kbman report <id> --status suspect --reason "现象描述" --append "实际报错与环境变化"
+
+# 本次实测通过：仅刷新验证时间，不改结论
+kbman touch <id>
+```
+
+- `kbman` 由 `cd go_projects/kbman && go build -o kbman.exe ./cmd/kbman` 自建，默认目录已指向本知识库（经 `~/.gemini/config/skills` 链接链），无需传 `--dir`；
+- `last_verified` 超过约 180 天未刷新时，默认按 `suspect` 对待（人工纪律，`kbman audit` 的时间衰减尚未实现）。
+
 ---
 
 ## 2. 场景路由表（快速匹配）
@@ -287,7 +311,7 @@ kb-engineering-notes/
 ## 3. 知识扩充规范（追加新知识时遵循）
 
 当你开发中遇到新的典型踩坑或沉淀出高价值工程实现流水线需要归档时：
-1. **确定文件名与 `name`**：文件名遵循五段式受控分面规范 `<id>_<domain>_<scope>_<type>_<slug>.md`（如 `074_win_docker_fix_DockerDesktop卷挂载符号链接失效排障.md` 或 `073_dev_cli_flow_CLI临时daemon按需拉起与零残留优雅关停.md`），序号三位定长顺延；同时在 frontmatter 里定一个 `kb-<英文短横线>` 的 `name`；
+1. **确定文件名与 `name`**：文件名遵循五段式受控分面规范 `<id>_<domain>_<scope>_<type>_<slug>.md`（如 `074_win_docker_fix_DockerDesktop卷挂载符号链接失效排障.md` 或 `073_dev_cli_flow_CLI临时daemon按需拉起与零残留优雅关停.md`），序号三位定长顺延；同时 frontmatter 必须齐备 `name`、`description` 与 `status`/`created`/`last_verified` 时序字段——新条目用 `kbman migrate` 生成默认可信态，勿手写漏字段；
 2. **文档结构标准（双轨结构）**：
    - **通用 YAML frontmatter**：`name` + `description`（skill-creator 规范，见第 1 节「条目即技能」），缺了它这条目就不算合规；
    - **Type A：疑难排障型条目**：

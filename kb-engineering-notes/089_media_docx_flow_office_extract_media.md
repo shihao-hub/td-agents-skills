@@ -1,6 +1,18 @@
 ---
 name: kb-office-extract-embedded-media
 description: Word/PPT/Excel 等 Office 文档内嵌原图与音视频无损提取流水线：剖析 OOXML ZIP 容器机制、外部链接媒体判定与 scripts/extract_media.py 批量提取 SOP。提取 Office 文档原图与媒体资源时查阅。
+id: "089"
+domain: media
+scope: docx
+type: flow
+slug: office_extract_media
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-22"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # Office 文档内嵌原图与媒体资源无损提取流水线

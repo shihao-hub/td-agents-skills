@@ -1,6 +1,18 @@
 ---
 name: kb-github-repo-cleanup-audit
 description: GitHub 账号海量仓库大扫除审计与安全清理流水线：包含 gh CLI 授权、fork 判定与超前提交比对、mirror 本地备份、白名单保护与批量归档删除 SOP。清理与归档个人/组织仓库时查阅。
+id: "087"
+domain: git
+scope: gh
+type: flow
+slug: repo_cleanup_audit
+status: verified
+created: "2026-09-22"
+last_verified: "2026-10-22"
+compatibility:
+  os: ["windows"]
+invocation:
+  auto_trigger: true
 ---
 
 # GitHub 仓库大扫除与审计清理流水线
