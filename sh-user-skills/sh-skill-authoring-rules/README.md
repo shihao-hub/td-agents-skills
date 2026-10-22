@@ -2,9 +2,9 @@
 name: sh-skill-authoring-rules
 description: |
   技能与知识库创作总规范（三卷合一 Single Source of Truth）：涵盖公共根级技能与族路由器（卷一：目录/命名正则/1-1024字符description预算/点名与主动触发红线/evals）、个人收敛子技能（卷二：sh-user-skills/README.md防探测落位/双表结构/SOP编写/分流器登记、回填闭环与提级暴露）、以及工程实战避坑知识库（卷三：kb-*/ID置顶五段式分面命名与时序解耦/Type A与Type B极简双轨/虚拟路径分层契约/外部自治解耦/转正清单）。当新建或改造任何根级技能、族路由器、个人子技能、或沉淀排障流水线知识库条目时，必须严格查阅并遵循本规范。
-version: 2.9.0
+version: 2.9.1
 created: 2026-10-07
-updated: 2026-10-20
+updated: 2026-10-22
 ---
 
 # SKILL-AUTHORING-RULES：技能与工程知识库创作总规范
@@ -21,7 +21,7 @@ updated: 2026-10-20
 
 | 物理落位形态 | 是否被 Harness 注册为全局技能 | 定位与适用场景 | 对应规范章节 |
 |---|:---:|---|---|
-| `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`） | **卷一** |
+| `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`、`sh-mattpocock-skills`） | **卷一** |
 | `~/.agents/skills/sh-user-skills/<name>/README.md` | ❌ | **个人沉淀类子技能**：通过 `README.md` 命名避开全局自动扫描，由 `sh-user-skills` 按需通过 `view_file` 调入 | **卷二** |
 | `~/.agents/skills/<name>/`（相对软链暴露，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的全局技能**：需进全局清单的方法论与规范（如 `sh-frontend-deai`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，**相对软链随仓入库** | **卷二·4** |
 | `~/.agents/skills/sh-cmd-<name>/SKILL.md`（零软链命令门面 Facade） | ✅ | **用户主动直调命令**：为 `sh-user-skills/` 子技能建立的根级纯文本轻量门面（如 `sh-cmd-plan-driven-development`、`sh-cmd-spec-driven-development`），用 `uv run expose_user_skill.py <name> --cmd` 生成，**零软链依赖**，仅供 `/skill:sh-cmd-*` 主动直调 | **卷二·4** |
@@ -144,6 +144,16 @@ uv run expose_user_skill.py <name> --cmd <custom-name> # 自定义门面名称 s
 为防止数十篇长篇排障文档撑爆上下文，知识库实行两级感知：
 1. **第一级（权威路由）**：`kb-engineering-notes/SKILL.md`，维护唯一的「问题/症状/报错关键词 -> 对应编号条目」映射表。
 2. **第二级（专项条目）**：编号条目文件，每个条目针对单点技术痛点，AI 命中后使用 `view_file` 单篇加载。
+
+### 1.1 条目生长准则：复合手记（Hub）就地演进优于碎片新建
+
+为防止知识库随着实操深入而陷入碎片化与条目爆炸，手记建设严格遵循**高内聚就地演进**原则：
+- **复合专题手记（Topic Hub）认知**：
+  核心软件实体（如 `ccswitch`、`zed`、`uv`、`worktree`、`opencode` 等）的手记往往由最初的通用配置（`_flow_`）逐步吸收多轮实战硬核排障（`_fix_`），天然演进为复合专题手记。这类手记即便是 `_flow_` 命名，内部也高度集成了关键避坑机制；
+- **创作查重前置（强制纪律）**：
+  新建条目绝不能仅看编号列表或裸扫文件名直接开新坑。**必须先在 `SKILL.md` 场景路由表中检索对应技术实体关键词**。
+  - 若既有 Hub 条目存在且能自然容纳当前场景，**一律以“日期增补”方式就地演进**，并在条目履历与正文追加对应实战章节；
+  - 仅当问题属于全新孤立实体，或与既有条目逻辑边界完全冲突时，方可按流水号新立条目。
 
 ### 2. 双轨条目结构与 ID 置顶五段式分面槽位命名（ID-First Faceted Pattern）
 知识库条目采用**ID 置顶五段式分面槽位命名**，使编辑器侧边栏与文件列表天然按单调递增顺号对齐：

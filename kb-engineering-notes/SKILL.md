@@ -79,7 +79,7 @@ kb-engineering-notes/
 ├── 026_ide_zed_flow_Zed项目级LSP白名单与内存优化.md # [Stage 2: 专项配置] 针对 LSP 项目白名单与内存优化
 ├── 027_git_ssh_flow_多Git账号SSH与IncludeIf配置.md # [Stage 2: 专项配置] 针对多账号 SSH 与 includeIf 切换
 ├── 028_ide_atuin_fix_Win终端Atuin历史同步与Profile修复.md # [Stage 2: 专项排障] 针对 Atuin 历史丢失与 profile 修复
-├── 029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md # [Stage 2: 专项配置] 针对 cc-switch 数据库直接读写
+├── 029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md # [Stage 2: 综合避坑] 针对 cc-switch 数据库机制、跨应用迁移与各端排障避坑
 ├── 030_ide_vscode_flow_VSCode扩展跨分支IDE手动搬运.md # [Stage 2: 专项配置] 针对扩展跨 IDE 搬运生效
 ├── 031_git_vscode_flow_VSCode底部面板GitLG配色调优.md # [Stage 2: 专项配置] 针对 GitLG 面板与分支配色
 ├── 032_win_ps_flow_Win便携PowerShell7绿色部署.md # [Stage 2: 专项配置] 针对 Pwsh7 绿色部署与环境变量
@@ -187,6 +187,14 @@ kbman touch <id>
 - `kbman` 由 `cd go_projects/kbman && go build -o kbman.exe ./cmd/kbman` 自建，默认目录已指向本知识库（经 `~/.gemini/config/skills` 链接链），无需传 `--dir`；
 - `last_verified` 超过约 180 天未刷新时，默认按 `suspect` 对待（人工纪律，`kbman audit` 的时间衰减尚未实现）。
 
+### 核心检索与防盲目新建硬约束（AI 检索铁律）
+
+> ⚠️ **【查实体必查路由表，严禁裸扫文件名断定有无】**
+> - **结构性背景**：随着核心技术实体（如 `ccswitch`、`zed`、`uv`、`worktree`、`opencode` 等）的手记在工程实践中不断生长，它们已天然演化为“**复合专题手记（Topic Hub）**”。条目内部高度集成了环境配置机制与多轮硬核排障（典型如 `029` 虽基础归类为 `_flow_`，但内部完整收敛了外键、上下文指示器、Codex 翻译丢 effort、密钥反噬及 OpenCode npm 校验死锁等多项重度 `fix`）；
+> - **反盲区操作铁律**：
+>   1. **检索严禁凭文件名盲猜**：凡遇到具体软件报错、环境疑难或用户询问“有没有相关知识库”时，**严禁仅凭文件名列表里的 `fix`/`flow` 单字或狭义 slug 盲目断定“没有”**；必须强制在总控 `SKILL.md` 的《场景路由表》中按具体技术实体关键词（如 `ccswitch`、`opencode`、`zed` 等）进行全文检索匹配；
+>   2. **沉淀就地演进优于碎片新建**：在准备沉淀新条目前，必须先核查既有专题 Hub 是否存在。若既有条目可容纳该实战场景，一律以“日期增补”方式就地演进，坚决防止知识库因盲目新建单点条目而陷入碎片化与编号膨胀。
+
 ---
 
 ## 2. 场景路由表（快速匹配）
@@ -226,7 +234,7 @@ kbman touch <id>
 | Zed 同时打开多个项目导致各个语言服务器全量拉起吃满内存，需要针对特定项目精细管控 LSP | [`026_ide_zed_flow_Zed项目级LSP白名单与内存优化.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/026_ide_zed_flow_Zed项目级LSP白名单与内存优化.md) | Zed LSP 白名单, .zed/settings.json, 按项目开 LSP, 内存优化 |
 | 既有个人 GitHub 账号又有公司 GitLab 账号，SSH 密钥冲突或提交邮箱身份串号 | [`027_git_ssh_flow_多Git账号SSH与IncludeIf配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/027_git_ssh_flow_多Git账号SSH与IncludeIf配置.md) | GitHub GitLab 共存, 多 SSH Key, includeIf, 身份自动切换, .gitconfig 隔离 |
 | Windows 下 Atuin 历史命令不同步、前导空格静默丢失、Ctrl+R 无法呼出或 PowerShell Profile 报错打架 | [`028_ide_atuin_fix_Win终端Atuin历史同步与Profile修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/028_ide_atuin_fix_Win终端Atuin历史同步与Profile修复.md) | Atuin 历史丢失, 前导空格, ignorespace, 静默丢弃, Ctrl+R 搜索历史, PSReadLine 冲突, profile.ps1 修复 |
-| cc-switch 界面操作卡顿或需要直接通过脚本批量迁移/读写应用模型配置；**换 API Key / 换 token 后不生效或被回滚**；**添加 OpenCode 官方直连供应商（如 DeepSeek）报错「需要填写 npm 包和至少一个模型」无法添加** | [`029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md) | cc-switch SQLite, 直接修改供应商, 跨应用模型迁移, 绕过 UI 配置, 换密钥, 密钥轮换, 换 key, token 不生效, settings.json 被回写, npm 校验死锁, 只有配置中已有的同名供应商可以沿用默认定义, disabled_providers, live config 二元判定 |
+| cc-switch 界面操作卡顿或需要直接通过脚本批量迁移/读写应用模型配置；**换 API Key / 换 token 后不生效或被回滚**；**添加 OpenCode 官方直连供应商（如 DeepSeek）报错「需要填写 npm 包和至少一个模型」无法添加** | [`029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md) | cc-switch SQLite, 直接修改供应商, 跨应用模型迁移, 绕过 UI 配置, 换密钥, 密钥轮换, 换 key, token 不生效, settings.json 被回写, npm 校验死锁, 只有配置中已有的同名供应商可以沿用默认定义, disabled_providers, live config 二元判定 |
 | 在 Cursor、Antigravity IDE 或 Trae 中需要用到某个只有 VS Code 插件市场才有的扩展 | [`030_ide_vscode_flow_VSCode扩展跨分支IDE手动搬运.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/030_ide_vscode_flow_VSCode扩展跨分支IDE手动搬运.md) | VS Code 插件搬运, Cursor 安装离线扩展, Trae 扩展移植, extensions.json 注册 |
 | VS Code 缺乏像 IntelliJ IDEA 那样直观清晰的 Git 提交树图谱，希望在底部面板集成 | [`031_git_vscode_flow_VSCode底部面板GitLG配色调优.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/031_git_vscode_flow_VSCode底部面板GitLG配色调优.md) | VS Code 提交图, GitLG, 分支配色, 底部面板终端, IDEA 视图复刻 |
 | 新电脑没有管理员权限或不想污染系统，需要免安装绿色便携部署 PowerShell 7 | [`032_win_ps_flow_Win便携PowerShell7绿色部署.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/032_win_ps_flow_Win便携PowerShell7绿色部署.md) | PowerShell 7 绿色安装, Pwsh 便携部署, 零系统残留, 用户级环境变量 |
@@ -363,7 +371,7 @@ kbman touch <id>
 | 026 | [`026_ide_zed_flow_Zed项目级LSP白名单与内存优化.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/026_ide_zed_flow_Zed项目级LSP白名单与内存优化.md) | `026_ide_zed_flow_Zed项目级LSP白名单与内存优化.md` | `ide` | `flow` | Zed 项目级 LSP 白名单配置与多项目内存优化 |
 | 027 | [`027_git_ssh_flow_多Git账号SSH与IncludeIf配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/027_git_ssh_flow_多Git账号SSH与IncludeIf配置.md) | `027_git_ssh_flow_多Git账号SSH与IncludeIf配置.md` | `git` | `flow` | 多 Git 账号 GitHub/GitLab 共存与 SSH IncludeIf 配置 |
 | 028 | [`028_ide_atuin_fix_Win终端Atuin历史同步与Profile修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/028_ide_atuin_fix_Win终端Atuin历史同步与Profile修复.md) | `028_ide_atuin_fix_Win终端Atuin历史同步与Profile修复.md` | `ide` | `fix` | Windows 终端 Atuin 命令历史同步与 Profile 修复 |
-| 029 | [`029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md) | `029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md` | `agent` | `flow` | cc-switch 直接读写 SQLite 与跨应用模型迁移 |
+| 029 | [`029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md) | `029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md` | `agent` | `flow` | cc-switch 数据库机制、跨应用模型迁移与避坑全指南 |
 | 030 | [`030_ide_vscode_flow_VSCode扩展跨分支IDE手动搬运.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/030_ide_vscode_flow_VSCode扩展跨分支IDE手动搬运.md) | `030_ide_vscode_flow_VSCode扩展跨分支IDE手动搬运.md` | `ide` | `flow` | VS Code 扩展跨分支 IDE 手动搬运与注册生效 |
 | 031 | [`031_git_vscode_flow_VSCode底部面板GitLG配色调优.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/031_git_vscode_flow_VSCode底部面板GitLG配色调优.md) | `031_git_vscode_flow_VSCode底部面板GitLG配色调优.md` | `git` | `flow` | VS Code 底部终端面板 GitLG 提交树与分支配色调优 |
 | 032 | [`032_win_ps_flow_Win便携PowerShell7绿色部署.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/032_win_ps_flow_Win便携PowerShell7绿色部署.md) | `032_win_ps_flow_Win便携PowerShell7绿色部署.md` | `win` | `flow` | Windows 便携免安装 PowerShell 7 绿色部署与初始化 |

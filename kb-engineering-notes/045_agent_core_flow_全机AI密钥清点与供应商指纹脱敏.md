@@ -136,7 +136,7 @@ for t in tabs:
         ...  # 命中含厂商名/key 的行，逐列脱敏输出
 ```
 
-- `mode=ro`：绝不写库；`immutable=1`：避开应用正在写入时的锁争用（参照本库 `029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md`）；
+- `mode=ro`：绝不写库；`immutable=1`：避开应用正在写入时的锁争用（参照本库 `029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md`）；
 - 表名/列名先 `sqlite_master` + `pragma table_info` 探测，**不要猜 schema**；
 - 命中后要区分"配置行"（`user_provider.api_keys`）与"日志行"（`ai_usage_record`、`proxy_request_logs`）——后者是统计噪音。
 
@@ -261,7 +261,7 @@ opencode models | grep -i <厂商>   # 模型列表是否已摘除（注意中�
 
 ## 附：与相邻条目的关系
 
-- `029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md` —— 数据库层读写规范与锁规避；
+- `029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md` —— 数据库层读写规范与锁规避；
 - `021_agent_opencode_fix_opencode连接GLM鉴权401与端点排障.md` —— key 优先级与端点映射；
 - `043_agent_opencode_fix_OpenCodeGo模型提速与关闭思考reasoningEffort.md` —— 官方直连与中继通道的区别；
 - `042_agent_core_fix_多Agent全局规则生效与CLI管道防挂起.md` —— 多 Agent 配置生效性验证方法论。

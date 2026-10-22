@@ -24,7 +24,7 @@ invocation:
 > **条目定位**：**Type A 疑难排障条目（Claude Code 新版扩展参数 × OpenCode 网关协议分立 × CC Switch 路由代理桥接）**  
 > **危险评级**：★★★☆☆（导致 Claude Code 彻底无法连接下游第三方模型、请求秒拒 400/401/403，配置不当引发双键冲突告警与 UI 校验锁死）  
 > **验证环境**：Windows 11、Claude Code v2.1.294 ~ v2.1.303、CC Switch v4.0.5+、OpenCode Go 网关。  
-> **关联条目**：CC Switch 数据库读写见 `029_agent_ccswitch_flow_cc-switch直接读写SQLite模型迁移.md`；OpenCode Go 模型访问提速与 reasoning 调优见 `043_agent_opencode_fix_OpenCodeGo模型提速与关闭思考reasoningEffort.md`；opencode 鉴权 401 排障见 `021_agent_opencode_fix_opencode连接GLM鉴权401与端点排障.md`。
+> **关联条目**：CC Switch 数据库读写见 `029_agent_ccswitch_flow_cc-switch数据库机制模型迁移与避坑指南.md`；OpenCode Go 模型访问提速与 reasoning 调优见 `043_agent_opencode_fix_OpenCodeGo模型提速与关闭思考reasoningEffort.md`；opencode 鉴权 401 排障见 `021_agent_opencode_fix_opencode连接GLM鉴权401与端点排障.md`。
 
 ---
 
