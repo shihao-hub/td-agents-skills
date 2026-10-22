@@ -4,12 +4,12 @@ description: |
   个人技能库总入口与分流器：用户只有一句模糊需求、忘记技能名，或遇到底层报错/环境与配置疑难，或任务执行中途需要某项专门能力（如全盘检索、打包、下载、归档）时，在此匹配并加载对应子技能 SOP。
   第一优先——内置工程避坑知识库（kb-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、【特大高危】Zed 信任表家目录污染致全盘监听与 10G 内存暴涨及 Defender 死锁、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理、Office原图提取、CMake构建排障、Bruno测试集生成、GitHub仓库大扫除、本地服务PWA窗口、SQLAlchemy查询抽取等；全量索引以知识库内部路由表为准，随条目持续生长。
   直调命令门面（sh-cmd-*：交付计划、规格驱动、Monorepo提交、排障复盘、会话交接）；
-  开发与重构（后端系统设计、OOP 重构、饥荒模组逆向探索、前端去 AI 味、PyStand 打包、Nuitka 单文件打包、Go 单二进制桌面双通道构建、WT 独立版定制守卫）；
+  开发与重构（后端系统设计、OOP 重构、饥荒模组逆向探索、前端去 AI 味、UI浮层与弹窗选型、PyStand 打包、Nuitka 单文件打包、Go 单二进制桌面双通道构建、WT 独立版定制守卫）；
   文档、检索与媒资归档（PRD/技术方案、技能创作与知识库规范、书转 skill、全盘找文件/大文件、本地文档知识库语义检索、Everything秒搜、音视频下载转写字幕、网页存档、飞书归档）；
   另有飞书、Redis/Iris、antigravity 三个族路由器；用户直接点名 `sh-*` 或 `sh-cmd-*`（含拼写近似）时均由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
-version: 1.7.0
+version: 1.8.0
 created: 2026-10-07
-updated: 2026-10-21
+updated: 2026-10-22
 ---
 
 # sh-user-skills：个人技能库总目录与分流导航
@@ -45,6 +45,7 @@ updated: 2026-10-21
 | 复盘一下你刚才定为排障的过程／排障复盘／心路复盘 | `sh-cmd-troubleshooting-recap`（命令门面，可直接点名） |
 | 换一个 agent 接着做／交接简报 | `sh-cmd-agent-handoff`（命令门面，可直接点名） |
 | 页面一股 AI 味／重新设计界面／前端去 AI 味 | `sh-frontend-deai`（全局方法论技能，已暴露，可直接点名） |
+| 加个弹窗／浮层选型／弹窗还是抽屉／Modal规范／Tooltip与Toast／弹窗防坑／UI弹出提示 | `sh-ui-layer-guide` |
 | 编写技能规范／新建技能规则／技能创作规则／知识库沉淀规范／子技能回填闭环／技能提级暴露 | `sh-skill-authoring-rules`（全局规范技能，已暴露，可直接点名） |
 | 把视频/音频转成字幕 | `sh-video-transcribe` |
 | 抖音/B站无水印下载、知乎文章存 Markdown | `sh-zhangshihao-douyin-dl` |
@@ -96,6 +97,7 @@ updated: 2026-10-21
 | `sh-oop-refactor` | 运用 OOP 思想与设计模式重构项目：代码坏味道诊断、接缝测试、架构方案到小步执行。点名使用 |
 | `sh-dst-mod-workshop` | 饥荒联机版（DST）创意工坊模组下载、加壳分析与活体内存Hex提取（实验性探索/未完全解密，仅供逆向研究参考）。点名使用 |
 | `sh-frontend-deai` | 前端去 AI 味：反蓝紫渐变、暗底霓虹与模板化套路，场景导向设计界面。已提级暴露为根级技能，点名使用 |
+| `sh-ui-layer-guide` | UI 浮层与弹出提示交互选型指南：组件分级、弹窗/抽屉/页面决策树与防坑自查。点名使用 |
 | `sh-pystand-pack` | PyStand+嵌入式 Python 把 Python 项目打包成免安装绿色文件夹。点名使用 |
 | `sh-nuitka-pack` | uv 单脚本+Nuitka 打包 Windows 单文件 exe 与启动加速缓存。点名使用 |
 | `sh-go-wails-desktop` | Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口、CLI(-cli) 只跑终端，内嵌 WebUI 与 Wails v3 托盘，窗口尺寸位置与最大化状态记忆、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用 |
