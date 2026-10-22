@@ -56,8 +56,8 @@ disable-model-invocation: true
 审问完成并获得用户确认后，**绝不允许直接编写业务代码**！根据项目规模执行下一步：
 
 - **若涉及全新业务名词、复杂核心实体或多模块概念**：  
-  👉 下一步调用 **[`domain-modeling`](../domain-modeling/SKILL.md)**，将核心术语固化进 `CONTEXT.md` / `GLOSSARY.md` 与 ADR。
+  👉 下一步调用 **[`domain-modeling`](../domain-modeling/README.md)**，将核心术语固化进 `CONTEXT.md` / `GLOSSARY.md` 与 ADR。
 - **若概念清晰且术语已知，直接进入规范编写**：  
-  👉 下一步调用 **[`to-spec`](../to-spec/SKILL.md)**，将共识直接合成为目的地规范文档，并严格界定测试接缝（Seams）。
+  👉 下一步调用 **[`to-spec`](../to-spec/README.md)**，将共识直接合成为目的地规范文档，并严格界定测试接缝（Seams）。
 - **若逻辑极其复杂、拿不准状态机手感**：  
-  👉 下一步调用 **[`prototype`](../prototype/SKILL.md)**，编写一次性抛弃型原型先行验证。
+  👉 下一步调用 **[`prototype`](../prototype/README.md)**，编写一次性抛弃型原型先行验证。

@@ -15,7 +15,7 @@ disable-model-invocation: true
 
 ## 一、执行原则：无二次采访，直接合成
 
-本技能直接以当前对话中 **[`grilling`](../grilling/SKILL.md)** 达成的设计共识与 **[`domain-modeling`](../domain-modeling/SKILL.md)** 沉淀的领域模型为输入：
+本技能直接以当前对话中 **[`grilling`](../grilling/README.md)** 达成的设计共识与 **[`domain-modeling`](../domain-modeling/README.md)** 沉淀的领域模型为输入：
 - **严禁重新采访用户**：所有的业务分支与决断已在前序审问中结算，此处纯粹负责高密度合成；
 - **使用项目通用语言**：严格使用 `CONTEXT.md` / `GLOSSARY.md` 中的标准术语；
 - **显式界定测试接缝（Seams）**：找到最高且唯一的公共接口边界（Seam），后续所有测试只能在接缝上验证行为，绝不可面向内部细节写测试。
@@ -55,5 +55,5 @@ disable-model-invocation: true
 ## 三、下游关联流转指引（Next Transitions）
 
 规范文档一旦落盘并经用户快速确认后：
-- 👉 下一步**必须**调用 **[`to-tickets`](../to-tickets/SKILL.md)**，将规范拆解为穿透全层的垂直切片（Tracer Bullets）与有向无环依赖图（DAG）。
+- 👉 下一步**必须**调用 **[`to-tickets`](../to-tickets/README.md)**，将规范拆解为穿透全层的垂直切片（Tracer Bullets）与有向无环依赖图（DAG）。
 - ⚠️ **红线警告**：严禁拿到 spec 直接开始“从数据库层一路堆代码”，必须先切片！

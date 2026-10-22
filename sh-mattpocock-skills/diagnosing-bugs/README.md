@@ -1,6 +1,7 @@
 ---
 name: diagnosing-bugs
 description: Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
+disable-model-invocation: true
 ---
 
 # Diagnosing Bugs
@@ -140,5 +141,5 @@ Required before declaring done:
 ## 下游关联流转指引（Next Transitions）
 
 - 修复通过并经过 Phase 6 清理后，将排障结论与回归测试提交入库；
-- 👉 若排障发现代码库缺乏测试接缝、模块过于浅薄脆弱，引导触发 **[`improve-codebase-architecture`](../improve-codebase-architecture/SKILL.md)** 扫描并重构成深模块；
-- 👉 业务功能修复完成后，返回 **[`to-tickets`](../to-tickets/SKILL.md)** 看板继续推进正常迭代。
+- 👉 若排障发现代码库缺乏测试接缝、模块过于浅薄脆弱，引导触发 **[`improve-codebase-architecture`](../improve-codebase-architecture/README.md)** 扫描并重构成深模块；
+- 👉 业务功能修复完成后，返回 **[`to-tickets`](../to-tickets/README.md)** 看板继续推进正常迭代。

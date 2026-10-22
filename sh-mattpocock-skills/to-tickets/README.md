@@ -60,5 +60,5 @@ disable-model-invocation: true
 
 切片清单生成并确认后：
 - 👉 **挑选当前 Frontier 中无阻塞（Blocked by: None）的第一个切片**；
-- 👉 **关键纪律**：**建议新开独立会话或执行 `/clear` 清空历史沉淀**，将该切片交给 **[`implement`](../implement/SKILL.md)**，结合 **[`tdd`](../tdd/SKILL.md)** 开始推进实现；
+- 👉 **关键纪律**：**建议新开独立会话或执行 `/clear` 清空历史沉淀**，将该切片交给 **[`implement`](../implement/README.md)**，结合 **[`tdd`](../tdd/README.md)** 开始推进实现；
 - ⚠️ **红线警告**：严禁在一个长会话中一口气把全部切片做完！一个切片交付后必须清空上下文再做下一个！

@@ -101,20 +101,20 @@ flowchart TD
 
 | 技能名称 | 阶段与定位 | 输入源 (Inputs) | 核心产出 (Outputs) | 下游承接技能 (Next Step) | 子模块执行路径 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `wayfinder` | **0.大图破雾**：面对模糊庞大工程，绘制决策地图 | 模糊大想法、跨多个会话的庞大需求 | 决策工单图（Decision Tickets），每次只决断一件事 | `grill-me`（决断单项）或 `to-spec` | `sh-mattpocock-skills/wayfinder/SKILL.md` |
-| `research` | **0.事实调研**：针对第一手权威信源深度调研 | 技术选型疑问、官方文档/API 取证 | 带权威信源引用的 Markdown 调查笔记 | `grill-me` / `to-spec` | `sh-mattpocock-skills/research/SKILL.md` |
-| `prototype` | **0.原型验证**：一次性抛弃型原型（逻辑/UI） | 状态机手感不确定、UI 多风格选型 | 单文件 HTML / 动态分支，验证后抛弃不入库 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/prototype/SKILL.md` |
-| `grill-me` | **1.需求审问**：无状态需求访谈入口 | 原始想法、一句话需求 | 扫清全部假设的设计概念共识 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/grill-me/SKILL.md` |
-| `grilling` | **1.审问原语**：底层决策树驱动引擎 | Frontier 未决决策项 | 格式化问卷（带推荐答案）与收敛后的决策树 | 供 `grill-me` / `grill-with-docs` 调用 | `sh-mattpocock-skills/grilling/SKILL.md` |
-| `grill-with-docs` | **1.仓内审问**：结合代码库现状与文档的深度拷问 | 现有代码仓、已存在的文档/规范 | 与工程上下文对齐的业务设计决策 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/grill-with-docs/SKILL.md` |
-| `domain-modeling` | **2.领域建模**：提炼并磨砺通用语言（DDD） | 对齐后的设计概念、业务名词 | `CONTEXT.md`、`GLOSSARY.md`、架构决策记录 `ADR` | `to-spec` | `sh-mattpocock-skills/domain-modeling/SKILL.md` |
-| `to-spec` | **3.规范合成**：无二次采访直接合成规范文档 | 前序审问共识、`CONTEXT.md` | 问题/解决方案/用户故事/实现决策/**测试接缝 Seams** | `to-tickets` | `sh-mattpocock-skills/to-spec/SKILL.md` |
-| `to-tickets` | **3.切片拆票**：垂直切片（Tracer Bullets）与看板 | 规范文档 `to-spec` 产物 | 穿透各层的 Tickets 清单与 `blocked by` DAG 依赖 | `implement` | `sh-mattpocock-skills/to-tickets/SKILL.md` |
-| `implement` | **4.切片落地**：按 ticket 实现并锁定 Seam | 单个 Ticket、预定 Seam | 最小实现代码、通过类型检查与单测 | `code-review`（须先 `/clear`） | `sh-mattpocock-skills/implement/SKILL.md` |
-| `tdd` | **4.反馈循环**：测试驱动开发（红-绿-重构） | 预先确认的公共接缝 Seam | 失败测试（红） $\to$ 最小通过实现（绿） $\to$ 干净代码 | `implement` / `code-review` | `sh-mattpocock-skills/tdd/SKILL.md` |
-| `code-review` | **5.双轴审查**：Standards 规范轴 + Spec 需求轴 | 变更 diff、起源 spec、Repo 规范 | 双轴独立审查报告（含 Fowler 代码坏味道诊断） | 人工 QA 验收 | `sh-mattpocock-skills/code-review/SKILL.md` |
-| `diagnosing-bugs` | **6.排障循环**：疑难 Bug 与性能退化排障 | 报错堆栈、异常行为、重现线索 | 极窄可复现反馈闭环（Tight Loop）、根因诊断与修复 | `tdd` 固化防回归测试 | `sh-mattpocock-skills/diagnosing-bugs/SKILL.md` |
-| `improve-codebase-architecture`| **6.架构演化**：扫描浅模块并推进深模块重构 | Git Commit 热点（Hot Spots）、代码库 | 深度机会 HTML 报告、Before/After 架构对比与重构方案 | `to-tickets` | `sh-mattpocock-skills/improve-codebase-architecture/SKILL.md` |
+| `wayfinder` | **0.大图破雾**：面对模糊庞大工程，绘制决策地图 | 模糊大想法、跨多个会话的庞大需求 | 决策工单图（Decision Tickets），每次只决断一件事 | `grill-me`（决断单项）或 `to-spec` | `sh-mattpocock-skills/wayfinder/README.md` |
+| `research` | **0.事实调研**：针对第一手权威信源深度调研 | 技术选型疑问、官方文档/API 取证 | 带权威信源引用的 Markdown 调查笔记 | `grill-me` / `to-spec` | `sh-mattpocock-skills/research/README.md` |
+| `prototype` | **0.原型验证**：一次性抛弃型原型（逻辑/UI） | 状态机手感不确定、UI 多风格选型 | 单文件 HTML / 动态分支，验证后抛弃不入库 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/prototype/README.md` |
+| `grill-me` | **1.需求审问**：无状态需求访谈入口 | 原始想法、一句话需求 | 扫清全部假设的设计概念共识 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/grill-me/README.md` |
+| `grilling` | **1.审问原语**：底层决策树驱动引擎 | Frontier 未决决策项 | 格式化问卷（带推荐答案）与收敛后的决策树 | 供 `grill-me` / `grill-with-docs` 调用 | `sh-mattpocock-skills/grilling/README.md` |
+| `grill-with-docs` | **1.仓内审问**：结合代码库现状与文档的深度拷问 | 现有代码仓、已存在的文档/规范 | 与工程上下文对齐的业务设计决策 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/grill-with-docs/README.md` |
+| `domain-modeling` | **2.领域建模**：提炼并磨砺通用语言（DDD） | 对齐后的设计概念、业务名词 | `CONTEXT.md`、`GLOSSARY.md`、架构决策记录 `ADR` | `to-spec` | `sh-mattpocock-skills/domain-modeling/README.md` |
+| `to-spec` | **3.规范合成**：无二次采访直接合成规范文档 | 前序审问共识、`CONTEXT.md` | 问题/解决方案/用户故事/实现决策/**测试接缝 Seams** | `to-tickets` | `sh-mattpocock-skills/to-spec/README.md` |
+| `to-tickets` | **3.切片拆票**：垂直切片（Tracer Bullets）与看板 | 规范文档 `to-spec` 产物 | 穿透各层的 Tickets 清单与 `blocked by` DAG 依赖 | `implement` | `sh-mattpocock-skills/to-tickets/README.md` |
+| `implement` | **4.切片落地**：按 ticket 实现并锁定 Seam | 单个 Ticket、预定 Seam | 最小实现代码、通过类型检查与单测 | `code-review`（须先 `/clear`） | `sh-mattpocock-skills/implement/README.md` |
+| `tdd` | **4.反馈循环**：测试驱动开发（红-绿-重构） | 预先确认的公共接缝 Seam | 失败测试（红） $\to$ 最小通过实现（绿） $\to$ 干净代码 | `implement` / `code-review` | `sh-mattpocock-skills/tdd/README.md` |
+| `code-review` | **5.双轴审查**：Standards 规范轴 + Spec 需求轴 | 变更 diff、起源 spec、Repo 规范 | 双轴独立审查报告（含 Fowler 代码坏味道诊断） | 人工 QA 验收 | `sh-mattpocock-skills/code-review/README.md` |
+| `diagnosing-bugs` | **6.排障循环**：疑难 Bug 与性能退化排障 | 报错堆栈、异常行为、重现线索 | 极窄可复现反馈闭环（Tight Loop）、根因诊断与修复 | `tdd` 固化防回归测试 | `sh-mattpocock-skills/diagnosing-bugs/README.md` |
+| `improve-codebase-architecture`| **6.架构演化**：扫描浅模块并推进深模块重构 | Git Commit 热点（Hot Spots）、代码库 | 深度机会 HTML 报告、Before/After 架构对比与重构方案 | `to-tickets` | `sh-mattpocock-skills/improve-codebase-architecture/README.md` |
 
 ---
 

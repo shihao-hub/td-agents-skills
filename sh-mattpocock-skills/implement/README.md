@@ -24,7 +24,7 @@ disable-model-invocation: true
 
 ## 二、执行闭环：红-绿-重构标准流
 
-强制调度 **[`tdd`](../tdd/SKILL.md)** 规则执行推进：
+强制调度 **[`tdd`](../tdd/README.md)** 规则执行推进：
 
 ```text
 1. [红 Red]：在预定的 Seam 编写针对本切片验收条件的失败测试；
@@ -61,6 +61,6 @@ disable-model-invocation: true
 ## 四、下游关联流转指引（Next Transitions）
 
 - 👉 **必须先清空上下文（`/clear` 或开新会话）**；
-- 👉 在清空后的会话中调入 **[`code-review`](../code-review/SKILL.md)**，并行启动 Standards 轴与 Spec 轴进行客观双轴审查；
+- 👉 在清空后的会话中调入 **[`code-review`](../code-review/README.md)**，并行启动 Standards 轴与 Spec 轴进行客观双轴审查；
 - 👉 审查无误后，**人类开发者必须亲自跑一遍（人工 QA）**，这是注入品味的唯一窗口；
-- 👉 确认无误后，返回 **[`to-tickets`](../to-tickets/SKILL.md)** 看板勾选该工单，挑选下一个 Frontier 切片。
+- 👉 确认无误后，返回 **[`to-tickets`](../to-tickets/README.md)** 看板勾选该工单，挑选下一个 Frontier 切片。

@@ -70,8 +70,8 @@ disable-model-invocation: true
 
 ## 四、下游关联流转指引（Next Transitions）
 
-- 👉 **验收通过且无硬伤**：返回 **[`to-tickets`](../to-tickets/SKILL.md)** 看板勾选该工单，清空会话推进下一个切片；
+- 👉 **验收通过且无硬伤**：返回 **[`to-tickets`](../to-tickets/README.md)** 看板勾选该工单，清空会话推进下一个切片；
 - 👉 **若在 QA 或测试中发现隐蔽 Bug / 性能衰退**：  
-  调用 **[`diagnosing-bugs`](../diagnosing-bugs/SKILL.md)**，第一要务是建立 2 秒红灯紧反馈闭环；
+  调用 **[`diagnosing-bugs`](../diagnosing-bugs/README.md)**，第一要务是建立 2 秒红灯紧反馈闭环；
 - 👉 **若审查发现多处浅模块散落或架构摩擦**：  
-  记录为重构需求，后续调用 **[`improve-codebase-architecture`](../improve-codebase-architecture/SKILL.md)** 进行深模块深化。
+  记录为重构需求，后续调用 **[`improve-codebase-architecture`](../improve-codebase-architecture/README.md)** 进行深模块深化。

@@ -73,5 +73,5 @@ Side effects happen inline as decisions crystallize; call the Skill tool with "d
 ## 下游关联流转指引（Next Transitions）
 
 - 架构深化决策通过 Grilling 达成共识后：
-  👉 下一步调用 **[`to-tickets`](../to-tickets/SKILL.md)**，将重构任务拆解为小步垂直切片（对于大范围改动遵循 expand-contract 扩缩模式）；
-  👉 随后由 **[`implement`](../implement/SKILL.md)** + **[`tdd`](../tdd/SKILL.md)** 落地重构代码。
+  👉 下一步调用 **[`to-tickets`](../to-tickets/README.md)**，将重构任务拆解为小步垂直切片（对于大范围改动遵循 expand-contract 扩缩模式）；
+  👉 随后由 **[`implement`](../implement/README.md)** + **[`tdd`](../tdd/README.md)** 落地重构代码。

@@ -130,5 +130,5 @@ The user may run unblocked tickets in parallel, so expect other sessions to be e
 ## 下游关联流转指引（Next Transitions）
 
 - 随着地图上的 Decision Tickets 逐步得到解决，大雾完全消散，终点路径彻底清晰；
-- 👉 下一步调用 **[`to-spec`](../to-spec/SKILL.md)**，将地图中已确认的所有决策合成为正式目的地规范；
-- 👉 随后调用 **[`to-tickets`](../to-tickets/SKILL.md)** 开始垂直切片工程实施。
+- 👉 下一步调用 **[`to-spec`](../to-spec/README.md)**，将地图中已确认的所有决策合成为正式目的地规范；
+- 👉 随后调用 **[`to-tickets`](../to-tickets/README.md)** 开始垂直切片工程实施。

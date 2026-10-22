@@ -1,6 +1,7 @@
 ---
 name: prototype
 description: Build a throwaway prototype to answer a design question. Use when the user wants to sanity-check whether a state model or logic feels right, or explore what a UI should look like.
+disable-model-invocation: true
 ---
 
 # Prototype
@@ -28,5 +29,5 @@ The two branches produce very different artifacts, so getting this wrong wastes 
 ## 下游关联流转指引（Next Transitions）
 
 - 原型验证通过并得出结论后，立即废弃测试代码，绝不直接将未经验收的原型合并入生产分支；
-- 👉 将验证通过的状态机结构或界面设计共识引入 **[`domain-modeling`](../domain-modeling/SKILL.md)** 固化模型，或直接写入 **[`to-spec`](../to-spec/SKILL.md)** 作为决策证据；
-- 👉 随后通过 **[`to-tickets`](../to-tickets/SKILL.md)** 与 **[`tdd`](../tdd/SKILL.md)** 规范重写真正的生产代码。
+- 👉 将验证通过的状态机结构或界面设计共识引入 **[`domain-modeling`](../domain-modeling/README.md)** 固化模型，或直接写入 **[`to-spec`](../to-spec/README.md)** 作为决策证据；
+- 👉 随后通过 **[`to-tickets`](../to-tickets/README.md)** 与 **[`tdd`](../tdd/README.md)** 规范重写真正的生产代码。

@@ -1,6 +1,7 @@
 ---
 name: research
 description: Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.
+disable-model-invocation: true
 ---
 
 Spin up a **background agent** to do the research, so you keep working while it reads.
@@ -14,5 +15,5 @@ Its job:
 ## 下游关联流转指引（Next Transitions）
 
 - 调研产出的 Markdown 调查笔记（附带一手信源引用）作为技术事实依据；
-- 👉 输入给 **[`grilling`](../grilling/SKILL.md)** 或 **[`wayfinder`](../wayfinder/SKILL.md)**，支撑方案选型与破雾决断；
-- 👉 消除外部依赖幻觉与不确定性，保证后续 **[`to-spec`](../to-spec/SKILL.md)** 规范坚实可靠。
+- 👉 输入给 **[`grilling`](../grilling/README.md)** 或 **[`wayfinder`](../wayfinder/README.md)**，支撑方案选型与破雾决断；
+- 👉 消除外部依赖幻觉与不确定性，保证后续 **[`to-spec`](../to-spec/README.md)** 规范坚实可靠。

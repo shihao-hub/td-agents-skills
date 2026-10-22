@@ -1,6 +1,7 @@
 ---
 name: domain-modeling
 description: Build and sharpen a project's domain model. Use when discussing codebase terminology, writing or editing a CONTEXT.md, or recording or editing an ADR.
+disable-model-invocation: true
 ---
 
 # Domain Modeling
@@ -76,5 +77,5 @@ If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](
 ## 下游关联流转指引（Next Transitions）
 
 领域模型与通用语言固化完成后：
-- 👉 下一步调用 **[`to-spec`](../to-spec/SKILL.md)**，将前序审问达成的共识与本阶段沉淀的业务实体结合，直接合成一页目的地规范文档，并明确锁定测试接缝（Seams）。
+- 👉 下一步调用 **[`to-spec`](../to-spec/README.md)**，将前序审问达成的共识与本阶段沉淀的业务实体结合，直接合成一页目的地规范文档，并明确锁定测试接缝（Seams）。
 - ⚠️ 严禁在此阶段直接根据术语开始编写业务代码，必须先经过规范与垂直切片拆解。

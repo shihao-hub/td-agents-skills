@@ -57,7 +57,7 @@ def scan_status():
     root_loose_dirs = []
     for item in ROOT_SKILLS_DIR.iterdir():
         if item.is_dir() and item.name in target_set:
-            if (item / "SKILL.md").exists():
+            if (item / "SKILL.md").exists() or (item / "README.md").exists():
                 root_loose_dirs.append(item.name)
     root_loose_dirs.sort()
 
@@ -65,7 +65,7 @@ def scan_status():
     if ROUTER_DIR.exists() and ROUTER_DIR.is_dir():
         for item in ROUTER_DIR.iterdir():
             if item.is_dir() and item.name in target_set:
-                if (item / "SKILL.md").exists():
+                if (item / "SKILL.md").exists() or (item / "README.md").exists():
                     routed_subdirs.append(item.name)
     routed_subdirs.sort()
 
@@ -104,6 +104,11 @@ def sync_to_router(dry_run: bool = False) -> dict:
             if dest.exists():
                 shutil.rmtree(dest)
             shutil.move(str(src), str(dest))
+            # 还原到根目录时，恢复为 SKILL.md 供全局发现
+            r_md = dest / "README.md"
+            s_md = dest / "SKILL.md"
+            if r_md.exists() and not s_md.exists():
+                r_md.rename(s_md)
         actions.append(act)
 
     return {
@@ -134,6 +139,11 @@ def restore_to_root(dry_run: bool = False) -> dict:
             if dest.exists():
                 shutil.rmtree(dest)
             shutil.move(str(src), str(dest))
+            # 还原到根目录时，恢复为 SKILL.md 供全局发现
+            r_md = dest / "README.md"
+            s_md = dest / "SKILL.md"
+            if r_md.exists() and not s_md.exists():
+                r_md.rename(s_md)
         actions.append(act)
 
     return {
