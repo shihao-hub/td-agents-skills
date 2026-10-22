@@ -1,17 +1,17 @@
 ---
 name: kb-zed-trusted-worktree-leak
 description: |
-  Zed 编辑器工作区信任表（trusted_worktrees）被父级用户家目录污染，导致后台被动态拉起全量活动监听（16 live worktrees）、单体内存暴涨至 10GB+、与 Windows Defender 内核微筛选器（WdFilter）死锁狂吃 60%+ CPU 的完整机理归因、假阳性误区纠偏与 SQLite 数据库无损清洗 SOP。
-version: 2.0.0
+  Zed 编辑器工作区信任表（trusted_worktrees）被父级家目录污染或 ACP 外部目录读取触发根盘符滑坡（Fallback to C:\ / D:\），导致后台动态拉起 23 万全量文件活动监听（live worktrees）、单体内存暴涨至 10GB+、与 Windows Defender (MsMpEng) 内核微筛选器死锁狂吃 75%+ CPU 的完整机理归因、ACP 委托引信拆弹（--no-delegation）、免重启就地脱困与全盘断路器加固 SOP。
+version: 2.1.0
 created: 2026-10-20
-updated: 2026-10-20
+updated: 2026-10-22
 id: "078"
 domain: ide
 scope: zed
 type: fix
 slug: "Zed信任表家目录污染致全盘监听与Defender死锁"
 status: verified
-last_verified: "2026-10-20"
+last_verified: "2026-10-22"
 compatibility:
   os: ["windows"]
 invocation:
@@ -130,9 +130,49 @@ Zed 判定："该文件属于合法工程 C:\Users\<user>，立即在后台激�
 
 ---
 
+### 4. 深水区第二弹：非系统盘滑坡（D:\ 裸奔）与 ACP 文件委托引燃机制（2026-10-22 追踪）
+
+在 2026-10-22 实战中，我们进一步捕获并侦破了该缺陷在**多驱动器开发环境（非 C 盘主力仓库）**下的全新形态与完整引爆链：
+
+1. **盲区暴露：D 盘“裸奔”被扫爆（231,962 个 entries）**：
+   - 开发者主力代码通常位于 `D:\Users` 或非系统盘；前序防御在 `file_scan_exclusions` 中配置了 `**/Windows`、`**/AppData`，**但这全部是 C 盘系统路径，D 盘完全处于防御裸奔状态**；
+   - 当 Agent（如 Pi Agent）在排查过程中向 Zed 请求读取 `D:\Users\language_projects\go_projects\glmquota` 时，由于该路径实为**文件夹**而非普通文件，Zed 的 `acp_thread.rs:1716` 打开失败：
+     ```text
+     2026-10-22T00:25:52 ERROR [crates/acp_thread/src/acp_thread.rs:1716] opening file "D:\\Users\\language_projects"
+     ```
+   - Zed 向上寻找所属工程，由于父级 `D:\Users` 未被信任且无边界熔断，**再次一路无脑滑坡至驱动器根 `D:\`**！
+   - 现场抓包日志铁证：
+     ```text
+     INFO [zed::reliability] worktree diagnostics: live 10, visible 1, strong 1, entries 236188, visible entries 236089, largest D:\ (231962 entries, 231962 visible)
+     INFO [worktree] deferred indexing of 3227 directories in "D:\\" that are outside of git repositories ...
+     ```
+   - 整个 `D:\` 盘的 Steam 游戏库（`steamapps`）、依赖库与非代码大资产共 **23 万个文件被瞬间挂载扫描**，Windows Defender 内核驱动（`MsMpEng.exe`）CPU 再次暴冲至 **75% ~ 100%**！
+
+2. **引信本质：ACP 的文件系统委托（Delegation）机制**：
+   - `@openma/pi-acp` 等 In-Process 适配器默认将 `readTextFile`、`writeTextFile` 委托给客户端宿主 Zed 处理（`fs/read_file`）；
+   - 一旦 Agent 试图探测目录或临时路径，Zed 的 `Project::open_buffer_by_path()` 立即套用重型编辑器流程，成为点燃全盘滑坡的引信；
+   - **核心领悟**：只要彻底切断 ACP 的文件委托（让 Agent 在自己的 Node.js 内存直接调用原生 `fs`），Zed 就永远不会收到跨盘路径打开请求，从物理源头拔除引信！
+
+---
+
 ## 四、确定性排查与终极双层防御 SOP
 
-治理目标：**第一层清洗数据库被污染父目录；第二层建立系统级扫描防火墙，彻底杜绝盘符滑坡死锁。**
+治理目标：**第一层（就地止血）：无需重启 IDE 释放占用；第二层（源头绝缘）：切断 ACP 委托引信；第三层（物理兜底）：全盘断路器加固。**
+
+### 步骤 0：免重启就地脱困 SOP（当前已被挂死时）
+
+若 Zed 正在全盘狂扫、Defender 处于死锁中，**无需强杀重启 Zed**，可按以下三步就地化解：
+
+1. **销毁死锁 Agent 会话（释放句柄源头）**：
+   - 触发全盘扫描的唯一强引用是当前 Agent 面板持有的上下文 Buffer。
+   - 打开 Zed 的 Agent 面板顶部会话列表（Threads），找到刚才引发报错的 Thread（如排查外部目录的会话）；
+   - **直接点击删除（Delete Thread）或归档**，并新建一个空白会话。`acp_thread` 句柄引用归零，后台 Worktree 立即卸载。
+2. **检查 Project 面板并移除滑坡盘符**：
+   - 检查左侧项目树根部是否意外多出 `D:\` 或 `C:\` 节点；若有，右键选择 **`Remove from Project`** 即可。
+3. **数据库无残留验证（安心保障）**：
+   - 实测证明：滑坡的盘符树属于会话级影子工作区（Shadow Worktree），Zed 的 `workspaces` 和 `trusted_worktrees` 表**绝不会持久化写入盘符根**，退出后数据库完全干净，重启绝不会复发。
+4. **等待 60 秒**：
+   - 句柄释放后，Defender 消化完内核积压队列，CPU 会在 1 分钟左右自动平息回落至 0%。
 
 ### 步骤 1：排查当前受信任工作区（安全只读）
 ```powershell
@@ -200,13 +240,32 @@ uv run python clean_zed_trust.py
 Remove-Item clean_zed_trust.py -Force
 ```
 
-### 步骤 4：构建全盘系统级扫描防火墙（终极物理防御）
+### 步骤 4：构建终极双层立体防御（源头绝缘 + 物理断路器）
 
-为了彻底杜绝 Zed 后续因各种原因再次退化滑坡至 `C:\` 并把操作系统扫爆，必须在客户端配置层建立硬性防火墙。
+为了彻底根治滑坡死锁，必须在配置层建立“主动绝缘”与“被动剪枝”双保险：
 
-在 `%APPDATA%\Zed\settings.json` 中配置全量系统级排除黑名单：
+#### 防线 1（主动源头绝缘）：为 ACP 适配器开启 `--no-delegation`
+在 `%APPDATA%\Zed\settings.json` 中，为自定义 In-Process ACP Agent（如 Pi Agent）加上 `--no-delegation` 参数（或环境变量 `PI_ACP_DELEGATION=0`）：
 
-```json
+```jsonc
+    "Pi Agent": {
+      "type": "custom",
+      "command": "node",
+      "args": [
+        "C:/Users/29580/.bun/install/global/node_modules/@openma/pi-acp/dist/bin.js",
+        "--no-delegation"  // <-- 核心：切断向 Zed 宿主的文件委托
+      ],
+      "env": {
+        "PI_ACP_DELEGATION": "0"
+      }
+    }
+```
+> **原理**：Agent 读取文件/目录将完全在自身的 Node.js 内存进程直接走系统 I/O，遇到目录原生返回 EISDIR，**绝对不会调用 Zed 的 `Project::open_buffer_by_path()`，从物理源头拔除引信**！
+
+#### 防线 2（被动物理断路器）：全驱动器级 `file_scan_exclusions`
+不仅排除 C 盘系统目录，还必须覆盖 D 盘等非系统盘上的巨型非代码资产（Steam 游戏库、临时缓存等）：
+
+```jsonc
   "file_scan_exclusions": [
     "**/.git",
     "**/.svn",
@@ -224,7 +283,14 @@ Remove-Item clean_zed_trust.py -Force
     "**/$Recycle.Bin",
     "**/*.evtx",
     "**/*.LOG*",
-    "**/System Volume Information"
+    "**/System Volume Information",
+    // ⬇️ 261022-defense-drive-root：驱动器级断路器，防止退化至 D:\ 时扫爆
+    "**/Steam",
+    "**/steamapps",
+    "**/Program Files*",
+    "**/Users/*/AppData",
+    "**/Users/*/Downloads",
+    "**/*.tmp"
   ]
 ```
 
