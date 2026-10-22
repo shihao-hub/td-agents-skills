@@ -1,7 +1,7 @@
 ---
 name: sh-go-wails-desktop
 description: Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口不做 CLI、CLI(-cli) 只跑终端不开窗口，内嵌 WebUI 与 Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用
-version: 1.7.0
+version: 1.8.0
 created: 2026-10-21
 updated: 2026-10-22
 disable-model-invocation: true
@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 # sh-go-wails-desktop：Go 双通道桌面应用脚手架与通道隔离
 
-> **定位**：把一个 Go 工具做成**两条通道、四个产物**——`<app>-gui` 只开桌面壳（Wails v3 托盘 + 内嵌 HTTP/WebUI），`<app>-cli` 只做终端 CLI；并让 dev / release 两个通道在产物名、版本号、数据目录、单实例 ID、图标五个维度完全隔离。
+> **定位**：把一个 Go 工具做成**两条通道、四个产物**——`<app>-gui` 只开桌面壳（Wails v3 托盘 + 内嵌 HTTP/WebUI），`<app>-cli` 只做终端 CLI；四个 exe 统一落 `<project>/bin/`，并让 dev / release 两个通道在产物名、版本号、数据目录、单实例 ID、图标五个维度完全隔离。
 > **硬约束**：GUI 产物不解析任何子命令（不管从哪里启动都只出窗口），CLI 产物不开窗口。**禁止**用 `-H windowsgui` + `AttachConsole` 把两者合成单产物（原因见「三、反模式警示」）。
 > **来源**：由知识库条目 `kb-engineering-notes/082` 转正（原条目保留为 deprecated 存根，历史排障细节可回溯）。
 > **验证锚点**：Windows 11 24H2、Go 1.26、Wails v3.0.0-beta.33、Edge WebView2；实机项目 `go_projects/anatomymanager`（2026-10-21 全链路实测；同日二次实测推翻了本 skill 1.2.0 的「单产物双模」旧范式，产物改名 `-gui` / `-cli`；1.4.0 补齐 Step 4b 窗口几何记忆）。
@@ -68,6 +68,7 @@ internal/app        gui.go / autostart.go / version.go / datadir.go / icon_*.go 
 internal/storage    SQLite（或你的持久层）
 internal/web        //go:embed 前端资产
 scripts/            render_icon.py / build.py
+bin/                构建产物（gitignore，四个 exe 统一落位）
 根目录              icon.png / icon.ico / icon_dev 静态资产 / info.json / wails.exe.manifest
 ```
 
@@ -96,7 +97,7 @@ func main() {
 }
 ```
 
-**校验**：``.\<app>-gui-dev.exe list --json`` 不给任何 CLI 输出、只出窗口（参数被忽略）。
+**校验**：``.\bin\<app>-gui-dev.exe list --json`` 不给任何 CLI 输出、只出窗口（参数被忽略）。
 
 ### Step 3 CLI 入口（`cli.go`，`//go:build cli`）
 
@@ -123,7 +124,7 @@ func main() {
 }
 ```
 
-**校验**：``.\<app>-cli-dev.exe version`` 回显通道后秒退，且 prompt 正常返回、末尾无悬空光标。
+**校验**：``.\bin\<app>-cli-dev.exe version`` 回显通道后秒退，且 prompt 正常返回、末尾无悬空光标。
 
 #### 硬约束：`serve` 必须同时托管 WebUI，不得只起裸 API
 
@@ -236,12 +237,12 @@ go test ./internal/app/ -run WindowState -v   # 往返 / 无文件 / 脏 JSON / 
 
 ### Step 6 构建脚本（`build.py`）
 
-按 `references/build-pipeline.md` 落地。**一次构建在同一通道内产出两个二进制**：
+按 `references/build-pipeline.md` 落地。**一次构建在同一通道内产出两个二进制，统一落 `bin/`**：
 
 | 通道 | 产物 |
 |:---|:---|
-| dev | `<app>-gui-dev.exe` + `<app>-cli-dev.exe` |
-| release | `<app>-gui.exe` + `<app>-cli.exe` |
+| dev | `bin/<app>-gui-dev.exe` + `bin/<app>-cli-dev.exe` |
+| release | `bin/<app>-gui.exe` + `bin/<app>-cli.exe` |
 
 判定规则：
 
@@ -256,7 +257,7 @@ HEAD 精确命中 <project>/v* tag  且  工作区干净（剔除构建生成物
 
 ```powershell
 uv run scripts/build.py --release   # 无 tag/脏工作区应退出码 2，且不产出正式名
-(Get-Item .\<app>-gui.exe).VersionInfo | Select-Object FileDescription, FileVersion, ProductName
+(Get-Item .\bin\<app>-gui.exe).VersionInfo | Select-Object FileDescription, FileVersion, ProductName
 # 期望：GUI 与 CLI 的 FileDescription 不同；版本与 tag 一致
 ```
 
@@ -290,9 +291,9 @@ db, err := sql.Open("sqlite", dbPath+sqliteDSNParams)
 
 ```powershell
 cd <project>
-uv run scripts/build.py            # dev     → <app>-gui-dev.exe + <app>-cli-dev.exe  vX.Y.Z-dev[-dirty]
+uv run scripts/build.py            # dev     → bin/<app>-gui-dev.exe + bin/<app>-cli-dev.exe  vX.Y.Z-dev[-dirty]
 git tag <project>/v1.0.0
-uv run scripts/build.py --release  # release → <app>-gui.exe     + <app>-cli.exe      vX.Y.Z
+uv run scripts/build.py --release  # release → bin/<app>-gui.exe     + bin/<app>-cli.exe      vX.Y.Z
 git status --porcelain             # 必须为空：构建不得弄脏工作区
 ```
 
@@ -343,7 +344,7 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 **回滚**：
 
 ```powershell
-Remove-Item .\<app>-gui-dev.exe, .\<app>-cli-dev.exe -ErrorAction SilentlyContinue  # 只删产物，不动源码
+Remove-Item .\bin\<app>-gui-dev.exe, .\bin\<app>-cli-dev.exe -ErrorAction SilentlyContinue  # 只删产物，不动源码
 git tag -d <project>/vX.Y.Z                                                        # 误打 tag（远端已 push 需单独处理）
 ```
 
@@ -357,9 +358,9 @@ git tag -d <project>/vX.Y.Z                                                     
 |---|---|---|
 | 双击零黑框 | 资源管理器双击 | 无 CMD 闪窗；托盘就绪 |
 | 任务栏图标 | 观察运行图标 | 专属图标，无白框 |
-| CLI 回显 | `.\<app>-cli.exe version` | 版本 + 通道正确后秒退，prompt 正常返回、无悬空光标 |
-| CLI 管道 | `.\<app>-cli.exe list --json \| ConvertFrom-Json` | 正常拿到 JSON，非空 |
-| GUI 忽略参数 | `.\<app>-gui.exe list --json` | 只出窗口，零 CLI 输出 |
+| CLI 回显 | `.\bin\<app>-cli.exe version` | 版本 + 通道正确后秒退，prompt 正常返回、无悬空光标 |
+| CLI 管道 | `.\bin\<app>-cli.exe list --json \| ConvertFrom-Json` | 正常拿到 JSON，非空 |
+| GUI 忽略参数 | `.\bin\<app>-gui.exe list --json` | 只出窗口，零 CLI 输出 |
 | 双通道子系统 | 读 PE 头 Subsystem | gui=2(WINDOWS_GUI)、cli=3(CONSOLE) |
 | PE 版本资源 | 右键 exe → 属性 → 详细信息 | 文件说明/文件版本/产品名/公司/版权齐全；GUI 与 CLI 描述不同 |
 | dev 图标 | 看文件管理器 | Go 地鼠；release 为专属图标 |
@@ -368,10 +369,10 @@ git tag -d <project>/vX.Y.Z                                                     
 | 并发写不冲突 | 并行两个 `ingest`，其间请求 `/api/artworks` | 两条都 success，API 200 |
 | 单实例隔离 | 两者同时运行 | 互不唤醒、可并存 |
 | 端口零冲突 | dev 与 release 同时启动看日志 URL | 各自不同动态端口，互不串台 |
-| CLI serve WebUI（新项目 / 有 serve 的项目） | `.\<app>-cli.exe serve` 后浏览器打开输出地址 | 根路径 200 显示完整工作台；`/api/*` 正常 |
+| CLI serve WebUI（新项目 / 有 serve 的项目） | `.\bin\<app>-cli.exe serve` 后浏览器打开输出地址 | 根路径 200 显示完整工作台；`/api/*` 正常 |
 | 自启门禁 | dev 勾选自启 | 菜单置灰 + 注册表无写入 |
 | 关窗释放 | 关窗后看任务管理器 | WebView2 子进程退出，内存回落 |
-| dev 控制台日志 | 运行 `.<app>-gui-dev.exe` | 控制台可见启动横幅与 Wails 日志 |
+| dev 控制台日志 | 运行 `.\bin\<app>-gui-dev.exe` | 控制台可见启动横幅与 Wails 日志 |
 | release 落盘日志 | release 运行后看 `<appDataDir>/<app>.log` | 有启动横幅（version/mode），无逐请求噪音；无控制台也能排障 |
 | 窗口记忆 | 移窗 + 缩放 → 关窗 → 从托盘重开 | 恢复上次尺寸与位置 |
 | 最大化记忆 | 最大化 → 关窗 → 重开 → 点还原 | 重开即最大化；还原回到记忆的还原尺寸，不是满屏 |

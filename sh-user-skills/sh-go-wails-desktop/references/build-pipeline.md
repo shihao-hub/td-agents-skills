@@ -6,12 +6,24 @@
 
 ---
 
+## 零、产物落位：统一 `<project>/bin/`
+
+四个产物一律输出到 `<project>/bin/`，项目根目录只保留源码与静态资产：
+
+- **禁止根目录平铺**：否则 `.gitignore` 只能逐文件写 `/your_app-gui.exe`，产物一多就与源码资产混在一起；
+- **不要用 `build/`**：Wails 官方脚手架已占用该目录（`Taskfile.yml`、`appicon.*`、`darwin/`、`docker/`），产物混入会被误当资源或误清理；
+- **不要用 `dist/`**：前端产物通常落在 `frontend/dist/`，同名目录容易在排障时混淆；
+- 产物目录只改变落盘位置，不影响 PE `OriginalFilename`、运行数据目录、单实例 ID 与图标通道。
+
+---
+
 ## 一、通道隔离五件套
 
 dev 与 release 必须在以下五个维度同时隔离，缺一项就会出现"分不清哪个是正式版"的事故：
 
 | 维度 | dev | release |
 |:---|:---|:---|
+| 产物落位 | `bin/`（统一，禁止根目录平铺） | `bin/` |
 | 产物名 | `<app>-gui-dev.exe` + `<app>-cli-dev.exe` | `<app>-gui.exe` + `<app>-cli.exe` |
 | 版本号 | `vX.Y.Z-dev[-dirty]` | `vX.Y.Z` |
 | 数据目录 | `%APPDATA%\language_projects\<app>\dev` | `...\prod` |
@@ -75,7 +87,7 @@ exe 属性面板里的「文件说明 / 文件版本 / 产品名称 / 公司 / �
 **校验**（构建后立刻跑）：
 
 ```powershell
-Get-Item .\<app>-gui.exe | ForEach-Object {
+Get-Item .\bin\<app>-gui.exe | ForEach-Object {
   $v = $_.VersionInfo
   "{0} | {1} | {2} | {3}" -f $v.FileDescription, $v.FileVersion, $v.ProductName, $v.OriginalFilename
 }
@@ -115,8 +127,8 @@ function Get-IconHash($path) {
   $sha = [System.Security.Cryptography.SHA256]::Create().ComputeHash($ms.ToArray())
   [BitConverter]::ToString($sha).Replace('-','').Substring(0,16)
 }
-Get-IconHash ".\<app>-gui.exe"        # 与下面必须不同（GUI 通道）
-Get-IconHash ".\<app>-gui-dev.exe"
+Get-IconHash ".\bin\<app>-gui.exe"        # 与下面必须不同（GUI 通道）
+Get-IconHash ".\bin\<app>-gui-dev.exe"
 ```
 
 再用 Pillow 取 `icon_dev.ico` 的 32×32 帧与 dev exe 图标做像素比对（`uv run --with pillow python`），可确认 dev 图标确实是地鼠。
@@ -173,8 +185,8 @@ if __name__ == "__main__":
 """双通道构建：每条通道各出 GUI（-H windowsgui）与 Console（-tags cli）两个二进制。
 
 用法：
-  uv run scripts/build.py              # dev     → <app>-gui-dev.exe + <app>-cli-dev.exe
-  uv run scripts/build.py --release    # release → <app>-gui.exe     + <app>-cli.exe（条件不足 exit 2）
+  uv run scripts/build.py              # dev     → bin/<app>-gui-dev.exe + bin/<app>-cli-dev.exe
+  uv run scripts/build.py --release    # release → bin/<app>-gui.exe     + bin/<app>-cli.exe（条件不足 exit 2）
 """
 from __future__ import annotations
 
@@ -198,16 +210,17 @@ RENDER_ICON = PROJECT_ROOT / "scripts" / "render_icon.py"
 MANIFEST = PROJECT_ROOT / "wails.exe.manifest"
 SYSO_OUT = PROJECT_ROOT / "cmd" / "your_app" / "rsrc_windows_amd64.syso"
 
-EXE_GUI_RELEASE = PROJECT_ROOT / "your_app-gui.exe"
-EXE_GUI_DEV = PROJECT_ROOT / "your_app-gui-dev.exe"
-EXE_CLI_RELEASE = PROJECT_ROOT / "your_app-cli.exe"
-EXE_CLI_DEV = PROJECT_ROOT / "your_app-cli-dev.exe"
+OUT_DIR = PROJECT_ROOT / "bin"     # 产物统一落位；勿用 build/（Wails 资源目录）或 dist/（前端产物）
+EXE_GUI_RELEASE = OUT_DIR / "your_app-gui.exe"
+EXE_GUI_DEV = OUT_DIR / "your_app-gui-dev.exe"
+EXE_CLI_RELEASE = OUT_DIR / "your_app-cli.exe"
+EXE_CLI_DEV = OUT_DIR / "your_app-cli-dev.exe"
 
 GENERATED_SUFFIXES = (
-    "/your_app-gui.exe",
-    "/your_app-gui-dev.exe",
-    "/your_app-cli.exe",
-    "/your_app-cli-dev.exe",
+    "/bin/your_app-gui.exe",
+    "/bin/your_app-gui-dev.exe",
+    "/bin/your_app-cli.exe",
+    "/bin/your_app-cli-dev.exe",
     "/icon.ico",
     "/icon.png",
     "/cmd/your_app/rsrc_windows_amd64.syso",
@@ -308,6 +321,8 @@ def main() -> int:
     parser.add_argument("--version", default="", help="仅覆盖版本基线，不改变通道判定")
     args = parser.parse_args()
 
+    OUT_DIR.mkdir(parents=True, exist_ok=True)   # go build 不会自动建父目录
+
     # 1. 先判定通道（图标与产物名都依赖它）；--release 只做断言
     dirty = worktree_dirty()
     release = exact_project_tag() is not None and not dirty
@@ -377,11 +392,10 @@ if __name__ == "__main__":
 ## 五、`.gitignore` 片段
 
 ```gitignore
-# 构建生成物（脚本自动重建，不入库）
-/your_app-gui.exe
-/your_app-gui-dev.exe
-/your_app-cli.exe
-/your_app-cli-dev.exe
+# 构建产物目录（脚本自动重建，不入库）；一次覆盖四个 exe
+/bin/
+
+# 其他构建生成物
 /icon.ico
 /icon.png
 /cmd/your_app/rsrc_windows_amd64.syso

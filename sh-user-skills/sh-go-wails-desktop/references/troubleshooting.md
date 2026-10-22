@@ -57,16 +57,16 @@
 **校验子系统**（两条通道必须分别是 2 和 3）：
 
 ```powershell
-uv run python -c "import struct,sys;d=open(sys.argv[1],'rb').read(0x400);pe=struct.unpack_from('<I',d,0x3c)[0];print(sys.argv[1], struct.unpack_from('<H',d,pe+0x5c)[0])" .\<app>-gui.exe
+uv run python -c "import struct,sys;d=open(sys.argv[1],'rb').read(0x400);pe=struct.unpack_from('<I',d,0x3c)[0];print(sys.argv[1], struct.unpack_from('<H',d,pe+0x5c)[0])" .\bin\<app>-gui.exe
 # 期望输出 2（IMAGE_SUBSYSTEM_WINDOWS_GUI）
-uv run python -c "import struct,sys;d=open(sys.argv[1],'rb').read(0x400);pe=struct.unpack_from('<I',d,0x3c)[0];print(sys.argv[1], struct.unpack_from('<H',d,pe+0x5c)[0])" .\<app>-cli.exe
+uv run python -c "import struct,sys;d=open(sys.argv[1],'rb').read(0x400);pe=struct.unpack_from('<I',d,0x3c)[0];print(sys.argv[1], struct.unpack_from('<H',d,pe+0x5c)[0])" .\bin\<app>-cli.exe
 # 期望输出 3（IMAGE_SUBSYSTEM_WINDOWS_CUI）
 ```
 
 **验证 shell 是否真的等待**（关键反证）：把 `serve` 放到后台跑，若父 shell 仍在阻塞，说明等待关系正常：
 
 ```powershell
-$p = Start-Process -PassThru .\<app>-cli.exe -ArgumentList 'serve','--port','0'
+$p = Start-Process -PassThru .\bin\<app>-cli.exe -ArgumentList 'serve','--port','0'
 Start-Sleep 3
 if (-not $p.HasExited) { "shell 已交出控制权但进程仍在跑（serve 语义正确）" }
 $p | Stop-Process
@@ -126,7 +126,7 @@ git check-ignore -v icon.ico internal/app/icon.ico
 ```
 
 - **tag 前缀不匹配**：monorepo tag 必须是 `<project>/vX.Y.Z`；`TAG_PREFIX` 为空时只认 `vX.Y.Z`。
-- **工作区脏**：生成物未进 `.gitignore`（`icon.ico`、`.syso`、`*.exe`）会永远判脏。
+- **工作区脏**：生成物未进 `.gitignore`（`icon.ico`、`.syso`、`bin/`）会永远判脏；`.gitignore` 必须写 `/bin/` 而不是逐个根目录 exe。
 - **`.gitignore` 误伤**：写成 `icon.ico` 会忽略 `internal/app/icon.ico`，干净检出后 `go:embed` 直接编译失败；必须 `/icon.ico`。
 - **`--version` 误用**：它只覆盖版本基线，不改变通道判定；想发版只能靠 tag + 干净工作区。
 

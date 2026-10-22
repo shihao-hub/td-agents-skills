@@ -78,6 +78,7 @@ your_app/
 ├── scripts/
 │   ├── render_icon.py                  # 专属图标渲染流水线 (Pillow，仅 release 图标)
 │   └── build.py                        # 一键构建：通道判定 + 图标 + go-winres 资源段 + 双通道 go build（GUI/Console 各一）
+├── bin/                                # 构建产物（gitignore）：四个 exe 统一落位，根目录保持干净
 ├── winres/
 │   ├── gui.json                        # VERSIONINFO + manifest + 图标模板（GUI 产物）
 │   └── cli.json                        # 同上，FileDescription/InternalName 换成 CLI 文案

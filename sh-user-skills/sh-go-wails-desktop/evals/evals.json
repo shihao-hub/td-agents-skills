@@ -4,13 +4,13 @@
     {
       "id": 1,
       "prompt": "帮我起一个 Go 桌面项目：既能在终端跑 CLI 子命令，双击又能开 Wails 托盘窗口，内嵌一个本地 WebUI；dev 版和正式版要能同时运行、数据分开存，双击都不能弹黑框。",
-      "expected_output": "产出双通道骨架（每条通道两个产物，禁止单产物双模）：cmd/<app> 下 main.go（//go:build !cli，GUI 入口：不解析任何子命令，任何启动方式只出窗口，仅识别 --hidden/--tray 静默托盘）与 cli.go（//go:build cli，CLI 入口：子命令派发 + 无参打印用法 + --hidden 退化为无窗 serve）；两个文件各自提供一个 main()。internal/app 下 gui.go（托盘常驻、单实例）。internal/api 提供 GUI 与 CLI serve 共用的 Handler()（静态 WebUI + REST），CLI serve 根路径即 WebUI 且打印访问 URL，禁止只起裸 API 端口。dev 与 release 五维隔离：产物名 <app>-gui-dev.exe/<app>-cli-dev.exe vs <app>-gui.exe/<app>-cli.exe、版本 vX.Y.Z-dev[-dirty] vs vX.Y.Z、数据目录 %APPDATA%\\language_projects\\<app>\\{dev,prod}、单实例 UniqueID dev 追加 .dev、图标 dev 地鼠 / release 专属；build.py 在同一通道内循环构建两次（仅 GUI 目标加 -H windowsgui、仅 CLI 目标加 -tags cli），默认 dev，仅精确 tag + 干净工作区才 release，--release 条件不足退出码 2。明确禁止用 console_windows.go + AttachConsole 合成单 exe。",
+      "expected_output": "产出双通道骨架（每条通道两个产物，禁止单产物双模）：cmd/<app> 下 main.go（//go:build !cli，GUI 入口：不解析任何子命令，任何启动方式只出窗口，仅识别 --hidden/--tray 静默托盘）与 cli.go（//go:build cli，CLI 入口：子命令派发 + 无参打印用法 + --hidden 退化为无窗 serve）；两个文件各自提供一个 main()。internal/app 下 gui.go（托盘常驻、单实例）。internal/api 提供 GUI 与 CLI serve 共用的 Handler()（静态 WebUI + REST），CLI serve 根路径即 WebUI 且打印访问 URL，禁止只起裸 API 端口。dev 与 release 五维隔离：产物统一落 bin/（bin/<app>-gui-dev.exe/bin/<app>-cli-dev.exe vs bin/<app>-gui.exe/bin/<app>-cli.exe）、版本 vX.Y.Z-dev[-dirty] vs vX.Y.Z、数据目录 %APPDATA%\\language_projects\\<app>\\{dev,prod}、单实例 UniqueID dev 追加 .dev、图标 dev 地鼠 / release 专属；build.py 在同一通道内循环构建两次（仅 GUI 目标加 -H windowsgui、仅 CLI 目标加 -tags cli），默认 dev，仅精确 tag + 干净工作区才 release，--release 条件不足退出码 2。明确禁止用 console_windows.go + AttachConsole 合成单 exe。",
       "files": []
     },
     {
       "id": 2,
       "prompt": "我已经打了 tag，但 uv run scripts/build.py --release 一直报拒绝发布构建，退出码 2，怎么排查？",
-      "expected_output": "按四条线索定位并给出可执行检查：git tag --points-at HEAD 确认 tag 是否精确命中且带 <project>/ 前缀；git status --porcelain 是否仍有未提交文件（构建生成物需在 .gitignore 中且根路径写成 /icon.ico，避免误伤 internal/app/icon.ico）；git check-ignore -v 复核忽略规则；确认 --version 只覆盖基线、不改变通道判定。修复后 release 产出正式名的两个产物 <app>-gui.exe 与 <app>-cli.exe，dev 产物不被覆盖。",
+      "expected_output": "按四条线索定位并给出可执行检查：git tag --points-at HEAD 确认 tag 是否精确命中且带 <project>/ 前缀；git status --porcelain 是否仍有未提交文件（构建生成物需在 .gitignore 中且根路径写成 /icon.ico，避免误伤 internal/app/icon.ico）；git check-ignore -v 复核忽略规则；确认 --version 只覆盖基线、不改变通道判定。修复后 release 产出正式名的两个产物 bin/<app>-gui.exe 与 bin/<app>-cli.exe，dev 产物不被覆盖。",
       "files": []
     },
     {
