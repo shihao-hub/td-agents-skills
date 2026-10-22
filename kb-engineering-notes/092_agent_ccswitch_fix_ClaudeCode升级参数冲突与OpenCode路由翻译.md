@@ -147,7 +147,7 @@ INSERT OR REPLACE INTO settings (key, value) VALUES ('global_proxy_url', 'http:/
 }
 ```
 
-在供应商的 `settings_config.env` 中配置 `ANTHROPIC_AUTH_TOKEN`（供代理向上游发送 `Authorization: Bearer`）：
+在供应商的 `settings_config.env` 中配置 `ANTHROPIC_AUTH_TOKEN` 与网关免扰环境变量：
 ```json
 {
   "env": {
@@ -158,15 +158,16 @@ INSERT OR REPLACE INTO settings (key, value) VALUES ('global_proxy_url', 'http:/
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.3-flash[1m]",
     "ANTHROPIC_DEFAULT_FABLE_MODEL": "glm-5.3-flash[1m]",
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "1000000",
+    "CLAUDE_CODE_AUTO_MODE_SERVER": "0",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "API_TIMEOUT_MS": "3000000"
   }
 }
 ```
 
-### 步骤 5：同步客户端配置与 1M 上下文（消除双键告警）
+### 步骤 5：同步客户端配置与 1M 上下文（消除双键告警与分类器弹窗）
 
-更新 `~/.claude/settings.json`，**彻底移除 `ANTHROPIC_API_KEY`，仅保留 `ANTHROPIC_AUTH_TOKEN: "PROXY_MANAGED"`**，并补齐 Fable 档位与 `[1M]` 上下文标识：
+更新 `~/.claude/settings.json`，**彻底移除 `ANTHROPIC_API_KEY`，仅保留 `ANTHROPIC_AUTH_TOKEN: "PROXY_MANAGED"`**，补齐 Fable 档位、`[1M]` 上下文标识以及 `CLAUDE_CODE_AUTO_MODE_SERVER: "0"`：
 
 ```json
 {
@@ -182,6 +183,7 @@ INSERT OR REPLACE INTO settings (key, value) VALUES ('global_proxy_url', 'http:/
     "ANTHROPIC_DEFAULT_OPUS_MODEL_NAME": "glm-5.3-flash",
     "ANTHROPIC_DEFAULT_FABLE_MODEL_NAME": "glm-5.3-flash",
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "1000000",
+    "CLAUDE_CODE_AUTO_MODE_SERVER": "0",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "API_TIMEOUT_MS": "3000000"
   }
@@ -194,35 +196,10 @@ INSERT OR REPLACE INTO settings (key, value) VALUES ('global_proxy_url', 'http:/
 Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = '"D:\Users\29580\AppData\Local\Programs\CC Switch\cc-switch.exe"' }
 ```
 
-### 步骤 7：治理 Zed Claude ACP 分类器警告（二选一）
+### 步骤 7：收敛原则：由 CC Switch 统管，禁止污染下游 IDE（如 Zed ACP）
 
-若在 Zed 中使用 Claude ACP 时频繁遇到 `Claude reported a warning` 黄色弹窗：
-
-- **方案 A（注入抑制环境变量，维持 Auto 模式）**：
-  在 `AppData/Roaming/Zed/settings.json` 的 `agent_servers.claude-acp` 下显式添加 `env` 节点：
-  ```json
-  "claude-acp": {
-    "default_config_options": {
-      "fast": true,
-      "effort": "max",
-      "model": "default",
-      "mode": "auto"
-    },
-    "type": "registry",
-    "env": {
-      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
-    }
-  }
-  ```
-- **方案 B（切换权限模式，源头绝缘分类器）**：
-  将 `mode` 设为 `"acceptEdits"`（自动接受编辑）或 `"default"`（Manual 手动批准）。非 `auto` 模式下 Claude 根本不会调用后台分类器，从机制源头根除该警告：
-  ```json
-  "claude-acp": {
-    "default_config_options": {
-      "mode": "acceptEdits"
-    }
-  }
-  ```
+- **统一中心化原则**：所有环境变量一律由 CC Switch 供应商配置统一注入至 `~/.claude/settings.json`，下游所有消费者（包括 Claude Code 原生终端 CLI、Zed Claude ACP、Cursor 等）自动继承；
+- **下游零污染原则**：Zed 的 `agent_servers.claude-acp` 保持原生默认配置（开箱即用 `type: "registry"`），**严禁在 Zed `settings.json` 中随意硬编码添加 `env`**，防止供应商切换时下游配置脱节或导致 ACP 进程行为分叉。
 
 ---
 
