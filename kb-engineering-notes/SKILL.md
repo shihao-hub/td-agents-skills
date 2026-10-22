@@ -5,9 +5,9 @@ description: |
    【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中复制Ctrl+C假死与剪贴板锁争用；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、【特大高危】Zed信任表家目录污染致全盘监听与10G内存暴涨及Defender死锁、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh启动误唤起Grok与accounts.x.ai弹窗；Claude Code升级400与OpenCode协议分立路由代理等。
   【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计。
   检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。命中条目后先看 frontmatter status：deprecated 直接弃用并改读 superseded_by，suspect 须先只读探测再执行。
-version: 2.1.3
+version: 2.1.5
 created: 2026-10-07
-updated: 2026-10-22
+updated: 2026-10-23
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -134,13 +134,16 @@ kb-engineering-notes/
 ├── 081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md # [Stage 2: 专项排障] 针对 dsh 启动 Cursor ACP 裸命令 agent 与 xAI Grok CLI 命名冲突致强制弹窗 accounts.x.ai 排障
 ├── 082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md # [已转正 → sh-go-wails-desktop，本文件仅存根] 原 Go 单二进制四位一体架构、任务栏PE图标、dev/release 通道隔离、图标双通道、开机自启门禁与无控制台排障
 ├── 083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md # [Stage 2: 专项排障] 针对 Zed 外接 ACP Agent（如 antigravity-acp）在经历 600+ 步长会话或 502 网络重试后，模型文本已全部输出但界面永久转圈、正文末尾挂三点脉冲、输入框死锁无法发送下一条及 $/cancel_request 缺失排障
-├── 084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md # [Stage 2: 专项排障] 针对 Pi 飞书桥接保活器 CLI 入口解析失败 + PI_CLI_ENTRY 指向包装层致 child.pid ≠ owner pid、每 10 秒误杀重生 daemon，且 spawn 缺 windowsHide 在定制版 WT 委托断层下弹标题 pi 的裸 conhost 黑窗排障
+├── 084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md # [Stage 2: 专项排障] 针对 Pi 飞书桥接保活器 CLI 入口解析失败 + PI_CLI_ENTRY 指向包装层致 child.pid ≠ owner pid、每 10 秒误杀重生 daemon，且 spawn 缺 windowsHide 在定制版 WT 委托断层下弹标题 pi 的裸 conhost 黑窗排障；并覆盖 pi 自更新迁移后旧全局入口失效与 settings.json 丢失 packages 致扩展静默不加载
 ├── 085_dev_bruno_flow_api_test_collection.md # [Stage 2: 专项流水线] 针对后端接口提取、Bruno OpenCollection YAML 测试集生成、认证隔离与语法校验
 ├── 086_dev_cmake_flow_trilang_lua_cpp_toolchain.md # [Stage 2: 专项流水线] 针对 C/C++/Lua 多语言工具链配置、FetchContent 集成 Lua 5.1、CMake Presets 模板与 MSVC /utf-8 排障
 ├── 087_git_gh_flow_repo_cleanup_audit.md # [Stage 2: 专项流水线] 针对 GitHub 账号仓库大扫除、fork 识别与超前提交比对、mirror 本地备份与 gh 批量清理
 ├── 088_browser_pwa_flow_localhost_standalone_window.md # [Stage 2: 专项流水线] 针对本地 Web 服务 Chromium SSB (--app 模式) 桌面独立窗口与 PWA 规范面板改造
 ├── 089_media_docx_flow_office_extract_media.md # [Stage 2: 专项流水线] 针对 Word/PPT/Excel 等 Office 文档内嵌原图与媒体资源 ZIP 拆包及无损提取流水线
 ├── 090_dev_sa_flow_sql_query_builder_extract.md # [Stage 2: 专项流水线] 针对复杂 SQLAlchemy Core 查询抽取为文本 SQL 模板与 Query Builder 层重构流水线
+├── 091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md # [Stage 2: 专项排障] 针对 WT 选中文本按 Ctrl+C 偶尔卡死数秒且未复制成功与剪贴板锁争用排障
+├── 092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md # [Stage 2: 专项排障] 针对 Claude Code 升级参数冲突、OpenCode 协议分立与 CC Switch 路由代理翻译
+├── 093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md # [Stage 2: 专项流水线] 针对 Typora 高内存替代、QuickLook 绿色便携部署与 Markdown 空格即时预览流水线
 └── ...（后续顺次扩充）
 ```
 
@@ -305,7 +308,7 @@ kbman touch <id>
 | 提级暴露技能配置了 disable-model-invocation 导致自然语言交互中 Kiro Spec / Plan 等规范失盲、AI 自由发挥破坏三件套交付基线 | [`080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md) | disable-model-invocation, 规范失盲, 知识库过时, 元数据防腐, Kiro Spec, SPEC.md 自由发挥, 时序软失效 |
 | dsh 启动时明明加了 `--no-open` 却弹出 accounts.x.ai 设备登录网页，或报错 Cursor ACP communication failed / CURSOR_BINARY_UNAVAILABLE | [`081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md) | accounts.x.ai, dsh web, --no-open 弹窗, Cursor ACP communication failed, CURSOR_BINARY_UNAVAILABLE, agent.exe, Grok CLI 命名冲突 |
 | Zed 外接 ACP Agent（如 antigravity-acp）生成完文本后界面持续转圈、正文末尾挂三点脉冲 `⋮`、输入框锁定无法发下一条，点击停止报错 `method=$/cancel_request Method not found`，重启后发消息又卡死 | [`083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md) | Zed外接ACP卡死, 永久转圈, 三点脉冲, 输入框锁定, PromptResponse丢失, receive_steps, STATE_FULLY_IDLE, cancel_request Method not found, 长会话失步, 502网络重试, antigravity-acp, 新Thread恢复 |
-| 重启电脑总弹一个标题为 `pi` 的黑窗（外观像 WT 但无标签栏，关掉还会再冒）；`daemon.log` 里每 20 秒一轮 `spawned daemon` / `killing my daemon (another live owner)` | [`084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md) | pi 弹窗, 重启弹黑窗, 标题 pi 窗口, another live owner, pi-feishu-keeper, ax-feishu-bridge, PI_CLI_ENTRY, pi-launcher 包装层, dist/bundle/cli.js, windowsHide, Detached 弹 conhost, DefTerm 断层 |
+| pi TUI 底部 `Feishu: 已连接` 状态消失、`/feishu` 命令与 `feishu_config_*` 工具没了，但飞书消息仍能收发；或 `pi list` 报 `No packages installed`、`settings.json` 里 `packages` 不见（旁边可能还躺着一份 `config.yml`）；或重启电脑总弹一个标题为 `pi` 的黑窗（外观像 WT 但无标签栏，关掉还会再冒）、`daemon.log` 里每 20 秒一轮 `spawned daemon` / `killing my daemon (another live owner)` | [`084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md) | pi 弹窗, 重启弹黑窗, 标题 pi 窗口, another live owner, pi-feishu-keeper, ax-feishu-bridge, PI_CLI_ENTRY, pi-launcher 包装层, dist/bundle/cli.js, windowsHide, Detached 弹 conhost, DefTerm 断层, Feishu 状态消失, /feishu 命令消失, pi list No packages installed, settings.json packages 丢失, config.yml 无效, pi 自更新 migrated install, 旧全局安装 已删除 |
 | 需要为后端 API 接口批量生成 Bruno 测试脚本集合（.bru / OpenCollection YAML），或遇到 Bruno YAML 格式/schema 报错 | [`085_dev_bruno_flow_api_test_collection.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/085_dev_bruno_flow_api_test_collection.md) | Bruno API, .bru, OpenCollection, opencollection.yml, 接口测试, after-response, 变量提取, YAML 语法校验 |
 | C/C++/Lua 多语言项目编译构建报错，需要配置 CMake Presets、通过 FetchContent 源码集成 Lua 5.1，或解决 MSVC /utf-8 中文乱码与 clangd 寻址 | [`086_dev_cmake_flow_trilang_lua_cpp_toolchain.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/086_dev_cmake_flow_trilang_lua_cpp_toolchain.md) | CMake, FetchContent, Lua 5.1.5, trilang, MSVC, /utf-8, clangd, Ninja, NeoCMake, LUA_OK, doctest |
 | GitHub 账号下仓库堆积，需要安全清点审计、纯收藏 fork 判定转 Star、核心仓库本地 mirror 备份与 gh CLI 批量删除 | [`087_git_gh_flow_repo_cleanup_audit.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/087_git_gh_flow_repo_cleanup_audit.md) | GitHub 仓库清理, gh auth login, delete_repo, fork 判定, ahead_by, mirror 备份, 批量删除仓库, PS 5.1 编码 |
@@ -314,6 +317,7 @@ kbman touch <id>
 | Repository 层 SQLAlchemy Core 查询过于冗长复杂，需要重构为纯文本 SQL 模板 + Query Builder 参数装配层 | [`090_dev_sa_flow_sql_query_builder_extract.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/090_dev_sa_flow_sql_query_builder_extract.md) | SQLAlchemy Core 重构, Query Builder, 文本 SQL 模板, CTE 抽取, text() 占位符, rows count 共享 params, SQL 注入防御 |
 | Windows Terminal (WT) 选中文本按 Ctrl+C 偶尔卡死数秒且未复制成功，或开 copyOnSelect 拖选文字卡顿掉帧 | [`091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md) | WT Ctrl+C 卡死, 终端复制卡死, 复制不上, OpenClipboard, PR 17006, Sleep 指数退避, UI 线程假死, cbdhsvc 锁争用, copyOnSelect 卡顿, Enter 回车复制 |
 | Claude Code 升级后直连 OpenCode/第三方网关报 400 inference_failed、ModelProtocolUnsupported、双鉴权头冲突、Cloudflare 1010 拦截或 Zed 弹窗 auto-mode-classifier-billing 警告 | [`092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md) | Claude Code 400, OpenCode GLM 400, ModelProtocolUnsupported, Go requires a credential, Both ANTHROPIC_AUTH_TOKEN and ANTHROPIC_API_KEY set, Header is managed by the local proxy and cannot be overridden, openai_chat 翻译, 1M 上下文, Fable 档位, auto-mode-classifier-billing, Claude reported a warning, 127.0.0.1:15721 |
+| Markdown 纯阅读渲染场景下 Typora/Obsidian 打开多窗口吞噬 1GB 内存，或需要免双击、阅后即焚、常驻仅 15MB 的空格即时预览工作流 | [`093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md) | QuickLook, Typora 替代, Markdown 预览, 空格预览, MarkdownViewer, 内存暴涨, WebView2 白屏, ql |
 
 ---
 
@@ -426,7 +430,7 @@ kbman touch <id>
 | 081 | [`081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md) | `081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md` | `agent` | `fix` | dsh 启动 Cursor ACP 裸命令 agent 与 Grok CLI 冲突致 accounts.x.ai 弹窗修复 |
 | 082 | [`082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md) | `082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md` | `dev` | `flow` | [已转正 → `sh-go-wails-desktop`] Go 单二进制 CLI 与 Wails v3 双模融合架构、通道隔离与图标双通道（正文已迁移，本条目为存根） |
 | 083 | [`083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md) | `083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md` | `ide` | `fix` | Zed 外接 ACP 长会话生成完毕转圈卡死与 PromptResponse 丢失排障 |
-| 084 | [`084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md) | `084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md` | `agent` | `fix` | 飞书桥接 keeper 空转重生 pi 与 conhost 黑窗排障 |
+| 084 | [`084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md) | `084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md` | `agent` | `fix` | 飞书桥接 keeper 空转重生 pi、conhost 黑窗与自更新后扩展静默掉线排障 |
 | 085 | [`085_dev_bruno_flow_api_test_collection.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/085_dev_bruno_flow_api_test_collection.md) | `085_dev_bruno_flow_api_test_collection.md` | `dev` | `flow` | 后端接口提取与 Bruno OpenCollection YAML 脚本生成流水线 |
 | 086 | [`086_dev_cmake_flow_trilang_lua_cpp_toolchain.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/086_dev_cmake_flow_trilang_lua_cpp_toolchain.md) | `086_dev_cmake_flow_trilang_lua_cpp_toolchain.md` | `dev` | `flow` | C/C++/Lua 多语言工具链配置、FetchContent 集成与 CMake 构建排障 |
 | 087 | [`087_git_gh_flow_repo_cleanup_audit.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/087_git_gh_flow_repo_cleanup_audit.md) | `087_git_gh_flow_repo_cleanup_audit.md` | `git` | `flow` | GitHub 账号仓库大扫除、fork 识别比对、mirror 备份与批量删除 |
@@ -435,5 +439,6 @@ kbman touch <id>
 | 090 | [`090_dev_sa_flow_sql_query_builder_extract.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/090_dev_sa_flow_sql_query_builder_extract.md) | `090_dev_sa_flow_sql_query_builder_extract.md` | `dev` | `flow` | 复杂 SQLAlchemy Core 查询抽取为纯文本 SQL 模板与 Query Builder 层重构 |
 | 091 | [`091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md) | `091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md` | `ide` | `fix` | Windows Terminal 选中文本 Ctrl+C 假死与剪贴板锁争用排障 |
 | 092 | [`092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md) | `092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md` | `agent` | `fix` | Claude Code 升级参数冲突、OpenCode 协议分立与 CC Switch 路由代理翻译 |
+| 093 | [`093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md) | `093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md` | `win` | `flow` | Typora 高内存替代、QuickLook 绿色便携部署与 Markdown 空格即时预览流水线 |
 
 
