@@ -126,3 +126,9 @@ User invokes with a map (URL or number). A ticket is **optional**: without one, 
 5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals that a ticket (this one or another) sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
 
 The user may run unblocked tickets in parallel, so expect other sessions to be editing the tracker concurrently.
+
+## 下游关联流转指引（Next Transitions）
+
+- 随着地图上的 Decision Tickets 逐步得到解决，大雾完全消散，终点路径彻底清晰；
+- 👉 下一步调用 **[`to-spec`](../to-spec/SKILL.md)**，将地图中已确认的所有决策合成为正式目的地规范；
+- 👉 随后调用 **[`to-tickets`](../to-tickets/SKILL.md)** 开始垂直切片工程实施。

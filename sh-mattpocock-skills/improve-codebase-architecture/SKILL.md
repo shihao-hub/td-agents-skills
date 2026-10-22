@@ -69,3 +69,9 @@ Side effects happen inline as decisions crystallize; call the Skill tool with "d
 - **Sharpening a fuzzy term during the conversation?** Update `GLOSSARY.md` right there.
 - **User rejects the candidate with a load-bearing reason?** Offer an ADR, framed as: _"Want me to record this as an ADR so future architecture reviews don't re-suggest it?"_ Only offer when the reason would actually be needed by a future explorer to avoid re-suggesting the same thing; skip ephemeral reasons ("not worth it right now") and self-evident ones.
 - **Want to explore alternative interfaces for the deepened module?** Call the Skill tool with "codebase-design" and use its design-it-twice parallel sub-agent pattern.
+
+## 下游关联流转指引（Next Transitions）
+
+- 架构深化决策通过 Grilling 达成共识后：
+  👉 下一步调用 **[`to-tickets`](../to-tickets/SKILL.md)**，将重构任务拆解为小步垂直切片（对于大范围改动遵循 expand-contract 扩缩模式）；
+  👉 随后由 **[`implement`](../implement/SKILL.md)** + **[`tdd`](../tdd/SKILL.md)** 落地重构代码。

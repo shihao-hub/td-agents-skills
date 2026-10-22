@@ -24,3 +24,9 @@ The two branches produce very different artifacts, so getting this wrong wastes 
 4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast.
 5. **Surface the state.** After every action (logic) or on every variant switch (UI), print or render the full relevant state so the user can see what changed.
 6. **Capture it when done.** Fold any validated decision into the real code, then capture the prototype itself as a **primary source**: commit it to a throwaway branch, out of main, and leave a context pointer to that branch on the implementation issue. Capture the answer too (the verdict and the question it settled) in the issue or a commit. The main branch keeps only the validated decision.
+
+## 下游关联流转指引（Next Transitions）
+
+- 原型验证通过并得出结论后，立即废弃测试代码，绝不直接将未经验收的原型合并入生产分支；
+- 👉 将验证通过的状态机结构或界面设计共识引入 **[`domain-modeling`](../domain-modeling/SKILL.md)** 固化模型，或直接写入 **[`to-spec`](../to-spec/SKILL.md)** 作为决策证据；
+- 👉 随后通过 **[`to-tickets`](../to-tickets/SKILL.md)** 与 **[`tdd`](../tdd/SKILL.md)** 规范重写真正的生产代码。

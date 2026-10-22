@@ -36,3 +36,9 @@ When the shape of that interface is itself in question (how deep the module is, 
 - **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
 - **Refactoring is not part of the loop.** It belongs to the review stage (see the `code-review` skill), not the red → green implementation cycle.
+
+## 下游关联流转指引（Next Transitions）
+
+- 测试变绿且类型检查通过后，本切片的实现闭环即告终结；
+- 👉 立即将控制权交还给 **[`implement`](../implement/SKILL.md)** 进行提交归档与会话清空（`/clear`）；
+- 👉 严禁在测试变绿后未经清空会话即开始下一个切片。

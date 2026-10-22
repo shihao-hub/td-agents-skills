@@ -136,3 +136,9 @@ Required before declaring done:
 - [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message, so the next debugger learns
+
+## 下游关联流转指引（Next Transitions）
+
+- 修复通过并经过 Phase 6 清理后，将排障结论与回归测试提交入库；
+- 👉 若排障发现代码库缺乏测试接缝、模块过于浅薄脆弱，引导触发 **[`improve-codebase-architecture`](../improve-codebase-architecture/SKILL.md)** 扫描并重构成深模块；
+- 👉 业务功能修复完成后，返回 **[`to-tickets`](../to-tickets/SKILL.md)** 看板继续推进正常迭代。
