@@ -1,9 +1,9 @@
 ---
 name: sh-go-wails-desktop
 description: Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口不做 CLI、CLI(-cli) 只跑终端不开窗口，内嵌 WebUI 与 Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用
-version: 1.6.0
+version: 1.7.0
 created: 2026-10-21
-updated: 2026-10-21
+updated: 2026-10-22
 disable-model-invocation: true
 ---
 
@@ -213,6 +213,21 @@ go test ./internal/app/ -run WindowState -v   # 往返 / 无文件 / 脏 JSON / 
 2. 关窗（进程留托盘）→ 再次启动 exe → 新窗口精确恢复上次尺寸与位置；
 3. 最大化后关窗重开 → 仍是最大化，且 `window.json` 里保留的还原尺寸没被写成满屏值。
 
+### Step 4c 可观测性（dev 控制台 + 全通道落盘日志）
+
+`-H windowsgui` 的 release 产物没有 stdout/stderr，启动失败或行为异常时就是纯黑盒。**日志必须与通道无关地落盘**，dev 只是额外可见：
+
+- **双写**：`internal/logx.Init(dataDir)` 打开 `<appDataDir>/<app>.log`（追加），`teeWriter` 同时写 `os.Stderr` 与文件；**stderr 写失败必须忽略**（GUI 子系统句柄无效），绝不能让 `io.MultiWriter` 因第一个 writer 失败而阻断文件落盘。
+- **单一真源**：`dataDir` 由调用方传入（通常 `store.DataDir()`），`logx` 不 import store，避免 `store → logx → store` 依赖环。
+- **启动横幅**：`version / commit / mode`，排障第一手信息（`internal/env` 提供 `ModeName()`）。
+- **接管 Wails 内部日志**：`application.Options.Logger = logx.SystemLogger()`（beta.25 为 `*slog.Logger`）；用 `filterHandler` 丢弃 `[AssetFileServerFS] Handling request` 这类逐请求噪音，否则一次页面加载就刷十几条，错误会被淹没。
+- **panic 兜底**：`main` 首行 `defer recover()` 写 `debug.Stack()`；release 额外 `MessageBoxW` 弹窗并给出日志路径（dev 弹窗会打断调试，不弹），随后 `os.Exit(1)`。
+- **轮转**：单文件 2 MB + 1 份（启动时检查）；低频桌面工具按天切只会产生一堆碎片文件。
+- **前端异常**：`window.error` + `unhandledrejection` → 复用现有服务方法上报，后端同消息 1 分钟去重，日志带 `[FE]` 前缀。
+- **安全红线**：日志不记录可能含令牌的完整命令行、注册表值内容；只记来源、名称、错误。
+
+**校验**：release 产物 `--hidden` 启动 5s → `<appDataDir>/<app>.log` 出现启动横幅且无 `Handling request` 噪音；dev 同样生成该文件（控制台也能看到）；`go test ./internal/logx` 覆盖往返/轮转/幂等/stderr 故障容错。
+
 ### Step 5 图标资产（release 专属 + dev 地鼠）
 
 `render_icon.py` 生成 1024 PNG 与 256/128/64/48/32/24/16 全尺寸 ICO，并同步 `internal/app/icon.ico`；把 `go-default.ico` 复制为 `internal/app/icon_dev.ico`。脚本全文见 `references/build-pipeline.md`。
@@ -322,6 +337,8 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 | 并发写报 `database is locked (SQLITE_BUSY)` | 裸 DSN：`busy_timeout=0` + rollback journal | 统一 DSN 加 `busy_timeout`/WAL（Step 7、troubleshooting §8） |
 | 每次打开窗口都是默认尺寸、位置也不记得 | wails v3 不内置窗口状态记忆；关窗只销毁窗口（进程留托盘），重建走同一份默认 options | 落 `window.json` + 几何事件防抖保存（Step 4b、troubleshooting §9） |
 | 最大化后重开，点还原变成满屏或尺寸错乱 | 把最大化尺寸写进了「还原几何」 | 保存时先判 `IsMaximised()`，最大化只翻标记不采集尺寸（Step 4b） |
+| release 双击毫无反应、也没有任何提示 | `-H windowsgui` 无 stdout，且未接落盘日志 | 按 Step 4c 补 `logx` 双写与 panic 弹窗，日志在 `<appDataDir>` |
+| 日志文件写了但内容为空 / 只有少量 | 用 `io.MultiWriter(os.Stderr, file)`，GUI 子系统 stderr 失败短路 | 换 `teeWriter`：先忽略 stderr 错误，再写文件（Step 4c） |
 
 **回滚**：
 
@@ -354,6 +371,8 @@ git tag -d <project>/vX.Y.Z                                                     
 | CLI serve WebUI（新项目 / 有 serve 的项目） | `.\<app>-cli.exe serve` 后浏览器打开输出地址 | 根路径 200 显示完整工作台；`/api/*` 正常 |
 | 自启门禁 | dev 勾选自启 | 菜单置灰 + 注册表无写入 |
 | 关窗释放 | 关窗后看任务管理器 | WebView2 子进程退出，内存回落 |
+| dev 控制台日志 | 运行 `.<app>-gui-dev.exe` | 控制台可见启动横幅与 Wails 日志 |
+| release 落盘日志 | release 运行后看 `<appDataDir>/<app>.log` | 有启动横幅（version/mode），无逐请求噪音；无控制台也能排障 |
 | 窗口记忆 | 移窗 + 缩放 → 关窗 → 从托盘重开 | 恢复上次尺寸与位置 |
 | 最大化记忆 | 最大化 → 关窗 → 重开 → 点还原 | 重开即最大化；还原回到记忆的还原尺寸，不是满屏 |
 | 构建幂等 | 连续两次 release 后 `git status` | 输出为空 |

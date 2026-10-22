@@ -82,40 +82,31 @@ $p | Stop-Process
 
 因此 skill 的产物契约是：**GUI 不做 CLI，CLI 不开窗口**，不要为了"少一个 exe"把两者合并。
 
-### 3.3 无控制台时看日志 → 滚动双写
+### 3.3 无控制台时看日志 → slog 双写
 
-`internal/app/log.go` 把每条日志同时写 `os.Stderr` 与 `<appDataDir>/<app>.log`：
+`internal/logx/logx.go` 把每条日志同时写 `os.Stderr` 与 `<appDataDir>/<app>.log`：
 
 ```go
-var (
-	logOnce sync.Once
-	logFile *os.File
-)
+type teeWriter struct{ stderr, file io.Writer }
 
-func logf(format string, args ...any) {
-	line := fmt.Sprintf("%s %s\n", time.Now().Format("2006-01-02 15:04:05"), fmt.Sprintf(format, args...))
-	_, _ = fmt.Fprint(os.Stderr, line)
+func (w teeWriter) Write(p []byte) (int, error) {
+	_, _ = w.stderr.Write(p) // GUI 子系统下必然失败，必须忽略
+	return w.file.Write(p)
+}
 
-	logOnce.Do(func() {
-		base := appDataDir()
-		if base == "" {
-			return
-		}
-		if err := os.MkdirAll(base, 0o755); err != nil {
-			return
-		}
-		f, err := os.OpenFile(filepath.Join(base, "your_app.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-		if err == nil {
-			logFile = f
-		}
-	})
-	if logFile != nil {
-		_, _ = logFile.WriteString(line)
-	}
+func Init(dataDir string) *slog.Logger {
+	// …OpenFile(append) → teeWriter{os.Stderr, f}
 }
 ```
 
-排障路径：`%APPDATA%\language_projects\<app>\<dev|prod>\<app>.log`。GUI 启动失败、单实例创建失败、自启被拒都会留下记录。
+**四个必须点**：
+
+1. `io.MultiWriter` 不行：stderr 写失败会短路，文件一条也写不进去（release 下日志永远为空）；
+2. `logx` 不 import `store`（由调用方传 `dataDir`），否则 `store → logx → store` 依赖成环；
+3. Wails 内部日志用过滤后的 `SystemLogger()`，去掉 `[AssetFileServerFS] Handling request` 噪音，否则错误会被逐请求日志淹没；
+4. 2 MB + 1 份轮转，避免无限增长；启动横幅记录 `version / commit / mode`。
+
+排障路径：`%APPDATA%\language_projects\<app>\<dev|prod>\<app>.log`。启动失败、单实例冲突、备份失败、前端 JS 异常（`[FE]` 前缀）都在这一个文件里。release 无控制台时靠 panic 弹窗提示日志位置。
 
 ### 3.4 前端白屏 / 交互异常
 
