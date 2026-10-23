@@ -322,6 +322,7 @@ kbman touch <id>
 | Markdown 纯阅读渲染场景下 Typora/Obsidian 打开多窗口吞噬 1GB 内存，或需要免双击、阅后即焚、常驻仅 15MB 的空格即时预览工作流 | [`093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md) | QuickLook, Typora 替代, Markdown 预览, 空格预览, MarkdownViewer, 内存暴涨, WebView2 白屏, ql |
 | Antigravity (agy app) 桌面端默认纯黑主题生硬刺眼，想配置为 JetBrains Rider Dark / Darcula 经典质感与三元基石色彩映射 | [`094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md) | Antigravity 外观, agy app 主题, Appearance, Dark Theme, Rider Dark, JetBrains 调色板, Background 262626, Foreground DFDFDF, Accent 3574F0, 纯黑刺眼 |
 | Antigravity 等 Electron 软件启动写死尺寸记不住最大化，或需要非侵入式桌面自动化、WMI 脱离热重启与 AHK 极客工作流 | [`095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md) | Antigravity 最大化, AHK 外挂, AutoHotkey, 启动最大化, 窗口记忆, WMI 脱离, 非侵入式, 桌面自动化, 热重启, 抽屉式 Toggle |
+| 后台工具拉起纯黑控制台窗口遮挡前台、Windhawk 模组置底 Hook 被 Stardock Groupy 外部多标签管理器穿透置顶（草案存档） | [`096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md) | conhost 黑框置底, Windhawk Hook, Stardock Groupy, 外部外壳穿透, HWND_BOTTOM, SW_SHOWMINNOACTIVE, 抢焦点, 排除名单 |
 
 ---
 
@@ -446,5 +447,6 @@ kbman touch <id>
 | 093 | [`093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md) | `093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md` | `win` | `flow` | Typora 高内存替代、QuickLook 绿色便携部署与 Markdown 空格即时预览流水线 |
 | 094 | [`094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md) | `094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md` | `agent` | `flow` | Antigravity 桌面端外观与 Rider Dark 调色板映射及配置流水线 |
 | 095 | [`095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md) | `095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md` | `win` | `flow` | Windows 非侵入式 AHK 启动外挂、WMI 脱离热重载与桌面极客自动化全景 |
+| 096 | [`096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md) | `096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md` | `win` | `fix` | [草案/未经验证] Windhawk 控制台置底 Hook 与 Stardock Groupy 外部多标签外壳穿透排障 |
 
 
