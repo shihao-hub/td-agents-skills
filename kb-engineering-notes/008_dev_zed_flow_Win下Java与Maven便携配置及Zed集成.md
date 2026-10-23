@@ -1,3 +1,15 @@
+### 5. JDTLS 自动更新踩坑与本地回滚 SOP
+
+若已被静默拉取了 1.63.0 等高版本，执行以下抢救与锁定：
+1. **删除有毒的高版本目录**：
+   删除 `%LOCALAPPDATA%\Zed\extensions\work\java\jdtls\1.63.0\`；
+2. **重置检查记录**：
+   将 `%LOCALAPPDATA%\Zed\extensions\work\java\jdtls\.update_checked` 中的版本修改回 `1.61.0`（或保留经实测兼容 Java 21 的本地最高版本）；
+3. **配置锁死**：
+   在 `.zed/settings.json` 及 `%APPDATA%\Zed\settings.json` 的 `lsp.jdtls.settings` 中配置 `"check_updates": "never"`。
+
+---
+
 ---
 name: kb-windows-java-maven-zed-setup
 description: Windows 下 Java 21 与 Maven 零污染便携子目录配置、C 盘本地仓重定向防膨胀、Zed 编辑器动态 LSP 与 tasks.json JDWP 任务调试配置 SOP。
@@ -8,11 +20,23 @@ type: flow
 slug: "Win下Java与Maven便携配置及Zed集成"
 status: verified
 created: "2026-09-22"
-last_verified: "2026-10-20"
+last_verified: "2026-10-24"
 compatibility:
   os: ["windows"]
 invocation:
   auto_trigger: true
+### 5. JDTLS 自动更新踩坑与本地回滚 SOP
+
+若已被静默拉取了 1.63.0 等高版本，执行以下抢救与锁定：
+1. **删除有毒的高版本目录**：
+   删除 `%LOCALAPPDATA%\Zed\extensions\work\java\jdtls\1.63.0\`；
+2. **重置检查记录**：
+   将 `%LOCALAPPDATA%\Zed\extensions\work\java\jdtls\.update_checked` 中的版本修改回 `1.61.0`（或保留经实测兼容 Java 21 的本地最高版本）；
+3. **配置锁死**：
+   在 `.zed/settings.json` 及 `%APPDATA%\Zed\settings.json` 的 `lsp.jdtls.settings` 中配置 `"check_updates": "never"`。
+
+---
+
 ---
 
 # Windows 下 Java 21 与 Maven 便携子目录配置及 Zed 任务调试集成指南
@@ -30,6 +54,14 @@ invocation:
    ```text
    [ERROR] 非法字符: '\ufeff'
    ```
+5. **Zed 启动 jdtls 报 `Server reset the connection` 与 Exit code 13**：
+   在 Zed 状态栏或语言服务器面板报 `Failed to run jdtls`，详细信息显示：
+   ```text
+   Error
+   initializing server jdtls, id 4: Server reset the connection
+   -- stderr --
+   WARNING: Using incubator modules: jdk.incubator.vector
+   ```
 
 ---
 
@@ -42,6 +74,9 @@ invocation:
    - **企业级本质**：通过官方 Java SE TCK 兼容性认证，针对高吞吐生产云环境打了大量性能补丁，拥有 AWS 官方长期支持（LTS）。纯绿色 ZIP 解压即用，无商业授权条款（如 Oracle OTN 协议）暴雷风险。
 3. **Zed 与 jdtls 的动态探测机制**：
    Eclipse JDT.LS（Java 语言服务器）具有原生的环境嗅探机制：当配置文件中省略显式的 `java_home` 与硬编码 `runtimes` 时，jdtls 会自动回退读取系统的 `JAVA_HOME` 环境变量及 `PATH`。过度在 IDE 项目级配置文件中硬编码绝对路径，反而破坏了项目的团队共享与跨机协同性。
+5. **Zed Java 扩展自动拉取上游 JDTLS milestone 导致与 JDK 21 冲突**：
+   Zed 的 Java 扩展（`zed-extensions/java`）默认开启 `check_updates: "always"`（每 24 小时向 Eclipse 官方 milestones 检查更新）。当上游发布高版本（如 1.63.0+）时，其 OSGi bundle（`org.eclipse.core.filesystem_1.12.0` 等）声明了 `Bundle-RequiredExecutionEnvironment: JavaSE-25`。若本地运行时为 Java 21 LTS，Equinox 运行时因缺少 JavaSE-25 能力而无法解析核心 bundle，抛出 `Unresolved requirement: Require-Capability: osgi.ee; filter:="(&(osgi.ee=JavaSE)(version=25))"` 并以 Exit Code 13 退出。前置代理 `java-lsp-proxy.exe` 捕获子进程退出，向 Zed 客户端上报 `Server reset the connection`。
+
 4. **JDWP（Java Debug Wire Protocol）的底层通用性**：
    Java 自诞生起就将调试协议与具体 IDE 解耦。无论是 IDEA、VS Code 还是 Zed，底层均基于 JDWP。轻量编辑器只需通过 JVM 参数 `-agentlib:jdwp=...` 监听特定端口（如 5005），即可无缝支持本地或远程调试器挂载。
 
@@ -113,7 +148,8 @@ if ($currentPath -notmatch [regex]::Escape("D:\Users\java\jdk-21\bin")) {
   "lsp": {
     "jdtls": {
       "settings": {
-        "lombok_support": true
+        "lombok_support": true,
+        "check_updates": "never"
       },
       "initialization_options": {
         "settings": {
@@ -177,4 +213,5 @@ if ($currentPath -notmatch [regex]::Escape("D:\Users\java\jdk-21\bin")) {
    - **轻量编写 / 日常快读 / 命令行自动化**：使用 **Zed + jdtls + tasks**，启动极快，内存占用低至百兆级。
    - **大型重构 / Spring 容器透视 / 复杂条件断点图形调试**：推荐配合 **IntelliJ IDEA** 打开同一工程目录（IDEA 直接识别标准 `pom.xml`，环境自动继承系统 `JAVA_HOME` 与 Maven 配置，互不干扰）。
 4. **禁止 PowerShell 产生 UTF-8 BOM**：
-   保存代码或配置脚本时，使用 `[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($false))`，绝不使用 `Out-File -Encoding utf8`。
+   保存代码或配置脚本时，使用 `[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($false))`，绝不使用 `Out-File -Encoding utf8`。5. **锁定 LSP 自动更新（防静默破坏）**：
+   轻量级 IDE 的扩展常常默认开启后台检查更新，针对 Java 这类与 JVM 运行时主版本强绑定的语言服务，一律配置 `"check_updates": "never"`，保持本地环境确定性。
