@@ -309,7 +309,7 @@ def try_call_app_rpc(tasks: List[Tuple[str, str, str]]) -> Dict[str, bool]:
     results: Dict[str, bool] = {}
     try:
         cmd = 'powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name=\'language_server.exe\'\" | Select-Object ProcessId, CommandLine | ConvertTo-Json"'
-        res = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+        res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", shell=True)
         if not res.stdout.strip():
             return results
         proc_info = json.loads(res.stdout)
@@ -323,7 +323,7 @@ def try_call_app_rpc(tasks: List[Tuple[str, str, str]]) -> Dict[str, bool]:
         csrf_token = token_m.group(1)
 
         cmd2 = f'powershell -NoProfile -Command "Get-NetTCPConnection -OwningProcess {pid} -State Listen | Select-Object -ExpandProperty LocalPort"'
-        res2 = subprocess.run(cmd2, capture_output=True, text=True, shell=True)
+        res2 = subprocess.run(cmd2, capture_output=True, text=True, encoding="utf-8", errors="replace", shell=True)
         ports = [int(p.strip()) for p in res2.stdout.split() if p.strip().isdigit()]
 
         http_port = None
