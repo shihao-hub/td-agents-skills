@@ -1,6 +1,6 @@
 ---
 name: sh-cmd-agent-handoff
-description: "跨 agent 会话交接：生成贯穿全会话生命周期的自包含交接简报，另一 agent 按路径或模糊描述接手继续。点名使用；接管侧必须完成状态检查与回写打标"。点名使用
+description: 跨 agent 会话交接：生成贯穿全会话生命周期的自包含交接简报，另一 agent 按路径或模糊描述接手继续。点名使用；接管侧必须完成状态检查与回写打标。点名使用
 disable-model-invocation: true
 ---
 
