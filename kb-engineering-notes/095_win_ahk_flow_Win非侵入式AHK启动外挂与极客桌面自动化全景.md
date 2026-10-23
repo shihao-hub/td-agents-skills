@@ -84,6 +84,62 @@ AutoMaximizeAntigravity() {
 }
 ```
 
+### 4. 衍生实战：针对后台 CLI / MCP 子进程弹出 conhost.exe 黑框的无感最小化守卫
+
+#### 痛点根因：
+在 Windows 11 下，当后台进程（如 `agy.exe`、Node.js 守护、MCP 工具、Git 钩子）启动子进程时，若父进程未传递 `CREATE_NO_WINDOW (0x08000000)` 或 `windowsHide: true`，且当前系统未将 Windows Terminal 设为系统默认终端（或便携版 WT 控制台委托断层），Windows 会强制为每个 CLI 进程唤起独立的 `conhost.exe` 黑色控制台窗口，直接遮挡当前屏幕并抢走前台输入焦点。
+
+#### 焦点保护与静默最小化方案：
+```autohotkey
+; conhost 控制台黑框后台无感最小化守卫 (100ms 快速响应，零打扰零抢焦点)
+SetTimer(AutoMinimizeConhost, 100)
+
+AutoMinimizeConhost() {
+    static handledHwnds := Map()
+    static lastUserWindow := 0
+    target := "ahk_class ConsoleWindowClass"
+
+    ; 实时捕获用户当前正常操作的前台工作窗口 (排除自身是控制台的情况)
+    try {
+        if (activeHwnd := WinActive("A")) {
+            if (WinGetClass("ahk_id " activeHwnd) != "ConsoleWindowClass") {
+                lastUserWindow := activeHwnd
+            }
+        }
+    }
+
+    if !WinExist(target) {
+        if (handledHwnds.Count > 0) {
+            handledHwnds.Clear()
+        }
+        return
+    }
+
+    try {
+        for hwnd in WinGetList(target) {
+            ; 只要遍历过，立刻登记指纹，杜绝重复检查与日志膨胀
+            if !handledHwnds.Has(hwnd) {
+                handledHwnds[hwnd] := true
+                
+                ; WinGetMinMax: 0 = 正常, 1 = 最大化, -1 = 最小化
+                minState := WinGetMinMax("ahk_id " hwnd)
+                if (minState != -1) {
+                    wasActive := (WinActive("A") = hwnd)
+                    
+                    ; 瞬间最小化到任务栏 (桌面清爽，不丢失控制台进程)
+                    WinMinimize("ahk_id " hwnd)
+
+                    ; 若万一在微秒间被黑框偷走了焦点，立即归还给用户原工作窗口，打字 100% 连贯
+                    if (wasActive && lastUserWindow && WinExist("ahk_id " lastUserWindow)) {
+                        WinActivate("ahk_id " lastUserWindow)
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
 ---
 
 ## 二、Windows 终端下 AHK 进程 WMI 脱离无感热重载 SOP
