@@ -3,11 +3,11 @@ name: kb-engineering-notes
 description: |
   开发者通用工程实战手记、疑难排障与自动化流水线知识库（两级渐进式检索总入口）：遇到系统/IDE/终端异常、底层报错或落地工程自动化时优先查阅。
    【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中复制Ctrl+C假死与剪贴板锁争用；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、【特大高危】Zed信任表家目录污染致全盘监听与10G内存暴涨及Defender死锁、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh启动误唤起Grok与accounts.x.ai弹窗；Claude Code升级400与OpenCode协议分立路由代理等。
-  【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计。
+  【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计；AGY外观Rider配色；AHK非侵入启动外挂与WMI脱离。
   检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。命中条目后先看 frontmatter status：deprecated 直接弃用并改读 superseded_by，suspect 须先只读探测再执行。
-version: 2.1.5
+version: 2.1.7
 created: 2026-10-07
-updated: 2026-10-23
+updated: 2026-10-24
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -144,6 +144,8 @@ kb-engineering-notes/
 ├── 091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md # [Stage 2: 专项排障] 针对 WT 选中文本按 Ctrl+C 偶尔卡死数秒且未复制成功与剪贴板锁争用排障
 ├── 092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md # [Stage 2: 专项排障] 针对 Claude Code 升级参数冲突、OpenCode 协议分立与 CC Switch 路由代理翻译
 ├── 093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md # [Stage 2: 专项流水线] 针对 Typora 高内存替代、QuickLook 绿色便携部署与 Markdown 空格即时预览流水线
+├── 094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md # [Stage 2: 专项配置] 针对 Antigravity 桌面端外观与 Rider Dark 调色板三元色映射及落盘
+├── 095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md # [Stage 2: 专项流水线] 针对非侵入式窗口启动自动最大化外挂、WMI脱离无感热重载与AHK极客能力全景
 └── ...（后续顺次扩充）
 ```
 
@@ -318,6 +320,8 @@ kbman touch <id>
 | Windows Terminal (WT) 选中文本按 Ctrl+C 偶尔卡死数秒且未复制成功，或开 copyOnSelect 拖选文字卡顿掉帧 | [`091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md) | WT Ctrl+C 卡死, 终端复制卡死, 复制不上, OpenClipboard, PR 17006, Sleep 指数退避, UI 线程假死, cbdhsvc 锁争用, copyOnSelect 卡顿, Enter 回车复制 |
 | Claude Code 升级后直连 OpenCode/第三方网关报 400 inference_failed、ModelProtocolUnsupported、双鉴权头冲突、Cloudflare 1010 拦截或 Zed 弹窗 auto-mode-classifier-billing 警告 | [`092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md) | Claude Code 400, OpenCode GLM 400, ModelProtocolUnsupported, Go requires a credential, Both ANTHROPIC_AUTH_TOKEN and ANTHROPIC_API_KEY set, Header is managed by the local proxy and cannot be overridden, openai_chat 翻译, 1M 上下文, Fable 档位, auto-mode-classifier-billing, Claude reported a warning, 127.0.0.1:15721 |
 | Markdown 纯阅读渲染场景下 Typora/Obsidian 打开多窗口吞噬 1GB 内存，或需要免双击、阅后即焚、常驻仅 15MB 的空格即时预览工作流 | [`093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md) | QuickLook, Typora 替代, Markdown 预览, 空格预览, MarkdownViewer, 内存暴涨, WebView2 白屏, ql |
+| Antigravity (agy app) 桌面端默认纯黑主题生硬刺眼，想配置为 JetBrains Rider Dark / Darcula 经典质感与三元基石色彩映射 | [`094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md) | Antigravity 外观, agy app 主题, Appearance, Dark Theme, Rider Dark, JetBrains 调色板, Background 262626, Foreground DFDFDF, Accent 3574F0, 纯黑刺眼 |
+| Antigravity 等 Electron 软件启动写死尺寸记不住最大化，或需要非侵入式桌面自动化、WMI 脱离热重启与 AHK 极客工作流 | [`095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md) | Antigravity 最大化, AHK 外挂, AutoHotkey, 启动最大化, 窗口记忆, WMI 脱离, 非侵入式, 桌面自动化, 热重启, 抽屉式 Toggle |
 
 ---
 
@@ -440,5 +444,7 @@ kbman touch <id>
 | 091 | [`091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md) | `091_ide_terminal_fix_WT选中文本CtrlC卡死与剪贴板锁争用排障.md` | `ide` | `fix` | Windows Terminal 选中文本 Ctrl+C 假死与剪贴板锁争用排障 |
 | 092 | [`092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md) | `092_agent_ccswitch_fix_ClaudeCode升级参数冲突与OpenCode路由翻译.md` | `agent` | `fix` | Claude Code 升级参数冲突、OpenCode 协议分立与 CC Switch 路由代理翻译 |
 | 093 | [`093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md) | `093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md` | `win` | `flow` | Typora 高内存替代、QuickLook 绿色便携部署与 Markdown 空格即时预览流水线 |
+| 094 | [`094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md) | `094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md` | `agent` | `flow` | Antigravity 桌面端外观与 Rider Dark 调色板映射及配置流水线 |
+| 095 | [`095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md) | `095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md` | `win` | `flow` | Windows 非侵入式 AHK 启动外挂、WMI 脱离热重载与桌面极客自动化全景 |
 
 
