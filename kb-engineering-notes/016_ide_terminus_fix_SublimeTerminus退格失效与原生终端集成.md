@@ -357,3 +357,8 @@ class OpenExternalTerminalCommand(sublime_plugin.WindowCommand):
 **归档说明：** 本条目沉淀自 Sublime Text 4 在 Windows 平台下集成内置终端时的典型架构踩坑，给出了兼顾纯英文 UI 美学与全功能终端能力的双轨落地标准。
 
 **后续更新（本机 WT 已换为独立定制版）：** 原版文档的 `open_external_terminal.py` 曾以 `%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe` 作硬编码兜底，在 WT 独立版接管后已属反模式（详见 二.5）；现已改为**只解析名字 + 注册表 PATH 回读 + Store 影子拒绝**，侧边栏拉起 100% 命中定制版。完整的独立版部署/图标注入/PATH 与 App Paths 接管/DefTerm 治理见 `sh-wt-customizer`。
+
+**扩展应用（按扩展名动态唤起专用工具）：**
+若需根据右键选中的文件类型（如 `.md` 文档）动态显示专用预览器（如 Tinta：`D:\Users\Softwares\Tinta\tinta.exe`），核心是利用 `sublime_plugin.WindowCommand` 的 `is_visible(self, paths=[])` 钩子做精准扩展名过滤，保持其他文件/目录右键菜单绝对干净：
+1. `Packages/User/open_in_tinta.py` 内部通过 `is_visible` 探测 `paths` 是否包含 `.md` 文件；
+2. `Packages/User/Side Bar.sublime-menu` 注入英文项 `{"caption": "Open in Tinta", "command": "open_in_tinta", "args": {"paths": []}}`。

@@ -10,8 +10,10 @@ domain: win
 scope: ql
 type: flow
 slug: "QuickLook便携部署与Markdown空格秒览"
-status: verified
-last_verified: "2026-10-23"
+status: deprecated
+last_verified: "2026-10-24"
+superseded_by: "097"
+deprecation_reason: "QuickLook常驻时WebView2进程树占用达300MB且非原生文档多标签持久化形态，持久多文档阅读场景全面由097 Tinta替代，QuickLook仅保留用于纯文件管理器秒看场景"
 compatibility:
   os: ["windows"]
 invocation:
@@ -20,6 +22,11 @@ invocation:
 ---
 
 # win_ql_flow_093_QuickLook便携部署与Markdown空格秒览
+
+> [!WARNING]
+> **方案选型演进与边界预警**：
+> 本方案仅适用于“文件资源管理器内空格按一下秒看、阅后即焚”的瞬态场景。实测表明，若将 QuickLook 窗口置顶长久驻留，其背后的 WebView2 渲染进程树内存占用依然高达 **302 MB**，且无法实现多标签页长效组织。
+> **若需求为“持久化长篇阅读、多文档多标签页对照、低内存占用（<90MB）与即时双栏编辑”，请直接查阅被替代升级的新方案：[`097_win_tinta_flow_Tinta原生极轻Markdown阅读与双栏编辑.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/097_win_tinta_flow_Tinta原生极轻Markdown阅读与双栏编辑.md)**。
 
 > **条目定位**：**Type B 工程方案流水线（Typora 高内存替代 × Windows 空格即时预览工作流）**  
 > **痛点直击**：Typora/Obsidian 在纯阅读场景下打开 3 个窗口即吞噬 800MB~1.2GB 内存；多窗口常驻任务栏杂乱；双击打开/关闭流程笨重。  

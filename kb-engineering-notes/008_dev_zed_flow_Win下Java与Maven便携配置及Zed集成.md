@@ -213,5 +213,6 @@ if ($currentPath -notmatch [regex]::Escape("D:\Users\java\jdk-21\bin")) {
    - **轻量编写 / 日常快读 / 命令行自动化**：使用 **Zed + jdtls + tasks**，启动极快，内存占用低至百兆级。
    - **大型重构 / Spring 容器透视 / 复杂条件断点图形调试**：推荐配合 **IntelliJ IDEA** 打开同一工程目录（IDEA 直接识别标准 `pom.xml`，环境自动继承系统 `JAVA_HOME` 与 Maven 配置，互不干扰）。
 4. **禁止 PowerShell 产生 UTF-8 BOM**：
-   保存代码或配置脚本时，使用 `[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($false))`，绝不使用 `Out-File -Encoding utf8`。5. **锁定 LSP 自动更新（防静默破坏）**：
+   保存代码或配置脚本时，使用 `[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($false))`，绝不使用 `Out-File -Encoding utf8`。
+5. **锁定 LSP 自动更新（防静默破坏）**：
    轻量级 IDE 的扩展常常默认开启后台检查更新，针对 Java 这类与 JVM 运行时主版本强绑定的语言服务，一律配置 `"check_updates": "never"`，保持本地环境确定性。

@@ -107,7 +107,7 @@ icacls ".\bin\typeai-gui-dev.exe"
 icacls ".."
 ```
 
-### 3.2 立即抢救（提升完整性级别与解锁）
+### 3.2 立即抢救（提升单文件完整性级别与解锁）
 通过 Windows 原生 `icacls` 工具将目标二进制的完整性标签显式提升回 `Medium`，并使用 PowerShell 解除附件标记：
 ```powershell
 # 提升为标准 Medium 级别（允许访问交互式窗口站）
@@ -118,12 +118,23 @@ Unblock-File "path\to\your-gui.exe"
 ```
 执行后再次运行，GUI 窗口即可瞬间正常弹出。
 
-### 3.3 目录级根治（可选）
-如果希望整个 worktree 目录及其后续生成的产物不再继承 Low 级别：
-```powershell
-# 提升整个 bin 目录及子项
-icacls "path\to\worktree\bin" /setintegritylevel Medium
+### 3.3 目录级根治：切断父级下毒并向子级下发 Medium
+若希望整个 worktree 根目录及其后续新建的任何子目录、文件、产物彻底摆脱父目录的 `Low` 级别继承：
+
+```cmd
+:: 1. 为当前所有者赋满 Full Control（若缺失 WRITE_DAC 将报 Access is denied）
+cmd /c "icacls path\to\worktree /grant %USERNAME%:(OI)(CI)F"
+
+:: 2. 覆盖打上 Medium 级别，并启用 (CI)(OI) 容器与对象双继承，递归应用至当前全部文件
+cmd /c "icacls path\to\worktree /setintegritylevel (CI)(OI)M /T"
 ```
+
+**生效验证**：
+在此目录下新建任意文件（如 `New-Item test.txt`），执行 `icacls test.txt`，输出将直接是：
+```text
+Mandatory Label\Medium Mandatory Level:(I)(NW)
+```
+父级沙箱标签被彻底截断，后续生成的一切文件全自动获得标准 Medium 级别！
 
 ---
 
