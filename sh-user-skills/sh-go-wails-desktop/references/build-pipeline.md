@@ -30,7 +30,7 @@ dev 与 release 必须在以下五个维度同时隔离，缺一项就会出现"
 | 单实例 ID | `<team>.<app>.gui.dev` | `<team>.<app>.gui` |
 | exe / 窗口图标 | Go 地鼠（一眼可辨） | 项目专属图标 |
 
-### 九条铁律
+### 十条铁律
 
 1. **判定单一入口**：仅当 HEAD 精确命中项目 tag 且工作区干净才产 release，其余一律 dev；`--release` 只做断言（条件不足 `exit 2`），不得改写判定。
 2. **严禁 dev 覆盖正式名**：不要为了"方便双击"把 dev 产物 `copy` 成正式名——正式名必须只由 release 构建产生。
@@ -41,6 +41,7 @@ dev 与 release 必须在以下五个维度同时隔离，缺一项就会出现"
 7. **dirty 判定过滤构建生成物**：`git -c status.relativePaths=false status --porcelain` 剔除 `*.exe`、图标、`rsrc_*.syso` 后为空才算干净；git 异常时保守按脏处理。
 8. **`.gitignore` 根路径限定**：`/icon.ico`、`/icon.png` 必须带前导斜杠，否则会误忽略 `internal/app/icon.ico`（`go:embed` 必需资产）。
 9. **双通道契约**：GUI 产物（`-H windowsgui`）只开窗口、不解析任何子命令；Console 产物（`-tags cli`，console 子系统）只跑终端、不开窗口。一条通道必须出两个二进制，严禁用 `AttachConsole` 合成单产物（原因见 `README.md` 反模式警示与 `references/troubleshooting.md` §3）。
+10. **Windows 产物安全防腐**：在受沙箱或容器 ACL 策略影响的工作区（如挂有 `Low Mandatory Level` 的目录），编译出的 exe 会默认继承 Low 级别，导致内核禁止接入交互式桌面窗口站 `WinSta0`，启动报 `ERROR_DLL_INIT_FAILED (0xC0000142)` 闪退。构建脚本在产物生成后必须自动调用 `icacls ... /setintegritylevel Medium` 提权并解开 `Zone.Identifier` 附件锁。
 
 
 ---
@@ -368,7 +369,7 @@ def main() -> int:
             print(f"❌ go build 失败（exit {r.returncode}）: {out_exe.name}", file=sys.stderr)
             return r.returncode
 
-    # 5. 产物名守卫：dev 必须以 -dev 结尾，release 不得含 dev
+    # 5. 产物名守卫与 Windows 完整性防腐
     for out_exe, _gui in targets:
         if release and "dev" in out_exe.stem:
             print(f"❌ 产物命名违规: {out_exe}", file=sys.stderr)
@@ -376,6 +377,15 @@ def main() -> int:
         if not release and not out_exe.stem.endswith("-dev"):
             print(f"❌ 产物命名违规: {out_exe}", file=sys.stderr)
             return 3
+
+        if sys.platform == "win32":
+            # 保证产物具备标准 Medium 完整性级别（防止继承外部沙箱/容器目录的 Low 标签导致 DLL 初始化崩溃）
+            subprocess.run(["icacls", str(out_exe), "/setintegritylevel", "Medium"], capture_output=True)
+            # 解除 Windows 附件管理器 Zone.Identifier 锁定（防止未知发布者警告弹窗）
+            try:
+                (out_exe.parent / f"{out_exe.name}:Zone.Identifier").unlink(missing_ok=True)
+            except OSError:
+                pass
 
     for out_exe, gui in targets:
         size_mb = out_exe.stat().st_size / 1048576

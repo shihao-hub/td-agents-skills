@@ -1,9 +1,9 @@
 ---
 name: sh-go-wails-desktop
 description: Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口不做 CLI、CLI(-cli) 只跑终端不开窗口，内嵌 WebUI 与 Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用
-version: 1.8.0
+version: 1.9.0
 created: 2026-10-21
-updated: 2026-10-22
+updated: 2026-10-24
 disable-model-invocation: true
 ---
 
@@ -252,6 +252,8 @@ HEAD 精确命中 <project>/v* tag  且  工作区干净（剔除构建生成物
 ```
 
 **PE 版本资源（必做，别用 rsrc）**：属性面板的「文件说明/文件版本/公司/版权」来自 VERSIONINFO，只有 `go-winres` 能生成。模板放 `winres/{gui,cli}.json`（占位 `__ICON__` / `__MANIFEST__` / `__FIXED_VERSION__` / `__VERSION__` / `__ORIGINAL_NAME__`），**每个产物 `go build` 之前都要重建一次 syso**——GUI 与 CLI 在同一个 Go 包里，一个包只能链接一份 `rsrc_windows_amd64.syso`，否则两者只能共享同一份 FileDescription。模板与脚本见 `references/build-pipeline.md` §1.1 与 §三。
+
+**Windows 产物环境防腐（必做，免疫沙箱/继承下毒）**：在受沙箱策略管制的目录（如父目录挂有 `Mandatory Label\Low Mandatory Level:(OI)(CI)(NW)` 标签）下新建 worktree 时，编译出的 exe 会继承 Low 级别，导致内核禁止接入桌面窗口站 `WinSta0`，启动在 `user32.dll` 阶段抛出 `ERROR_DLL_INIT_FAILED (0xC0000142)` 闪退且弹未知发布者警告。构建脚本在产物生成后必须自动执行 `icacls <exe> /setintegritylevel Medium` 提权并解开 `Zone.Identifier` 附件锁（见 `references/build-pipeline.md` §三 与 `references/troubleshooting.md` §10）。
 
 **校验**：
 

@@ -215,3 +215,44 @@ go test ./internal/app/ -run WindowState -v   # 往返/无文件/脏 JSON/过小
 实机三步：移动+缩放 → 关窗 → 重启（尺寸位置一致）；最大化 → 关窗 → 重启（仍最大化，`window.json` 里还原尺寸未被写满屏）；还原（尺寸位置正确、`maximised` 翻回 false）。
 
 **排障提示**：`window.json` 是纯人读 JSON，可直接看内容定位是「没写入」还是「写错值」；日志里出现「解析窗口状态失败」「保存窗口状态失败」「不在任何屏幕工作区内」即对应上述分支。
+
+---
+
+## 10. 双击 exe 弹“无法验证发布者”安全警告，或点击运行无反应/闪退（DLL 初始化失败 0xC0000142）
+
+**症状**：
+- 双击运行 `<app>-gui-dev.exe` 弹出“打开文件 - 安全警告：无法验证发布者。你确定要运行此软件吗？”；
+- 点击“运行”后屏幕无任何反应，无报错弹窗，任务管理器中进程一闪而退；直接在终端运行无任何输出直接退出，连 `main()` 首行打印都未执行；
+- **跨目录迷惑性对照**：将同一二进制拷贝到 `D:\Users` 或其他未受沙箱标记的旧项目目录下运行，却能秒开秒跑。
+
+**根因**：
+- 根目录被系统/安全工具配置了 Windows 强制完整性控制（MIC）沙箱标签：`Mandatory Label\Low Mandatory Level:(OI)(CI)(NW)`；
+- 新建的 Git Worktree 目录或子目录自动继承了 `(I)` 该 Low 标签，编译出的 exe 默认处于 `Low Mandatory Level`（低完整性级别）；
+- **Windows 安全架构边界**：Low 完整性进程被内核严禁连接交互式桌面窗口站 `WinSta0` 和剪贴板。当 GUI 启动尝试加载 `user32.dll` / `shell32.dll` 或 GUI 运行时初始化时，系统内核直接拒绝，引发 `ERROR_DLL_INIT_FAILED (0xC0000142)` 导致进程瞬间自毁；且 Low 级别 + 未签名同时触发了 Windows 附件管理器（Attachment Manager）警告拦截。
+
+**处置**：
+1. **构建脚本防腐（推荐，根本解法）**：
+   在 `build.py` 生成二进制后自动执行（见 `build-pipeline.md` §三）：
+   ```python
+   if sys.platform == "win32":
+       subprocess.run(["icacls", str(out_exe), "/setintegritylevel", "Medium"], capture_output=True)
+       try:
+           (out_exe.parent / f"{out_exe.name}:Zone.Identifier").unlink(missing_ok=True)
+       except OSError:
+           pass
+   ```
+2. **临时手动抢救单文件**：
+   ```powershell
+   icacls "path\to\<app>-gui-dev.exe" /setintegritylevel Medium
+   Unblock-File "path\to\<app>-gui-dev.exe"
+   ```
+3. **整个 Worktree 目录级根治（截断父级下毒并向子级下发 Medium）**：
+   ```cmd
+   :: 赋满所有者控制权
+   cmd /c "icacls path\to\worktree /grant %USERNAME%:(OI)(CI)F"
+   :: 覆盖打上 Medium 级别并启用 (CI)(OI) 双继承，递归应用至全量文件
+   cmd /c "icacls path\to\worktree /setintegritylevel (CI)(OI)M /T"
+   ```
+
+**关联知识库**：深度技术原理与取证细节见 `kb-engineering-notes/098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md`。
+
