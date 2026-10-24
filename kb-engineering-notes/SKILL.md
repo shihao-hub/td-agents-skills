@@ -2,10 +2,10 @@
 name: kb-engineering-notes
 description: |
   开发者通用工程实战手记、疑难排障与自动化流水线知识库（两级渐进式检索总入口）：遇到系统/IDE/终端异常、底层报错或落地工程自动化时优先查阅。
-   【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中复制Ctrl+C假死与剪贴板锁争用；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、【特大高危】Zed信任表家目录污染致全盘监听与10G内存暴涨及Defender死锁、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh启动误唤起Grok与accounts.x.ai弹窗；Claude Code升级400与OpenCode协议分立路由代理等。
+   【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11任务栏输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中复制Ctrl+C假死与剪贴板锁争用；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、【特大高危】Zed信任表家目录污染致全盘监听与10G内存暴涨及Defender死锁、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh启动误唤起Grok与accounts.x.ai弹窗；Claude Code升级400与OpenCode协议分立路由代理；父目录Low完整性继承致GUI闪退与安全警告等。
   【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计；AGY外观Rider配色；AHK非侵入启动外挂与WMI脱离。
   检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。命中条目后先看 frontmatter status：deprecated 直接弃用并改读 superseded_by，suspect 须先只读探测再执行。
-version: 2.1.7
+version: 2.1.9
 created: 2026-10-07
 updated: 2026-10-24
 ---
@@ -146,6 +146,9 @@ kb-engineering-notes/
 ├── 093_win_ql_flow_QuickLook便携部署与Markdown空格秒览.md # [Stage 2: 专项流水线] 针对 Typora 高内存替代、QuickLook 绿色便携部署与 Markdown 空格即时预览流水线
 ├── 094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md # [Stage 2: 专项配置] 针对 Antigravity 桌面端外观与 Rider Dark 调色板三元色映射及落盘
 ├── 095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md # [Stage 2: 专项流水线] 针对非侵入式窗口启动自动最大化外挂、WMI脱离无感热重载与AHK极客能力全景
+├── 096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md # [Stage 2: 专项排障] 针对 Windhawk 控制台置底 Hook 与 Stardock Groupy 外部多标签外壳穿透排障
+├── 097_win_tinta_flow_Tinta原生极轻Markdown阅读与双栏编辑.md # [Stage 2: 专项流水线] 针对 Typora 终极替代、Tinta 纯 C++/Direct2D 极轻持久阅读与双栏编辑流水线
+├── 098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md # [Stage 2: 专项排障] 针对 Windows 父目录带 Low Mandatory Level 沙箱标签致新建 worktree/子目录继承低完整性、GUI 双击弹安全警告或点击运行闪退 ERROR_DLL_INIT_FAILED (0xC0000142) 排障与 icacls /setintegritylevel Medium 抢救及构建脚本防腐
 └── ...（后续顺次扩充）
 ```
 
@@ -323,6 +326,8 @@ kbman touch <id>
 | Antigravity (agy app) 桌面端默认纯黑主题生硬刺眼，想配置为 JetBrains Rider Dark / Darcula 经典质感与三元基石色彩映射 | [`094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md) | Antigravity 外观, agy app 主题, Appearance, Dark Theme, Rider Dark, JetBrains 调色板, Background 262626, Foreground DFDFDF, Accent 3574F0, 纯黑刺眼 |
 | Antigravity 等 Electron 软件启动写死尺寸记不住最大化，或需要非侵入式桌面自动化、WMI 脱离热重启与 AHK 极客工作流 | [`095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md) | Antigravity 最大化, AHK 外挂, AutoHotkey, 启动最大化, 窗口记忆, WMI 脱离, 非侵入式, 桌面自动化, 热重启, 抽屉式 Toggle |
 | 后台工具拉起纯黑控制台窗口遮挡前台、Windhawk 模组置底 Hook 被 Stardock Groupy 外部多标签管理器穿透置顶（草案存档） | [`096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md) | conhost 黑框置底, Windhawk Hook, Stardock Groupy, 外部外壳穿透, HWND_BOTTOM, SW_SHOWMINNOACTIVE, 抢焦点, 排除名单 |
+| Typora 打开多窗口吃 1GB 内存，或需要原生独立桌面窗口长久阅读、多标签管理、内存小于 90MB、Mermaid 矢量图与双栏编辑/贴图落盘 | [`097_win_tinta_flow_Tinta原生极轻Markdown阅读与双栏编辑.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/097_win_tinta_flow_Tinta原生极轻Markdown阅读与双栏编辑.md) | Tinta, Typora 替代, 轻量 Markdown 阅读器, Direct2D, 低内存 Markdown, Markdown 双栏编辑, 截图贴图, tinta |
+| Windows 下双击 exe 弹“打开文件-安全警告：无法验证发布者”，点击运行后毫无动静瞬间闪退，排查发现是父目录带 Mandatory Label\Low Mandatory Level 沙箱标签被新建 worktree 继承，导致进程在 Low 级别无法连接 WinSta0 窗口站并死在 DLL 初始化 (0xC0000142) | [`098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md) | Mandatory Label, Low Mandatory Level, icacls, /setintegritylevel Medium, Unblock-File, ERROR_DLL_INIT_FAILED, 0xC0000142, WinSta0, 安全警告, 无法验证发布者, 点击运行没反应, 静默闪退, worktree 权限继承, 沙箱完整性级别 |
 
 ---
 
@@ -448,5 +453,7 @@ kbman touch <id>
 | 094 | [`094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md) | `094_agent_agy_flow_AGY外观RiderDark深色调色板映射与配置.md` | `agent` | `flow` | Antigravity 桌面端外观与 Rider Dark 调色板映射及配置流水线 |
 | 095 | [`095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md) | `095_win_ahk_flow_Win非侵入式AHK启动外挂与极客桌面自动化全景.md` | `win` | `flow` | Windows 非侵入式 AHK 启动外挂、WMI 脱离热重载与桌面极客自动化全景 |
 | 096 | [`096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md) | `096_win_conhost_fix_Windhawk置底Hook与Groupy外壳穿透.md` | `win` | `fix` | [草案/未经验证] Windhawk 控制台置底 Hook 与 Stardock Groupy 外部多标签外壳穿透排障 |
+| 097 | [`097_win_tinta_flow_Tinta原生极轻Markdown阅读与双栏编辑.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/097_win_tinta_flow_Tinta原生极轻Markdown阅读与双栏编辑.md) | `097_win_tinta_flow_Tinta原生极轻Markdown阅读与双栏编辑.md` | `win` | `flow` | Typora 终极替代、Tinta 纯 C++/Direct2D 极轻持久阅读与双栏编辑流水线 |
+| 098 | [`098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md) | `098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md` | `win` | `fix` | 父目录 Low 完整性级别继承致 GUI 无法连接 WinSta0 闪退与安全警告排障 |
 
 
