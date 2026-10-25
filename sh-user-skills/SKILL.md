@@ -3,13 +3,13 @@ name: sh-user-skills
 description: |
   个人技能库总入口与分流器：用户只有一句模糊需求、忘记技能名，或遇到底层报错/环境与配置疑难，或任务执行中途需要某项专门能力（如全盘检索、打包、下载、归档）时，在此匹配并加载对应子技能 SOP。
   第一优先——内置工程避坑知识库（kb-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、【特大高危】Zed 信任表家目录污染致全盘监听与 10G 内存暴涨及 Defender 死锁、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理、Office原图提取、CMake构建排障、Bruno测试集生成、GitHub仓库大扫除、本地服务PWA窗口、SQLAlchemy查询抽取等；全量索引以知识库内部路由表为准，随条目持续生长。
-  直调命令门面（sh-cmd-*：交付计划、规格驱动、Monorepo提交、排障复盘、会话交接、Go桌面双通道构建）；
+  直调命令门面（sh-cmd-*：交付计划、规格驱动、Monorepo提交、排障复盘、会话交接、桌面双通道构建（Go/Python））；
   开发与重构（后端系统设计、OOP 重构、饥荒模组逆向探索、前端去 AI 味、UI浮层与弹窗选型、PyStand 打包、Nuitka 单文件打包、WT 独立版定制守卫）；
   文档、检索与媒资归档（PRD/技术方案、技能创作与知识库规范、书转 skill、全盘找文件/大文件、本地文档知识库语义检索、Everything秒搜、音视频下载转写字幕、网页存档、飞书归档）；
   另有飞书、Redis/Iris、antigravity、Matt Pocock、备用库五个族路由器；用户直接点名 `sh-*` 或 `sh-cmd-*`（含拼写近似）时均由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
-version: 1.11.0
+version: 1.12.0
 created: 2026-10-07
-updated: 2026-10-24
+updated: 2026-10-25
 ---
 
 # sh-user-skills：个人技能库总目录与分流导航
@@ -59,7 +59,7 @@ updated: 2026-10-24
 | 饥荒mod下载/脱壳/解密/反编译/DaxSg脱壳/奎姆/3152990521/内存提取 | `sh-dst-mod-workshop`（实验性探索/未完全解密） |
 | Python 项目打包成免安装绿色版 | `sh-pystand-pack` |
 | Python 单脚本打包 exe／uv 脚本编译／Nuitka 单文件加速／打包成一个 exe | `sh-nuitka-pack` |
-| Go 双通道桌面应用／go-wails／GUI 与 CLI 拆两个 exe／Wails 托盘窗口／Wails 窗口尺寸位置不记忆／每次打开都是默认大小／最大化状态不保存／dev release 打包隔离／无控制台看日志 | `sh-cmd-go-wails-desktop`（命令门面，可直接点名） |
+| Go/Wails 双通道桌面／Wails 托盘窗口／PE 图标双通道／Python 桌面壳／pywebview／WebView2 窗口／Nuitka 双 exe／关窗 WebView2 不退出／窗口尺寸位置不记忆／每次打开都是默认大小／最大化状态不保存／dev release 打包隔离／无控制台看日志 | `sh-cmd-desktop-dual-channel`（命令门面，可直接点名） |
 | 把这个能力沉淀成 skill／书转 skill | `sh-book2skill-sop`（书/文档）或 `skill-creator` |
 | Windows Terminal换图标／修改终端图标／WT定制／右键在终端中打开修改 | `sh-wt-customizer` |
 | agy会话标题批量治理／汉化agy对话标题／修改会话为中文／批量重命名agy会话／antigravity app会话改中文／桌面版会话汉化／侧边栏会话标题中文化 | `sh-agy-session-governance` |
@@ -92,7 +92,7 @@ updated: 2026-10-24
 | `sh-cmd-monorepo-commit-push` | `sh-user-skills/sh-monorepo-commit-push/` | Monorepo 与 git submodule 项目逐项审查、拆分提交并安全推送。点名使用 |
 | `sh-cmd-troubleshooting-recap` | `sh-user-skills/sh-troubleshooting-recap/` | 排障复盘：把一次排障/解题过程按「做了什么 → 怎么想的 → 在哪碰壁 → 怎么解决」四段精炼呈现。点名使用 |
 | `sh-cmd-agent-handoff` | `sh-user-skills/sh-agent-handoff/` | 跨 agent 会话交接：生成交接简报文件并给出路径，另一 agent 按路径接手继续。点名使用 |
-| `sh-cmd-go-wails-desktop` | `sh-user-skills/sh-go-wails-desktop/` | Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口、CLI(-cli) 只跑终端，内嵌 WebUI 与 Wails v3 托盘，窗口尺寸位置与最大化状态记忆、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用 |
+| `sh-cmd-desktop-dual-channel` | `sh-user-skills/sh-desktop-dual-channel/` | 桌面双通道脚手架（Go/Wails + Python/pywebview）：GUI 只开窗口、CLI 只跑终端，内嵌 WebUI、托盘、关窗销毁重建、窗口几何记忆、dev/release 隔离与图标双通道。点名使用 |
 
 ### 🏗️ 系统设计与工程开发
 

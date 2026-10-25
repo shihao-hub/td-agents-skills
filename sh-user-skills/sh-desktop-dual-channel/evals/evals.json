@@ -1,5 +1,5 @@
 {
-  "skill_name": "sh-go-wails-desktop",
+  "skill_name": "sh-desktop-dual-channel",
   "evals": [
     {
       "id": 1,
@@ -41,6 +41,24 @@
       "id": 7,
       "prompt": "我构建出来的 exe 右键属性里「文件版本」「文件说明」「公司」都是空的，任务管理器里也只有文件名，怎么让 GUI 和 CLI 两个 exe 各自带上正确的版本信息？",
       "expected_output": "先定性根因：rsrc v0.10.2 只支持 -manifest/-ico，不读 info.json 也不生成 VERSIONINFO，所以属性面板全空；info.json 现在只能当无 tag 时的版本基线。修复用 go-winres：go install github.com/tc-hib/go-winres@latest，建 winres/gui.json 与 winres/cli.json 两份模板（RT_GROUP_ICON 引 __ICON__、RT_MANIFEST 以相对 JSON 目录的 ../wails.exe.manifest 引用现有清单、RT_VERSION 写 CompanyName/FileDescription/ProductName/FileVersion/ProductVersion/LegalCopyright/OriginalFilename 占位），FileDescription 两通道必须不同（GUI=桌面工作台，CLI=命令行）。关键实现点：GUI 与 CLI 在同一个 Go 包，一个包只能链接一份 rsrc_windows_amd64.syso，所以必须在每个产物 go build 之前重新生成一次 syso（固定版本用 4 段数字 1.2.1.0，info 里的 Version 可带 -dev 后缀便于区分）；go-winres 的资源路径按「相对 JSON 所在目录」解析，所以临时渲染的 JSON 要落在 winres/ 下并用正斜杠相对路径。验证：Get-Item exe 的 VersionInfo 读 FileDescription/FileVersion/OriginalFilename，两通道描述不同且与 tag 版本一致；并确认 DPI/Common-Controls manifest 仍生效（窗口 DPI 正常）。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "我有一个 uv 管理的 Python CLI，想在终端继续跑子命令，双击又能开自己的桌面窗口（不要用 Chrome --app 借壳）；dev 和正式版要能同时运行、数据分开存，关窗后不要在后台留一堆 WebView2 进程。",
+      "expected_output": "产出 Python 双入口（cli:app / gui:main）+ pywebview 壳：窗口只加载 daemon 的 /ui，不 import core；pystray 托盘在 webview.start(func=...) 线程内创建；关窗放行销毁窗口并用 gc.collect() 释放，WebView2 子进程归零，托盘「显示窗口」按上次几何重建（二次 webview.start()）；单实例用 OS 文件锁而非端口占用；dev/prod 数据目录、动态端口、日志、图标五维隔离；Nuitka 双产物 GUI --windows-console-mode=disable / CLI force，统一落 bin/。",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "pywebview 应用用 Nuitka 打包后一启动就闪退，退出码 0xE0434352；另外 daemon 在 exe 里起不来，日志报 ValueError: Unable to configure formatter 'default'。",
+      "expected_output": "两个根因分别处置：0xE0434352 是 System.Drawing.Icon 收到 PNG——webview.start(icon=...) 必须传 .ico，不能传 .png；formatter 报错是 uvicorn dictConfig 在 Nuitka 下解析 uvicorn.logging.DefaultFormatter 失败——uvicorn.Config(..., log_config=None)，日志统一交给自家 logx 双写落盘。补充验证：窗口/托盘图标与 exe PE 图标同源，日志文件有启动横幅。",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Nuitka 打出来的 dev 版和 release 版图标一模一样，分不清哪个是开发版；而且窗口每次打开都是默认大小，关窗后从托盘点显示也打不开。",
+      "expected_output": "图标双通道：运行时 app_icon() 按 is_production_build() 分流，dev 用语言默认图标（如 Python 双蛇，源码态读父仓 python-default.ico、打包态读包内 icon-dev.ico），release 用专属图标；构建脚本 dev 用语言图标并 --include-data-file 为 icon-dev.ico，release 用专属 ico。几何记忆：<dataDir>/window.json + moved/resized 700ms 防抖，最大化只记标记不覆盖还原尺寸，最小化 -25600 坐标用 MonitorFromPoint 过滤。托盘点显示打不开：窗口销毁后主循环已退出，必须用主线程循环 + show_requested 事件 + 二次 webview.start() 重建。",
       "files": []
     }
   ]

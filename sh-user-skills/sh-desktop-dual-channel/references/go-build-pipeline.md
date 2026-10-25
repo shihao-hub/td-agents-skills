@@ -1,6 +1,6 @@
 # 构建流水线参考：dev / release 通道隔离与图标双通道
 
-> 归属：`sh-go-wails-desktop`。脚本以 Windows + uv + go-winres 为准，其他平台自行替换资源编译环节。
+> 归属：`sh-desktop-dual-channel`。脚本以 Windows + uv + go-winres 为准，其他平台自行替换资源编译环节。
 >
 > **工具选型（踩过坑）**：不要用 `rsrc` 做版本资源——`rsrc v0.10.2` 只支持 `-manifest` / `-ico`，**不读 `info.json`、不支持 VERSIONINFO**，exe 属性面板的版本/描述会全空。改 `go-winres`：`go install github.com/tc-hib/go-winres@latest`；它能同时产出 VERSIONINFO + manifest + 图标，并支持按产物给不同 FileDescription。
 

@@ -1,6 +1,6 @@
 # 架构参考：双通道产物与桌面壳实现
 
-> 归属：`sh-go-wails-desktop`。本文是深度材料，日常执行以 `README.md` 的 SOP 为准。
+> 归属：`sh-desktop-dual-channel`。本文是深度材料，日常执行以 `README.md` 的 SOP 为准。
 > 验证环境：Windows 11 24H2、Go 1.26、Wails v3.0.0-beta.33、Edge WebView2。
 
 ---

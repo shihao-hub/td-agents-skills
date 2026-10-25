@@ -1,22 +1,15 @@
----
-name: sh-go-wails-desktop
-description: Go 双通道桌面应用脚手架：GUI(-gui) 只开窗口不做 CLI、CLI(-cli) 只跑终端不开窗口，内嵌 WebUI 与 Wails v3 托盘、dev/release 通道隔离、PE 图标双通道与无控制台排障。点名使用
-version: 1.9.0
-created: 2026-10-21
-updated: 2026-10-24
-disable-model-invocation: true
----
+# Go 模块：Wails v3 双通道桌面应用与通道隔离
 
-# sh-go-wails-desktop：Go 双通道桌面应用脚手架与通道隔离
-
+> 归属：`sh-desktop-dual-channel`。本文是 Go/Wails 分支的完整 SOP；
+> 通用不变式与分流入口见上级 `README.md`。
 > **定位**：把一个 Go 工具做成**两条通道、四个产物**——`<app>-gui` 只开桌面壳（Wails v3 托盘 + 内嵌 HTTP/WebUI），`<app>-cli` 只做终端 CLI；四个 exe 统一落 `<project>/bin/`，并让 dev / release 两个通道在产物名、版本号、数据目录、单实例 ID、图标五个维度完全隔离。
 > **硬约束**：GUI 产物不解析任何子命令（不管从哪里启动都只出窗口），CLI 产物不开窗口。**禁止**用 `-H windowsgui` + `AttachConsole` 把两者合成单产物（原因见「三、反模式警示」）。
 > **来源**：由知识库条目 `kb-engineering-notes/082` 转正（原条目保留为 deprecated 存根，历史排障细节可回溯）。
 > **验证锚点**：Windows 11 24H2、Go 1.26、Wails v3.0.0-beta.33、Edge WebView2；实机项目 `go_projects/anatomymanager`（2026-10-21 全链路实测；同日二次实测推翻了本 skill 1.2.0 的「单产物双模」旧范式，产物改名 `-gui` / `-cli`；1.4.0 补齐 Step 4b 窗口几何记忆）。
 > **深度材料**：
-> - `references/architecture.md`：双通道蓝图、目录树、PE 清单与版本元数据、`gui.go` 全文、窗口几何记忆实现
-> - `references/build-pipeline.md`：构建脚本全文、通道隔离五件套、图标双通道
-> - `references/troubleshooting.md`：任务栏白框、无控制台日志、窗口不记忆/跑到屏外、门禁拒绝等排障
+> - `go-architecture.md`：双通道蓝图、目录树、PE 清单与版本元数据、`gui.go` 全文、窗口几何记忆实现
+> - `go-build-pipeline.md`：构建脚本全文、通道隔离五件套、图标双通道
+> - `go-troubleshooting.md`：任务栏白框、无控制台日志、窗口不记忆/跑到屏外、门禁拒绝等排障
 
 ---
 
@@ -59,7 +52,7 @@ go install github.com/tc-hib/go-winres@latest   # PE 资源（VERSIONINFO+manife
 
 ### Step 1 建骨架
 
-按 `references/architecture.md` 的目录树创建：
+按 `go-architecture.md` 的目录树创建：
 
 ```text
 cmd/<app>/          main.go(GUI 入口 //go:build !cli) / cli.go(CLI 入口 //go:build cli) / rsrc_windows_amd64.syso(生成物)
@@ -163,12 +156,12 @@ log.Fatal(http.Serve(listener, api.NewServer(store).Handler()))
 
 ### Step 4 桌面壳（`gui.go`）
 
-托盘常驻、单实例、窗口关闭销毁 + 双击重建、任务栏图标在 HWND 就绪后绑定。完整实现见 `references/architecture.md`。关键点：
+托盘常驻、单实例、窗口关闭销毁 + 双击重建、任务栏图标在 HWND 就绪后绑定。完整实现见 `go-architecture.md`。关键点：
 
 - `DisableQuitOnLastWindowClosed: true` 保持托盘常驻；
 - dev 的 `SingleInstanceOptions.UniqueID` 必须追加 `.dev`，否则与常驻正式版互斥；
 - 关闭窗口放行 `WindowClosing`，延时 `runtime.GC()` + `debug.FreeOSMemory()`；
-- **单实例互斥可被外部探测**：Wails 建锁名固定为 `wails-app-<UniqueID>-sim`，CLI 侧用 `OpenMutex` 即可判定「哪个通道的 GUI 在跑」，建锁与探测必须共用同一个 ID 真源（详见 `references/architecture.md` §四·补二）；
+- **单实例互斥可被外部探测**：Wails 建锁名固定为 `wails-app-<UniqueID>-sim`，CLI 侧用 `OpenMutex` 即可判定「哪个通道的 GUI 在跑」，建锁与探测必须共用同一个 ID 真源（详见 `go-architecture.md` §四·补二）；
 - **端口默认 `port=0` 动态探测**，不要写死固定端口（如 8765）：GUI 必须先 `net.Listen` 拿到真实端口才能构造窗口 `URL:`，CLI `serve` 则绑定后阻塞；两处共用同一个绑定函数与同一个 `Handler()`（见 Step 3 硬约束），杜绝「以为的端口」与「实际端口」两份真相，也杜绝 GUI 有页面、CLI 只有裸 API 的分裂。实际 URL 必须走 `logf`（`-H windowsgui` 下 stdout 不可见）或 console 通道的 `fmt.Printf`，固定端口仅作为可选参数保留。
 
 **校验**：dev 与 release 可同时运行且互不唤醒。
@@ -231,13 +224,13 @@ go test ./internal/app/ -run WindowState -v   # 往返 / 无文件 / 脏 JSON / 
 
 ### Step 5 图标资产（release 专属 + dev 地鼠）
 
-`render_icon.py` 生成 1024 PNG 与 256/128/64/48/32/24/16 全尺寸 ICO，并同步 `internal/app/icon.ico`；把 `go-default.ico` 复制为 `internal/app/icon_dev.ico`。脚本全文见 `references/build-pipeline.md`。
+`render_icon.py` 生成 1024 PNG 与 256/128/64/48/32/24/16 全尺寸 ICO，并同步 `internal/app/icon.ico`；把 `go-default.ico` 复制为 `internal/app/icon_dev.ico`。脚本全文见 `go-build-pipeline.md`。
 
 **校验**：`gofmt -l internal/app` 无输出（`//go:embed` 前需空 `//` 注释行）。
 
 ### Step 6 构建脚本（`build.py`）
 
-按 `references/build-pipeline.md` 落地。**一次构建在同一通道内产出两个二进制，统一落 `bin/`**：
+按 `go-build-pipeline.md` 落地。**一次构建在同一通道内产出两个二进制，统一落 `bin/`**：
 
 | 通道 | 产物 |
 |:---|:---|
@@ -251,9 +244,9 @@ HEAD 精确命中 <project>/v* tag  且  工作区干净（剔除构建生成物
 其余情况（含无 tag、脏工作区、--release 但条件不足）            → dev / 退出码 2
 ```
 
-**PE 版本资源（必做，别用 rsrc）**：属性面板的「文件说明/文件版本/公司/版权」来自 VERSIONINFO，只有 `go-winres` 能生成。模板放 `winres/{gui,cli}.json`（占位 `__ICON__` / `__MANIFEST__` / `__FIXED_VERSION__` / `__VERSION__` / `__ORIGINAL_NAME__`），**每个产物 `go build` 之前都要重建一次 syso**——GUI 与 CLI 在同一个 Go 包里，一个包只能链接一份 `rsrc_windows_amd64.syso`，否则两者只能共享同一份 FileDescription。模板与脚本见 `references/build-pipeline.md` §1.1 与 §三。
+**PE 版本资源（必做，别用 rsrc）**：属性面板的「文件说明/文件版本/公司/版权」来自 VERSIONINFO，只有 `go-winres` 能生成。模板放 `winres/{gui,cli}.json`（占位 `__ICON__` / `__MANIFEST__` / `__FIXED_VERSION__` / `__VERSION__` / `__ORIGINAL_NAME__`），**每个产物 `go build` 之前都要重建一次 syso**——GUI 与 CLI 在同一个 Go 包里，一个包只能链接一份 `rsrc_windows_amd64.syso`，否则两者只能共享同一份 FileDescription。模板与脚本见 `go-build-pipeline.md` §1.1 与 §三。
 
-**Windows 产物环境防腐（必做，免疫沙箱/继承下毒）**：在受沙箱策略管制的目录（如父目录挂有 `Mandatory Label\Low Mandatory Level:(OI)(CI)(NW)` 标签）下新建 worktree 时，编译出的 exe 会继承 Low 级别，导致内核禁止接入桌面窗口站 `WinSta0`，启动在 `user32.dll` 阶段抛出 `ERROR_DLL_INIT_FAILED (0xC0000142)` 闪退且弹未知发布者警告。构建脚本在产物生成后必须自动执行 `icacls <exe> /setintegritylevel Medium` 提权并解开 `Zone.Identifier` 附件锁（见 `references/build-pipeline.md` §三 与 `references/troubleshooting.md` §10）。
+**Windows 产物环境防腐（必做，免疫沙箱/继承下毒）**：在受沙箱策略管制的目录（如父目录挂有 `Mandatory Label\Low Mandatory Level:(OI)(CI)(NW)` 标签）下新建 worktree 时，编译出的 exe 会继承 Low 级别，导致内核禁止接入桌面窗口站 `WinSta0`，启动在 `user32.dll` 阶段抛出 `ERROR_DLL_INIT_FAILED (0xC0000142)` 闪退且弹未知发布者警告。构建脚本在产物生成后必须自动执行 `icacls <exe> /setintegritylevel Medium` 提权并解开 `Zone.Identifier` 附件锁（见 `go-build-pipeline.md` §三 与 `go-troubleshooting.md` §10）。
 
 **校验**：
 
@@ -319,7 +312,7 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 
 **业内做法**：`git.exe` / `git-gui.exe`、`docker.exe` / `Docker Desktop.exe`、`python.exe` / `pythonw.exe` 一律拆成两个产物，本 skill 的 `<app>-gui` / `<app>-cli` 同此。
 
-**唯一保留项**：GUI 产物内部仍用 `logf` 双写落盘做无控制台排障（`references/troubleshooting.md` §3.2），但绝不向控制台写业务输出。
+**唯一保留项**：GUI 产物内部仍用 `logf` 双写落盘做无控制台排障（`go-troubleshooting.md` §3.2），但绝不向控制台写业务输出。
 
 ---
 
@@ -327,7 +320,7 @@ git status --porcelain             # 必须为空：构建不得弄脏工作区
 
 | 症状 | 根因 | 处置 |
 |---|---|---|
-| 任务栏 / 资源管理器图标是白框 | `.syso` 未放在 `cmd/<app>/`；manifest 非 4 段；乱设 AppUserModelID | `references/troubleshooting.md` §1 |
+| 任务栏 / 资源管理器图标是白框 | `.syso` 未放在 `cmd/<app>/`；manifest 非 4 段；乱设 AppUserModelID | `go-troubleshooting.md` §1 |
 | 双击无窗口、托盘也不出现 | WebView2 运行时缺失；启动参数冲突 | 装 Evergreen Runtime；看 `logf` 落盘日志 |
 | CLI 在 PowerShell 无输出 / `--json > out.json` 为空 | GUI 子系统进程拿不到父进程管道句柄；`AttachConsole` 只能写进控制台 | 改用 `<app>-cli.exe`，GUI 产物不做 CLI（本节 + `troubleshooting.md` §3） |
 | 执行后 prompt 被顶掉、末尾光标悬空 | shell 不等待 GUI 子系统进程，prompt 先渲染，程序又往同一光标处写 | 同上：终端一律用 `-cli` 产物 |
@@ -386,7 +379,7 @@ git tag -d <project>/vX.Y.Z                                                     
 
 | 文件 | 内容 |
 |---|---|
-| `references/architecture.md` | 双通道蓝图、目录树、manifest/info.json、`gui.go` 全文、窗口几何记忆（§四·补）、生命周期 |
-| `references/build-pipeline.md` | 通道隔离五件套与铁律、图标双通道、`render_icon.py` / `build.py` 全文 |
-| `references/troubleshooting.md` | PE 图标三铁律、HWND 时序、无控制台日志、窗口几何不记忆（§9）、门禁与迁移排障 |
+| `go-architecture.md` | 双通道蓝图、目录树、manifest/info.json、`gui.go` 全文、窗口几何记忆（§四·补）、生命周期 |
+| `go-build-pipeline.md` | 通道隔离五件套与铁律、图标双通道、`render_icon.py` / `build.py` 全文 |
+| `go-troubleshooting.md` | PE 图标三铁律、HWND 时序、无控制台日志、窗口几何不记忆（§9）、门禁与迁移排障 |
 | `kb-engineering-notes/082_...md` | 原知识库条目（deprecated 存根，保留检索入口） |
