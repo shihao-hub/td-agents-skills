@@ -1,6 +1,6 @@
 ---
 name: kb-autohotkey-app-switcher
-description: Windows 单手盲切与抽屉式 Toggle 应用窗口的 AutoHotkey v2 自动化实践指南。解决任务栏应用过多鼠标甩动疲劳、原生 Alt+Tab 轮转不可预测、PowerToys 强制冷启动应用等问题，包含未运行静默、前台置顶/最小化 Toggle、多窗口轮转、开机自启与 Feishu 知识库排障。
+description: Windows 单手盲切与抽屉式 Toggle 应用窗口的 AutoHotkey v2 自动化实践指南。解决任务栏应用过多鼠标甩动疲劳、原生 Alt+Tab 轮转不可预测、PowerToys 强制冷启动应用、Chrome PWA 独立应用与浏览器底层进程冲突、原生客户端与 Web 版双模优先级降级调度，以及终端 Job Object 强杀与 WMI 脱钩热重载 SOP。
 id: "014"
 domain: win
 scope: ahk
@@ -8,7 +8,7 @@ type: flow
 slug: "Win单手盲切与抽屉式Toggle窗口AHK配置"
 status: verified
 created: "2026-09-22"
-last_verified: "2026-10-20"
+last_verified: "2026-10-25"
 compatibility:
   os: ["windows"]
 invocation:
@@ -91,15 +91,16 @@ Windows 用户自启目录快捷路径为 `shell:startup`（对应 `C:\Users\<�
 ; 3. 软件当前已在最前 -> 再次按下则最小化收起
 ; 4. 多窗口处理：若有多个窗口，依次轮换，最后一个最小化收起
 ; ========================================================
-ToggleApp(exeName) {
-    target := 'ahk_exe ' . exeName
-    
-    ; 1. 软件未运行：彻底无反应
+ToggleWin(target, runCmd := "") {
+    ; 1. 软件未运行
     if !WinExist(target) {
+        if (runCmd != "") {
+            try Run(runCmd)
+        }
         return
     }
 
-    ; 2. 如果当前激活窗口正是该程序
+    ; 2. 如果当前激活窗口正是该目标
     if WinActive(target) {
         winList := WinGetList(target)
         ; 单窗口：直接最小化收起
@@ -130,6 +131,9 @@ ToggleApp(exeName) {
         WinActivate(target)
     }
 }
+
+; 基础进程名快速包装
+ToggleApp(exeName) => ToggleWin('ahk_exe ' . exeName)
 
 ; ========================================================
 ; 文件资源管理器专用 Toggle 函数 (Explorer)
@@ -182,6 +186,28 @@ ToggleExplorer() {
 }
 
 ; ========================================================
+; ========================================================
+; Tinta 专用 Toggle 函数 (Markdown 阅读器，兼容 tina.exe 拼写)
+; 1. 软件未运行 -> 启动打开 Tinta (若存在便携路径则直接拉起)
+; 2. 软件在后台 -> 激活并置顶到最前
+; 3. 软件已在最前 -> 再次按下则最小化收起 (抽屉式 Toggle)
+; 4. 多窗口处理 -> 依次轮换各个窗口，最后一个最小化收起
+; ========================================================
+ToggleTinta() {
+    target := WinExist('ahk_exe tina.exe') ? 'ahk_exe tina.exe' : 'ahk_exe tinta.exe'
+    
+    ; 1. 未运行：直接启动打开
+    if !WinExist(target) {
+        path := FileExist('D:\Users\Softwares\Tinta\tinta.exe') ? 'D:\Users\Softwares\Tinta\tinta.exe' : (FileExist('D:\Users\Softwares\Tinta\tina.exe') ? 'D:\Users\Softwares\Tinta\tina.exe' : 'tinta.exe')
+        try Run(path)
+        return
+    }
+
+    ; 2. 软件运行中：交由通用 ToggleApp 轮替/最小化
+    exeName := WinExist('ahk_exe tina.exe') ? 'tina.exe' : 'tinta.exe'
+    ToggleApp(exeName)
+}
+
 ; 全局纯左手单手快捷键映射配置（! 代表 Alt 键）
 ; 提示：以下为常用工具全量映射字典；个人日常若暂不使用某软件，可在行首加 `;` 注释（如 Cursor、IDEA 等）
 ; ========================================================
@@ -201,8 +227,43 @@ ToggleExplorer() {
 ; Alt + C -> Cursor AI 代码编辑器
 !c::ToggleApp('Cursor.exe')
 
-; Alt + D -> DeepSeek Harness 客户端
-!d::ToggleApp('DeepSeek Harness.exe')
+; ========================================================
+; DeepSeek Harness 专用双模 Toggle 函数 (桌面客户端优先，Chrome 应用兜底)
+; 1. 优先检测原生桌面客户端 (ahk_exe DeepSeek Harness.exe) 窗口
+;    - 若存在 -> 执行 Toggle (后台唤起置顶 / 前台最小化收起 / 多窗口轮换)
+; 2. 原生桌面端不存在时 -> 自动回退接管 Chrome PWA 应用版
+;    - 匹配标识: "DeepSeek Harness ahk_exe chrome.exe"
+;    - 若窗口已存在 -> 执行 Toggle (置顶 / 最小化 / 轮换)
+;    - 若未开启 -> 自动调用 Chrome 快捷方式直接拉起启动
+; ========================================================
+ToggleDsh() {
+    targetDesk := 'ahk_exe DeepSeek Harness.exe'
+    targetChromeApp := 'DeepSeek Harness ahk_exe chrome.exe'
+    appShortcut := A_AppData . '\Microsoft\Windows\Start Menu\Programs\Chrome 应用\DeepSeek Harness.lnk'
+
+    ; 1. 原生桌面客户端存在：优先对其生效
+    if WinExist(targetDesk) {
+        ToggleWin(targetDesk)
+        return
+    }
+
+    ; 2. 桌面端不存在：回退对 Chrome 应用版生效 (未打开时自动拉起快捷方式)
+    ToggleWin(targetChromeApp, FileExist(appShortcut) ? appShortcut : "")
+}
+
+; ========================================================
+; Google Chrome 专用 Toggle 函数 (纯净浏览器窗口)
+; 1. 核心过滤：匹配 " - Google Chrome ahk_exe chrome.exe"
+; 2. 物理隔离：彻底排除 Chrome PWA 独立应用 (如 DeepSeek Harness, docsearch 等)
+; 3. Alt+R 专心服务日常网页浏览，绝不串台独立应用
+; ========================================================
+ToggleChrome() {
+    target := ' - Google Chrome ahk_exe chrome.exe'
+    ToggleWin(target)
+}
+
+; Alt + D -> DeepSeek Harness (桌面端优先，Chrome 应用兜底)
+!d::ToggleDsh()
 
 ; Alt + E -> IntelliJ IDEA
 !e::ToggleApp('idea64.exe')
@@ -210,8 +271,8 @@ ToggleExplorer() {
 ; Alt + F -> 飞书
 !f::ToggleApp('Feishu.exe')
 
-; Alt + R -> Google Chrome 浏览器
-!r::ToggleApp('chrome.exe')
+; Alt + R -> Google Chrome 浏览器 (已排除 PWA 独立应用)
+!r::ToggleChrome()
 
 ; Alt + V -> VS Code
 !v::ToggleApp('Code.exe')
@@ -221,6 +282,9 @@ ToggleExplorer() {
 
 ; Alt + X -> 资源管理器 (未开启则启动，已开启则盲切/Toggle)
 !x::ToggleExplorer()
+
+; Alt + T -> Tinta Markdown 阅读器 (兼容 tina.exe；未开启则启动，已开启则盲切/Toggle)
+!t::ToggleTinta()
 
 ; ========================================================
 ; 修复 Chrome 中单按 Alt (特别是豆包输入法占用右 Alt / RAlt) 导致右上角三点菜单被高亮选中的问题
@@ -233,13 +297,21 @@ ToggleExplorer() {
 #HotIf
 ```
 
-### 步骤 3：重载脚本使配置生效
+### 步骤 3：重载脚本使配置生效（WMI 脱钩热重载 SOP）
 AHK 脚本加载进内存后，修改文件不会自动热更新，需通过以下方式重载：
 - **托盘右键**：在任务栏右下角找到绿色“H”图标，右键选择 **Reload Script**；
-- **快速命令行重启（PowerShell）**：
+- **终端远程热重启（严禁裸跑 Start-Process，详见第 095 篇 SOP）**：
+  在 Agent、CI 或远程 PowerShell 下，若使用 `Start-Process`，子进程会被捆绑进当前终端的 **Job Object（作业对象）** 树中，命令退出时 **AHK 会被系统连带掐死**。必须通过 WMI 创建脱钩的独立后台常驻守护：
   ```powershell
-  Stop-Process -Name AutoHotkey64 -ErrorAction SilentlyContinue
-  Start-Process "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\app_switcher.ahk"
+  # 1. 优雅终止旧实例
+  Stop-Process -Name AutoHotkey64 -Force -ErrorAction SilentlyContinue
+  Start-Sleep -Milliseconds 300
+
+  # 2. 构造启动命令行并借 WMI 脱钩常驻
+  $ahkExe = "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe"
+  $scriptPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\app_switcher.ahk"
+  $cmd = "`"$ahkExe`" `"$scriptPath`""
+  Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $cmd }
   ```
 
 ---
@@ -273,6 +345,25 @@ AHK 脚本加载进内存后，修改文件不会自动热更新，需通过以�
 ### 7. Chrome 单按 Alt 激活三点菜单与豆包输入法右 Alt 语音冲突（详见第 64 篇）
 在 Windows 下，单按 Alt 键会触发系统的 `SC_KEYMENU` 菜单栏激活机制，导致 Chrome 右上角“三点”菜单被高亮选中抢夺焦点；若同时使用豆包输入法等需要长按右 Alt 触发语音输入的软件，松开 Alt 时极易意外弹开 Chrome 菜单或中断输入。
 - **解决方案**：在脚本末尾加入 `#HotIf WinActive("ahk_exe chrome.exe")` 作用域，使用带 `~` 透传修饰符的按键监听，并发送 `{Blind}{vkE8}`（未分配给任何实际功能的虚拟键码）使系统判定存在组合键输入，静默消除菜单激活，完美共存。
+
+### 8. Chrome PWA / 独立应用与普通浏览器底层进程冲突与标题特征物理隔离
+- **现象与混淆**：通过 Chrome「将网页安装为应用」或「创建快捷方式 -> 作为窗口打开」（如 DeepSeek Harness、ZedHub、docsearch）后，其底层宿主进程**依然是 `chrome.exe`**。若 AHK 使用简单的 `ahk_exe chrome.exe`，按 <kbd>Alt</kbd> + <kbd>R</kbd> 时系统会将独立应用也误当成 Chrome 浏览器唤起，多窗口轮换时也会把独立应用排进浏览器轮换队列，造成严重“串台”；
+- **底层根因**：Windows 下普通 Chrome 浏览器窗口标题无论语言环境，结尾必定包含全局品牌后缀 ` - Google Chrome`；而 Chrome 独立应用（PWA / Standalone）窗口标题直接为应用名，**绝不包含** ` - Google Chrome`；
+- **物理隔离方案**：
+  - 普通浏览器使用复合选择器：`target := ' - Google Chrome ahk_exe chrome.exe'`；
+  - 独立应用使用专属标题选择器：`target := 'DeepSeek Harness ahk_exe chrome.exe'`；
+  通过标题特征实现 100% 物理隔离，两套快捷键各司其职，互不串扰。
+
+### 9. 原生客户端（Native Client）与 Web PWA 独立应用「双模优先级降级」调度模式
+- **场景痛点**：对于既有本地独立客户端（如 `DeepSeek Harness.exe`）又有 Chrome Web PWA 版本的工具，若分配两个不同快捷键会挤占左手单手按键资源并增加肌肉记忆负担；
+- **双模调度设计**：
+  1. **第一优先（原生桌面端）**：通过 `WinExist('ahk_exe DeepSeek Harness.exe')` 检测桌面端是否在运行，若存在则优先对其生效（置顶激活 / 最小化收起）；
+  2. **第二兜底（Web PWA 独立应用）**：若桌面端未开启，自动降级接管 Chrome PWA 应用（`DeepSeek Harness ahk_exe chrome.exe`）；
+  3. **缺省秒起**：若两者均未开启，按热键时自动通过开始菜单的 Chrome 快捷方式拉起 Web 应用，兼顾免手动寻找与全自动兜底。
+
+### 10. 终端远程热重载 AHK 的 Job Object 强杀陷阱与 WMI 脱钩规范（参见第 095 篇）
+- **致命陷阱**：在 Agent、CI 或远程 PowerShell 终端中执行修改后，若直接使用常规的 `Start-Process` 或 `& AutoHotkey64.exe` 重启脚本，子进程会被自动绑定到**当前终端会话的 Job Object（作业对象）树**中。当远程命令执行完毕、子进程退出时，Windows **会将整棵作业树下的所有子进程（包括刚刚启动的 AHK）连带强行杀死**，表现为终端提示启动成功但实际界面立刻退出的假象；
+- **标准解法**：必须执行第 095 篇 SOP，使用 WMI `Invoke-CimMethod -ClassName Win32_Process -MethodName Create` 将 AHK 进程从终端树中彻底脱钩剥离，创建真正的系统独立后台常驻守护。
 
 ---
 
