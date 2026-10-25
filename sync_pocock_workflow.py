@@ -2,18 +2,18 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-"""sync_mattpocock_skills.py: Matt Pocock 纯正技能与 sh-mattpocock-skills 路由器的资产同步与双向迁移工具。
+"""sync_pocock_workflow.py: Matt Pocock 纯正技能与 sh-pocock-workflow 工作流目录的资产同步与双向迁移工具。
 
 核心设计哲学：脚本归脚本，AI 归 AI (AI-in-the-Loop)
 - 脚本负责：文件原子移动/覆盖、根目录清理、还原(--restore)、探针检测、JSON 诊断报告
 - AI 负责：日常意图精准分流、生命周期流转编排、架构演进与深模块重构建议
 
 用法:
-    python sync_mattpocock_skills.py                # 执行收割迁移（将根目录散装 Matt Pocock 技能移入 sh-mattpocock-skills/）
-    python sync_mattpocock_skills.py --dry-run      # 预览执行计划，不修改文件
-    python sync_mattpocock_skills.py --check        # 仅状态检查与探针诊断
-    python sync_mattpocock_skills.py --restore      # 【一键复原】将 sh-mattpocock-skills/ 子目录全部移回根目录
-    python sync_mattpocock_skills.py --json         # 输出结构化诊断数据，供 AI Agent 直接解析
+    python sync_pocock_workflow.py                # 执行收割迁移（将根目录散装工程技能移入 sh-pocock-workflow/）
+    python sync_pocock_workflow.py --dry-run      # 预览执行计划，不修改文件
+    python sync_pocock_workflow.py --check        # 仅状态检查与探针诊断
+    python sync_pocock_workflow.py --restore      # 【一键复原】将 sh-pocock-workflow/ 子目录全部移回根目录
+    python sync_pocock_workflow.py --json         # 输出结构化诊断数据，供 AI Agent 直接解析
 """
 
 from __future__ import annotations
@@ -28,8 +28,8 @@ from pathlib import Path
 # 根技能仓库目录 (~/.agents/skills)
 ROOT_SKILLS_DIR = Path(__file__).resolve().parent
 
-# 目标路由器目录 (~/.agents/skills/sh-mattpocock-skills)
-ROUTER_DIR_NAME = "sh-mattpocock-skills"
+# 目标工作流目录 (~/.agents/skills/sh-pocock-workflow)
+ROUTER_DIR_NAME = "sh-pocock-workflow"
 ROUTER_DIR = ROOT_SKILLS_DIR / ROUTER_DIR_NAME
 
 # 严格限定的 14 个 Matt Pocock 原生工程技能
@@ -78,7 +78,7 @@ def scan_status():
 
 
 def sync_to_router(dry_run: bool = False) -> dict:
-    """将根目录散装 Matt Pocock 技能收拢至 sh-mattpocock-skills/"""
+    """将根目录散装 Matt Pocock 技能收拢至 sh-pocock-workflow/"""
     status = scan_status()
     loose = status["root_loose_dirs"]
     actions = []
@@ -119,7 +119,7 @@ def sync_to_router(dry_run: bool = False) -> dict:
 
 
 def restore_to_root(dry_run: bool = False) -> dict:
-    """【一键复原】将 sh-mattpocock-skills/ 子目录全部移回根目录"""
+    """【一键复原】将 sh-pocock-workflow/ 子目录全部移回根目录"""
     status = scan_status()
     routed = status["routed_subdirs"]
     actions = []
@@ -127,7 +127,7 @@ def restore_to_root(dry_run: bool = False) -> dict:
     if not routed:
         return {
             "status": "noop",
-            "message": "No routed skills found in sh-mattpocock-skills/ to restore.",
+            "message": "No routed skills found in sh-pocock-workflow/ to restore.",
             "actions_performed": [],
         }
 
@@ -170,7 +170,7 @@ def main():
     parser.add_argument(
         "--restore",
         action="store_true",
-        help="一键复原：将收拢在 sh-mattpocock-skills/ 下的子技能移回根目录",
+        help="一键复原：将收拢在 sh-pocock-workflow/ 下的子技能移回根目录",
     )
     parser.add_argument(
         "--json",
@@ -187,11 +187,11 @@ def main():
 
     if args.check:
         status = scan_status()
-        print("=== Matt Pocock Skills 收拢状态检查 ===")
+        print("=== Pocock Workflow Skills 收拢状态检查 ===")
         print(f"根目录散装数量: {len(status['root_loose_dirs'])}")
         for item in status["root_loose_dirs"]:
             print(f"  - [散装] {item}")
-        print(f"路由器收拢数量: {len(status['routed_subdirs'])}")
+        print(f"工作流目录收拢数量: {len(status['routed_subdirs'])}")
         for item in status["routed_subdirs"]:
             print(f"  - [已收拢] {item}")
         print(f"官方规范技能总数: {status['total_official']}")
@@ -205,8 +205,8 @@ def main():
         print(f"复原完成: {res['status']}")
         return
 
-    # 默认：迁移收拢到路由器
-    print(">>> 正在执行收拢迁移到 sh-mattpocock-skills/ ...")
+    # 默认：迁移收拢到工作流目录
+    print(">>> 正在执行收拢迁移到 sh-pocock-workflow/ ...")
     res = sync_to_router(dry_run=args.dry_run)
     for act in res["actions_performed"]:
         print(f"  {act}")

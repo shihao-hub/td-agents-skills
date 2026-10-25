@@ -29,7 +29,7 @@ updated: 2026-10-24
      - **多候选匹配** → 列出候选及对比依据，供用户点名确认。
 3. **文件寻址与加载规则**：
    - **知识库总控路由**（`kb-engineering-notes`，最高优先）：用户遇到底层报错、声卡/网络/内存排障、IDE 崩溃或环境配置时，载入 `kb-engineering-notes/SKILL.md`，按两级渐进式感知协议查阅；
-   - **独立族路由器**（`sh-agy-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-mattpocock-skills`）：位于父级同级目录，按对应 `SKILL.md` 协议二次分流；
+   - **独立族路由器与方法论工作流**（`sh-agy-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-pocock-workflow`）：位于父级同级目录，按对应 `SKILL.md` 协议二次分流；
    - **用户直调命令门面**（`sh-cmd-*`，如 `sh-cmd-plan-driven-development`、`sh-cmd-spec-driven-development` 等）：已在根级建立零软链门面，支持用户在终端直接输入 `/skill:sh-cmd-*` 唤起，内部自动调度对应真身；
    - **全局方法论技能**（`sh-frontend-deai`、`sh-skill-authoring-rules`）：以相对软链暴露在根级，AI 在代码生成或规范制定时自主遵循；
    - **收拢子技能**：均已收拢存放在本技能子目录中，且核心指导文件统一为 `README.md`。执行时，AI 使用 `view_file` 直接读取 `sh-user-skills/<skill-name>/README.md` 全文并严格按其 SOP 步骤执行。
@@ -64,7 +64,7 @@ updated: 2026-10-24
 | Windows Terminal换图标／修改终端图标／WT定制／右键在终端中打开修改 | `sh-wt-customizer` |
 | agy会话标题批量治理／汉化agy对话标题／修改会话为中文／批量重命名agy会话／antigravity app会话改中文／桌面版会话汉化／侧边栏会话标题中文化 | `sh-agy-session-governance` |
 | WT关闭全部标签页会话恢复／Windows Terminal关闭会话保持／agy会话恢复守护／关闭WT拦截保存／wt会话守卫／开启开机自启守卫 | `sh-wt-session-guard` |
-| Matt Pocock工程流／软件基本功／审问对齐／垂直切片拆票／曳光弹开发／深模块重构／双轴审查 | `sh-mattpocock-skills`（二级族路由器，可直接点名） |
+| Matt Pocock工程流／软件基本功／审问对齐／垂直切片拆票／曳光弹开发／深模块重构／双轴审查 | `sh-pocock-workflow`（可直接点名） |
 | 调取备用技能／冷备技能／查看暂存技能／调用未启用技能／找回不常用技能 | `sh-standby-skills`（二级族路由器，可直接点名） |
 
 ### ⚡ 领域技能族路由器（二级分流）
@@ -74,7 +74,7 @@ updated: 2026-10-24
 | `sh-agy-skills` | antigravity 斜杠命令技能族路由器：点名使用后，按用户后续内容自动分流到子目录 skill（goal/schedule/browser/grill-me/teamwork/learn/boost/plan）。点名使用 |
 | `sh-lark-skills` | 飞书全域技能族路由器：集成飞书 28 域原生能力（IM、文档、表格、多维表格、审批、任务、邮件、日历、会议、妙记等）。点名使用 |
 | `sh-redis-skills` | Redis 与 Iris 全域技能族路由器：集成 Redis 官方核心建模、连接池、集群分片、全文/向量检索、监控排障与 Iris AI 长短期记忆库。点名使用 |
-| `sh-mattpocock-skills` | Matt Pocock 软件工程全域技能族路由器：涵盖从大雾寻路、无情审问对齐、领域建模、规范合成、垂直切片、TDD实现、双轴审查到深模块演进。点名使用 |
+| `sh-pocock-workflow` | Matt Pocock 软件工程全域工作流：源自《软件基本功没死，它在 AI 时代变得更值钱了》方法论，串联大雾寻路、无情审问对齐、领域建模、规范合成、垂直切片、TDD实现、双轴审查到深模块演进。点名使用 |
 | `sh-standby-skills` | 备用与低频技能收拢库：集中存放架构模式、整洁代码、前端设计、Git高级流、Python设计模式、代码库wiki等备查技能。点名使用 |
 
 ### 📚 工程手记与排障避坑知识库（第一优先）

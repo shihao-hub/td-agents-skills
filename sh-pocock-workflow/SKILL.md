@@ -1,13 +1,13 @@
 ---
-name: sh-mattpocock-skills
+name: sh-pocock-workflow
 description: |
-  Matt Pocock 软件工程全域技能族分流路由器：收录并串联 Matt Pocock 实践体系的 14 个原子工程技能。坚守软件基本功与代码所有权，反对 specs-to-code 与无脑 vibe coding。覆盖从大雾决策寻路（wayfinder）、权威信源调研（research）、一次性原型验证（prototype）、需求与设计概念无情审问（grill-me/grilling/grill-with-docs）、领域建模与通用语言固化（domain-modeling）、规范与 Seam 接缝生成（to-spec）、垂直切片曳光弹看板拆票（to-tickets）、单会话 TDD 红绿实现（implement/tdd）、全新上下文双轴审查（code-review）、紧反馈排障循环（diagnosing-bugs）到深模块架构重构演进（improve-codebase-architecture）的完整软件工程生命周期。按用户意图与工程阶段精准分流并编排关联流转。点名使用。
+  Matt Pocock 软件工程全域工作流：源自《软件基本功没死，它在 AI 时代变得更值钱了》工程方法论。坚守软件基本功与代码所有权，反对 specs-to-code 与无脑 vibe coding。覆盖从大雾决策寻路（wayfinder）、权威信源调研（research）、一次性原型验证（prototype）、需求与设计概念无情审问（grill-me/grilling/grill-with-docs）、领域建模与通用语言固化（domain-modeling）、规范与 Seam 接缝生成（to-spec）、垂直切片曳光弹看板拆票（to-tickets）、单会话 TDD 红绿实现（implement/tdd）、全新上下文双轴审查（code-review）、紧反馈排障循环（diagnosing-bugs）到深模块架构重构演进（improve-codebase-architecture）的完整软件工程生命周期。按用户意图与工程阶段精准分流并编排关联流转。点名使用。
 version: 1.0.0
 created: 2026-10-22
-updated: 2026-10-22
+updated: 2026-10-25
 ---
 
-# sh-mattpocock-skills: Matt Pocock 软件工程全域技能族路由器
+# sh-pocock-workflow: Matt Pocock 软件工程全域方法论工作流
 
 > **核心哲学：软件基本功没死，它在 AI 时代变得更值钱了。**  
 > 好代码库让 AI 表现出色，坏代码库让 AI 一塌糊涂。本技能族是 Matt Pocock（`mattpocock/skills`，AI Hero 体系）工程哲学的落地路由器。  
@@ -101,20 +101,20 @@ flowchart TD
 
 | 技能名称 | 阶段与定位 | 输入源 (Inputs) | 核心产出 (Outputs) | 下游承接技能 (Next Step) | 子模块执行路径 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `wayfinder` | **0.大图破雾**：面对模糊庞大工程，绘制决策地图 | 模糊大想法、跨多个会话的庞大需求 | 决策工单图（Decision Tickets），每次只决断一件事 | `grill-me`（决断单项）或 `to-spec` | `sh-mattpocock-skills/wayfinder/README.md` |
-| `research` | **0.事实调研**：针对第一手权威信源深度调研 | 技术选型疑问、官方文档/API 取证 | 带权威信源引用的 Markdown 调查笔记 | `grill-me` / `to-spec` | `sh-mattpocock-skills/research/README.md` |
-| `prototype` | **0.原型验证**：一次性抛弃型原型（逻辑/UI） | 状态机手感不确定、UI 多风格选型 | 单文件 HTML / 动态分支，验证后抛弃不入库 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/prototype/README.md` |
-| `grill-me` | **1.需求审问**：无状态需求访谈入口 | 原始想法、一句话需求 | 扫清全部假设的设计概念共识 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/grill-me/README.md` |
-| `grilling` | **1.审问原语**：底层决策树驱动引擎 | Frontier 未决决策项 | 格式化问卷（带推荐答案）与收敛后的决策树 | 供 `grill-me` / `grill-with-docs` 调用 | `sh-mattpocock-skills/grilling/README.md` |
-| `grill-with-docs` | **1.仓内审问**：结合代码库现状与文档的深度拷问 | 现有代码仓、已存在的文档/规范 | 与工程上下文对齐的业务设计决策 | `domain-modeling` / `to-spec` | `sh-mattpocock-skills/grill-with-docs/README.md` |
-| `domain-modeling` | **2.领域建模**：提炼并磨砺通用语言（DDD） | 对齐后的设计概念、业务名词 | `CONTEXT.md`、`GLOSSARY.md`、架构决策记录 `ADR` | `to-spec` | `sh-mattpocock-skills/domain-modeling/README.md` |
-| `to-spec` | **3.规范合成**：无二次采访直接合成规范文档 | 前序审问共识、`CONTEXT.md` | 问题/解决方案/用户故事/实现决策/**测试接缝 Seams** | `to-tickets` | `sh-mattpocock-skills/to-spec/README.md` |
-| `to-tickets` | **3.切片拆票**：垂直切片（Tracer Bullets）与看板 | 规范文档 `to-spec` 产物 | 穿透各层的 Tickets 清单与 `blocked by` DAG 依赖 | `implement` | `sh-mattpocock-skills/to-tickets/README.md` |
-| `implement` | **4.切片落地**：按 ticket 实现并锁定 Seam | 单个 Ticket、预定 Seam | 最小实现代码、通过类型检查与单测 | `code-review`（须先 `/clear`） | `sh-mattpocock-skills/implement/README.md` |
-| `tdd` | **4.反馈循环**：测试驱动开发（红-绿-重构） | 预先确认的公共接缝 Seam | 失败测试（红） $\to$ 最小通过实现（绿） $\to$ 干净代码 | `implement` / `code-review` | `sh-mattpocock-skills/tdd/README.md` |
-| `code-review` | **5.双轴审查**：Standards 规范轴 + Spec 需求轴 | 变更 diff、起源 spec、Repo 规范 | 双轴独立审查报告（含 Fowler 代码坏味道诊断） | 人工 QA 验收 | `sh-mattpocock-skills/code-review/README.md` |
-| `diagnosing-bugs` | **6.排障循环**：疑难 Bug 与性能退化排障 | 报错堆栈、异常行为、重现线索 | 极窄可复现反馈闭环（Tight Loop）、根因诊断与修复 | `tdd` 固化防回归测试 | `sh-mattpocock-skills/diagnosing-bugs/README.md` |
-| `improve-codebase-architecture`| **6.架构演化**：扫描浅模块并推进深模块重构 | Git Commit 热点（Hot Spots）、代码库 | 深度机会 HTML 报告、Before/After 架构对比与重构方案 | `to-tickets` | `sh-mattpocock-skills/improve-codebase-architecture/README.md` |
+| `wayfinder` | **0.大图破雾**：面对模糊庞大工程，绘制决策地图 | 模糊大想法、跨多个会话的庞大需求 | 决策工单图（Decision Tickets），每次只决断一件事 | `grill-me`（决断单项）或 `to-spec` | `sh-pocock-workflow/wayfinder/README.md` |
+| `research` | **0.事实调研**：针对第一手权威信源深度调研 | 技术选型疑问、官方文档/API 取证 | 带权威信源引用的 Markdown 调查笔记 | `grill-me` / `to-spec` | `sh-pocock-workflow/research/README.md` |
+| `prototype` | **0.原型验证**：一次性抛弃型原型（逻辑/UI） | 状态机手感不确定、UI 多风格选型 | 单文件 HTML / 动态分支，验证后抛弃不入库 | `domain-modeling` / `to-spec` | `sh-pocock-workflow/prototype/README.md` |
+| `grill-me` | **1.需求审问**：无状态需求访谈入口 | 原始想法、一句话需求 | 扫清全部假设的设计概念共识 | `domain-modeling` / `to-spec` | `sh-pocock-workflow/grill-me/README.md` |
+| `grilling` | **1.审问原语**：底层决策树驱动引擎 | Frontier 未决决策项 | 格式化问卷（带推荐答案）与收敛后的决策树 | 供 `grill-me` / `grill-with-docs` 调用 | `sh-pocock-workflow/grilling/README.md` |
+| `grill-with-docs` | **1.仓内审问**：结合代码库现状与文档的深度拷问 | 现有代码仓、已存在的文档/规范 | 与工程上下文对齐的业务设计决策 | `domain-modeling` / `to-spec` | `sh-pocock-workflow/grill-with-docs/README.md` |
+| `domain-modeling` | **2.领域建模**：提炼并磨砺通用语言（DDD） | 对齐后的设计概念、业务名词 | `CONTEXT.md`、`GLOSSARY.md`、架构决策记录 `ADR` | `to-spec` | `sh-pocock-workflow/domain-modeling/README.md` |
+| `to-spec` | **3.规范合成**：无二次采访直接合成规范文档 | 前序审问共识、`CONTEXT.md` | 问题/解决方案/用户故事/实现决策/**测试接缝 Seams** | `to-tickets` | `sh-pocock-workflow/to-spec/README.md` |
+| `to-tickets` | **3.切片拆票**：垂直切片（Tracer Bullets）与看板 | 规范文档 `to-spec` 产物 | 穿透各层的 Tickets 清单与 `blocked by` DAG 依赖 | `implement` | `sh-pocock-workflow/to-tickets/README.md` |
+| `implement` | **4.切片落地**：按 ticket 实现并锁定 Seam | 单个 Ticket、预定 Seam | 最小实现代码、通过类型检查与单测 | `code-review`（须先 `/clear`） | `sh-pocock-workflow/implement/README.md` |
+| `tdd` | **4.反馈循环**：测试驱动开发（红-绿-重构） | 预先确认的公共接缝 Seam | 失败测试（红） $\to$ 最小通过实现（绿） $\to$ 干净代码 | `implement` / `code-review` | `sh-pocock-workflow/tdd/README.md` |
+| `code-review` | **5.双轴审查**：Standards 规范轴 + Spec 需求轴 | 变更 diff、起源 spec、Repo 规范 | 双轴独立审查报告（含 Fowler 代码坏味道诊断） | 人工 QA 验收 | `sh-pocock-workflow/code-review/README.md` |
+| `diagnosing-bugs` | **6.排障循环**：疑难 Bug 与性能退化排障 | 报错堆栈、异常行为、重现线索 | 极窄可复现反馈闭环（Tight Loop）、根因诊断与修复 | `tdd` 固化防回归测试 | `sh-pocock-workflow/diagnosing-bugs/README.md` |
+| `improve-codebase-architecture`| **6.架构演化**：扫描浅模块并推进深模块重构 | Git Commit 热点（Hot Spots）、代码库 | 深度机会 HTML 报告、Before/After 架构对比与重构方案 | `to-tickets` | `sh-pocock-workflow/improve-codebase-architecture/README.md` |
 
 ---
 
@@ -188,30 +188,30 @@ flowchart TD
 
 ## 六、【重要】资产管理与一键复原指南 (Sync & Rollback Guide)
 
-本路由器下的 14 个 Matt Pocock 子技能已完整收敛于 `sh-mattpocock-skills/<sub-skill>/`，彻底消除根目录散装目录对全局 Prompt 的污染。
+本工作流下的 14 个工程子技能已完整收敛于 `sh-pocock-workflow/<sub-skill>/`，彻底消除根目录散装目录对全局 Prompt 的污染。
 
 ### 1. 状态检查与诊断
 ```powershell
-python sync_mattpocock_skills.py --check
+python sync_pocock_workflow.py --check
 ```
 
 ### 2. 一键复原回滚（Rollback Guide）
 若需要在特定场景下将这 14 个技能全部恢复为根目录散装形态，只需运行：
 ```powershell
 # 在 skills 根目录执行一键还原：
-python sync_mattpocock_skills.py --restore
+python sync_pocock_workflow.py --restore
 
 # 刷新多 Agent 软链挂载：
 python sync_skills.py
 ```
-所有子技能将安全、无损地移回根目录；随时重新运行 `python sync_mattpocock_skills.py` 即可再次收拢，全流程幂等可逆。
+所有子技能将安全、无损地移回根目录；随时重新运行 `python sync_pocock_workflow.py` 即可再次收拢，全流程幂等可逆。
 
 ---
 
 ## 七、AI 自动维护与上游更新协议 (For Agent / Self-Updating Protocol)
 
 > 💡 **核心契约：用户只需一句话，其余全由 AI 自动化闭环**  
-> 当用户指示 **“更新 sh-mattpocock-skills”**、**“同步最新的 matt pocock skills”** 或 **“帮我把 Matt Pocock 技能更新到最新版”** 时，AI 必须严格执行以下六步闭环：
+> 当用户指示 **“更新 sh-pocock-workflow”**、**“同步最新的 pocock 工程工作流技能”** 时，AI 必须严格执行以下六步闭环：
 
 ### 1. 探针感知与上游对比
 - AI 通过搜索工具或 GitHub 探测 `github.com/mattpocock/skills` 的最新 Commit / Release；
@@ -220,14 +220,14 @@ python sync_skills.py
 ### 2. 安全还原与覆盖拉取
 - 执行确定性命令将现有技能一键平退为散装形态：
   ```powershell
-  uv run sync_mattpocock_skills.py --restore
+  uv run sync_pocock_workflow.py --restore
   ```
 - 从上游拉取或覆盖受影响的技能目录。
 
 ### 3. 一键重新收割与物理绝缘
 - 执行收拢命令，将更新后的技能重新归集回本目录，并自动转为 `README.md` 绝缘文件名：
   ```powershell
-  uv run sync_mattpocock_skills.py
+  uv run sync_pocock_workflow.py
   ```
 
 ### 4. 链路回填与流转契约加固

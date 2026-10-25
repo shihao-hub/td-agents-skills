@@ -21,7 +21,7 @@ updated: 2026-10-22
 
 | 物理落位形态 | 是否被 Harness 注册为全局技能 | 定位与适用场景 | 对应规范章节 |
 |---|:---:|---|---|
-| `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`、`sh-mattpocock-skills`） | **卷一** |
+| `~/.agents/skills/<name>/SKILL.md` | ✅ | **公共根级技能 / 族路由器**：高频全局入口（如 `sh-user-skills`、`sh-lark-skills`、`sh-redis-skills`、`sh-agy-skills`、`sh-pocock-workflow`） | **卷一** |
 | `~/.agents/skills/sh-user-skills/<name>/README.md` | ❌ | **个人沉淀类子技能**：通过 `README.md` 命名避开全局自动扫描，由 `sh-user-skills` 按需通过 `view_file` 调入 | **卷二** |
 | `~/.agents/skills/<name>/`（相对软链暴露，真身 `sh-user-skills/<name>/`） | ✅ | **提级暴露的全局技能**：需进全局清单的方法论与规范（如 `sh-frontend-deai`、`sh-skill-authoring-rules`），用 `uv run expose_user_skill.py <name>` 生成，**相对软链随仓入库** | **卷二·4** |
 | `~/.agents/skills/sh-cmd-<name>/SKILL.md`（零软链命令门面 Facade） | ✅ | **用户主动直调命令**：为 `sh-user-skills/` 子技能建立的根级纯文本轻量门面（如 `sh-cmd-plan-driven-development`、`sh-cmd-spec-driven-development`），用 `uv run expose_user_skill.py <name> --cmd` 生成，**零软链依赖**，仅供 `/skill:sh-cmd-*` 主动直调 | **卷二·4** |
