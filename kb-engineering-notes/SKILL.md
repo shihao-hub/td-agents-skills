@@ -64,7 +64,7 @@ kb-engineering-notes/
 ├── 011_win_conhost_fix_计划任务控制台委托闪窗与conhost注册.md # [Stage 2: 专项排障] 针对计划任务触发 WT 标签页闪窗（控制台委托 handoff）与无窗口任务手动注册
 ├── 012_agent_yolo_flow_CLI执行模式辨析与免批YOLO配置.md # [Stage 2: 专项配置] 针对 CLI 执行模式、YOLO 权限免审批与配置面板
 ├── 013_media_audio_flow_降噪耳机人声泄露声学掩蔽与公有音频.md # [Stage 2: 专项实战] 针对降噪耳机人声泄露掩蔽、Commons API 下载与纯 Python 音频合成
-├── 014_win_ahk_flow_Win单手盲切与抽屉式Toggle窗口AHK配置.md # [Stage 2: 专项效率] 针对 Windows 多常驻窗口盲切、左手单手 Toggle 与 AutoHotkey v2 自动化
+├── 014_win_ahk_flow_Win单手盲切与抽屉式Toggle窗口AHK配置.md # [Stage 2: 专项效率] 针对 Windows 多常驻窗口盲切、左手单手 Toggle、PWA物理隔离与双模降级及 AutoHotkey v2 自动化
 ├── 015_dev_docx_flow_docx自动化生成试卷与排版流水线.md # [Stage 2: 专项实现] 针对教辅试卷生成、东亚字体分离(w:eastAsia)与 python-docx 精细排版流水线
 ├── 016_ide_terminus_fix_SublimeTerminus退格失效与原生终端集成.md # [Stage 2: 专项排障] 针对 Sublime 内置终端退格失效/中文吞字根因与原生侧边栏 PowerShell 扩展
 ├── 017_win_audio_fix_Win声卡爆音无声与虚拟音频抢占排查.md # [Stage 2: 专项排障] 针对设备占用、默认输出抢占与修复
@@ -151,6 +151,7 @@ kb-engineering-notes/
 ├── 098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md # [Stage 2: 专项排障] 针对 Windows 父目录带 Low Mandatory Level 沙箱标签致新建 worktree/子目录继承低完整性、GUI 双击弹安全警告或点击运行闪退 ERROR_DLL_INIT_FAILED (0xC0000142) 排障与 icacls /setintegritylevel Medium 抢救及构建脚本防腐
 ├── 099_agent_dsh_flow_DSHWeb三层更新体系与插件升级及容器校验.md # [Stage 2: 专项流水线] 针对 DeepSeek Harness Web UI 三层更新（全局CLI/Profile远端依赖/本地模组软链）、Cordis 容器静态校验与后台常驻服务平滑重启
 ├── 100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md # [Stage 2: 专项排障] 针对 Windows 11 DWM 显存泄漏逼近 1GB、Alt+Tab XAML 宿主 DirectComposition 表面创建失败完全失效与 Winlogon AutoRestartShell 0.5 秒平滑自愈
+├── 101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md # [Stage 2: 专项排障] 针对 Windows 11 开始菜单固定区偶尔莫名其妙追加一整排官方默认应用（画图/计算器/OEM工具/纸牌）、强杀 StartMenuExperienceHost 破坏 start2.bin 触发崩溃自愈与 ContentDeliveryManager 静默推送通道加固
 └── ...（后续顺次扩充）
 ```
 
@@ -229,7 +230,7 @@ kbman touch <id>
 | 需要一条命令手动注册/重配置“无窗口”计划任务（防止终端闪标签页），或任务目录搬移后动作路径失效 | [`011_win_conhost_fix_计划任务控制台委托闪窗与conhost注册.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/011_win_conhost_fix_计划任务控制台委托闪窗与conhost注册.md) | register_task.ps1, conhost --headless, New-ScheduledTaskAction, 手动配置, 幂等注册, $PSScriptRoot |
 | Antigravity CLI 执行模式（plan/accept-edits）与免批 YOLO 权限混淆、状态栏无 yolo、/permissions 规则为空、/config 面板与免审启动参数配置 | [`012_agent_yolo_flow_CLI执行模式辨析与免批YOLO配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/012_agent_yolo_flow_CLI执行模式辨析与免批YOLO配置.md) | Antigravity CLI, YOLO, accept-edits, plan, /permissions, /config, Tool Permission, --dangerously-skip-permissions |
 | 佩戴降噪耳机仍能听到人声谈话、轻音乐休止符间隙漏音打断心流，需要构建抗干扰声床、免鉴权下载公有领域名曲或合成立体声褐噪音/自然雨声 | [`013_media_audio_flow_降噪耳机人声泄露声学掩蔽与公有音频.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/013_media_audio_flow_降噪耳机人声泄露声学掩蔽与公有音频.md) | 降噪耳机, 隔绝人声, 听觉掩蔽, 褐噪音, Brown Noise, 白噪音, 雨声, Wikimedia Commons, 公有领域轻音乐, 萨蒂, 肖邦, 卡农, 巴赫 |
-| Windows 常驻应用多（IDE/终端/浏览器/IM）、鼠标跨屏甩动疲劳、Alt+Tab 轮转顺序不稳定、PowerToys 快捷键误触冷启动 | [`014_win_ahk_flow_Win单手盲切与抽屉式Toggle窗口AHK配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/014_win_ahk_flow_Win单手盲切与抽屉式Toggle窗口AHK配置.md) | AutoHotkey, AHK v2, 窗口切换, 盲切, 单手快捷键, Toggle, 前台置顶, 任务栏, PowerToys 缺陷 |
+| Windows 常驻应用多（IDE/终端/浏览器/IM）、鼠标跨屏甩动疲劳、Alt+Tab 轮转顺序不稳定、PowerToys 快捷键误触冷启动、Chrome PWA独立应用与浏览器底层串台冲突、桌面端与Web版双模降级调度、AHK终端重载退出 | [`014_win_ahk_flow_Win单手盲切与抽屉式Toggle窗口AHK配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/014_win_ahk_flow_Win单手盲切与抽屉式Toggle窗口AHK配置.md) | AutoHotkey, AHK v2, 窗口切换, 盲切, 单手快捷键, Toggle, 前台置顶, 任务栏, PowerToys 缺陷, Chrome PWA 独立应用, 双模优先级降级, - Google Chrome 标题特征, PWA 串台, WMI 进程脱离 |
 | 需要基于 python-docx 批量生成 Word 试卷或教辅练习题，处理东亚中文字体分离(w:eastAsia)、页边距、行间距微调、化学式上下标排版或自动化装配流水线 | [`015_dev_docx_flow_docx自动化生成试卷与排版流水线.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/015_dev_docx_flow_docx自动化生成试卷与排版流水线.md) | python-docx, 试卷生成, 举一反三, eastAsia, 宋体回退, 行距, 上下标, 批量生成流水线, Word 排版 |
 | Sublime Text 终端插件 Terminus 中文吞字、按 Backspace 无法删除字符、侧边栏右键打开终端看似 PowerShell 实际是 CMD | [`016_ide_terminus_fix_SublimeTerminus退格失效与原生终端集成.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/016_ide_terminus_fix_SublimeTerminus退格失效与原生终端集成.md) | Sublime Text, Terminus, Backspace删不掉, 中文输入法, PSReadLine, Open Terminus here, Open PowerShell here, wt.exe |
 | Windows 扬声器/耳机无声、高频或周期性噼啪爆音、默认音频输出设备被虚拟声卡（如 Voicemeeter）静默抢占 | [`017_win_audio_fix_Win声卡爆音无声与虚拟音频抢占排查.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/017_win_audio_fix_Win声卡爆音无声与虚拟音频抢占排查.md) | 声卡爆音, 无声, 默认设备抢占, 虚拟声卡, Voicemeeter, 音频端点, 独占模式 |
@@ -332,6 +333,7 @@ kbman touch <id>
 | Windows 下双击 exe 弹“打开文件-安全警告：无法验证发布者”，点击运行后毫无动静瞬间闪退，排查发现是父目录带 Mandatory Label\Low Mandatory Level 沙箱标签被新建 worktree 继承，导致进程在 Low 级别无法连接 WinSta0 窗口站并死在 DLL 初始化 (0xC0000142) | [`098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md) | Mandatory Label, Low Mandatory Level, icacls, /setintegritylevel Medium, Unblock-File, ERROR_DLL_INIT_FAILED, 0xC0000142, WinSta0, 安全警告, 无法验证发布者, 点击运行没反应, 静默闪退, worktree 权限继承, 沙箱完整性级别 |
 | DeepSeek Harness Web UI (dsh web) 需要全量升级，更新后界面没变、或三方插件缺少新特性、或想在不启动服务前静态验证 Cordis 插件树与配置完整性 | [`099_agent_dsh_flow_DSHWeb三层更新体系与插件升级及容器校验.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/099_agent_dsh_flow_DSHWeb三层更新体系与插件升级及容器校验.md) | dsh web 更新, dsh 升级, dsh plugin update, ds-harness-remote, --dump-config, 静态容器校验, Cordis 层叠, 幽灵旧进程, 端口幂等, Start-DshWeb, 三层更新体系 |
 | Windows 11 下按 Alt+Tab 完全失效无反应（弹不出切换器），此前只能靠重启电脑解决，排查 DWM 显存句柄泄漏破 1GB 与 Explorer 崩溃后 XAML 宿主失步，需免重启秒级自愈 | [`100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md) | Alt+Tab失效, 弹不出切换器, 重启解决, DWM内存泄漏, dwm.exe, 7500句柄, ForegroundStaging, XamlExplorerHostIslandWindow, AutoRestartShell, Winlogon, 平滑重启, Stop-Process explorer, AltTabSettings |
+| Windows 11 开始菜单固定区偶尔莫名其妙多出一整排官方应用（画图/计算器/记事本/OEM工具/纸牌游戏），取消固定后又再次冒出，排查 StartMenuExperienceHost 强杀致 start2.bin 崩溃自愈与 ContentDeliveryManager 静默回填 | [`101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md) | 开始菜单固定项变多, 莫名其妙再次显示, 被重置了的感觉, 画图计算器记事本又冒出来了, 机械革命, 幽灵回填, StartMenuExperienceHost, ContentDeliveryManager, OemPreInstalledAppsEnabled, SilentInstalledAppsEnabled, start2.bin |
 
 ---
 
@@ -461,5 +463,6 @@ kbman touch <id>
 | 098 | [`098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md) | `098_win_fs_fix_父目录Low完整性继承致GUI闪退与安全警告排障.md` | `win` | `fix` | 父目录 Low 完整性级别继承致 GUI 无法连接 WinSta0 闪退与安全警告排障 |
 | 099 | [`099_agent_dsh_flow_DSHWeb三层更新体系与插件升级及容器校验.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/099_agent_dsh_flow_DSHWeb三层更新体系与插件升级及容器校验.md) | `099_agent_dsh_flow_DSHWeb三层更新体系与插件升级及容器校验.md` | `agent` | `flow` | DSH Web 三层更新体系、Profile 插件升级与 Cordis 容器层叠校验 |
 | 100 | [`100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md) | `100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md` | `win` | `fix` | Win11 DWM 显存泄漏致 Alt+Tab 失效根因与 Winlogon 平滑自愈 |
+| 101 | [`101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md) | `101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md` | `win` | `fix` | Win11 开始菜单固定区幽灵回填与强杀 StartMenu 自愈排障 |
 
 
