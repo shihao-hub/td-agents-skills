@@ -1,6 +1,6 @@
 ---
 name: kb-autohotkey-app-switcher
-description: Windows 单手盲切与抽屉式 Toggle 应用窗口的 AutoHotkey v2 自动化实践指南。解决任务栏应用过多鼠标甩动疲劳、原生 Alt+Tab 轮转不可预测、PowerToys 强制冷启动应用、Chrome PWA 独立应用与浏览器底层进程冲突、原生客户端与 Web 版双模优先级降级调度，以及终端 Job Object 强杀与 WMI 脱钩热重载 SOP。
+description: Windows 单手盲切与抽屉式 Toggle 应用窗口的 AutoHotkey v2 自动化实践指南。解决任务栏应用过多鼠标甩动疲劳、原生 Alt+Tab 轮转不可预测、PowerToys 强制冷启动应用、Chrome PWA 独立应用与浏览器底层进程冲突、原生客户端/PWA/普通Chrome固定标签页「三模优先级平滑降级」调度，以及终端 Job Object 强杀与 WMI 脱钩热重载 SOP。
 id: "014"
 domain: win
 scope: ahk
@@ -8,7 +8,7 @@ type: flow
 slug: "Win单手盲切与抽屉式Toggle窗口AHK配置"
 status: verified
 created: "2026-09-22"
-last_verified: "2026-10-25"
+last_verified: "2026-10-27"
 compatibility:
   os: ["windows"]
 invocation:
@@ -228,18 +228,22 @@ ToggleTinta() {
 !c::ToggleApp('Cursor.exe')
 
 ; ========================================================
-; DeepSeek Harness 专用双模 Toggle 函数 (桌面客户端优先，Chrome 应用兜底)
+; DeepSeek Harness 专用三模 Toggle 函数 (桌面端 -> PWA独立应用 -> 普通Chrome专属标签页直达)
 ; 1. 优先检测原生桌面客户端 (ahk_exe DeepSeek Harness.exe) 窗口
-;    - 若存在 -> 执行 Toggle (后台唤起置顶 / 前台最小化收起 / 多窗口轮换)
-; 2. 原生桌面端不存在时 -> 自动回退接管 Chrome PWA 应用版
+;    - 若存在 -> 执行 Toggle (置顶/最小化/轮换)
+; 2. 原生桌面端不存在时 -> 检测 Chrome PWA 独立窗口
 ;    - 匹配标识: "DeepSeek Harness ahk_exe chrome.exe"
-;    - 若窗口已存在 -> 执行 Toggle (置顶 / 最小化 / 轮换)
-;    - 若未开启 -> 自动调用 Chrome 快捷方式直接拉起启动
+;    - 严密反向排除: 排除包含 " - Google Chrome" 的普通标签页，绝不串台
+;    - 若存在 -> 执行 Toggle (置顶/最小化/轮换)
+; 3. 前两者均不存在时 -> 接管普通 Chrome 浏览器中的本地标签页 (127.0.0.1:11111)
+;    - 联动 DSH Tab Switcher 扩展 (内部命令键: Ctrl+Shift+9)
+;    - 若前台非 Chrome -> 瞬间激活 Chrome 并切到 127.0.0.1:11111 标签页
+;    - 若前台已是 Chrome -> 发送信号保持锁定 DSH 页面，杜绝其他 DeepSeek 标签页串台
 ; ========================================================
 ToggleDsh() {
     targetDesk := 'ahk_exe DeepSeek Harness.exe'
     targetChromeApp := 'DeepSeek Harness ahk_exe chrome.exe'
-    appShortcut := A_AppData . '\Microsoft\Windows\Start Menu\Programs\Chrome 应用\DeepSeek Harness.lnk'
+    targetChrome := ' - Google Chrome ahk_exe chrome.exe'
 
     ; 1. 原生桌面客户端存在：优先对其生效
     if WinExist(targetDesk) {
@@ -247,8 +251,21 @@ ToggleDsh() {
         return
     }
 
-    ; 2. 桌面端不存在：回退对 Chrome 应用版生效 (未打开时自动拉起快捷方式)
-    ToggleWin(targetChromeApp, FileExist(appShortcut) ? appShortcut : "")
+    ; 2. Chrome PWA 独立应用存在：对其生效 (通过 ExcludeTitle 杜绝误匹配普通 Chrome)
+    if WinExist(targetChromeApp, , ' - Google Chrome') {
+        ToggleWin(targetChromeApp)
+        return
+    }
+
+    ; 3. 前两者都不在，但普通 Chrome 窗口存在：联动 Chrome 扩展直达标签页
+    if WinExist(targetChrome) {
+        if !WinActive(targetChrome) {
+            WinActivate(targetChrome)
+            Sleep(30)
+        }
+        Send('^+9')
+        return
+    }
 }
 
 ; ========================================================
@@ -349,23 +366,27 @@ AHK 脚本加载进内存后，修改文件不会自动热更新，需通过以�
 ### 8. Chrome PWA / 独立应用与普通浏览器底层进程冲突与标题特征物理隔离
 - **现象与混淆**：通过 Chrome「将网页安装为应用」或「创建快捷方式 -> 作为窗口打开」（如 DeepSeek Harness、ZedHub、docsearch）后，其底层宿主进程**依然是 `chrome.exe`**。若 AHK 使用简单的 `ahk_exe chrome.exe`，按 <kbd>Alt</kbd> + <kbd>R</kbd> 时系统会将独立应用也误当成 Chrome 浏览器唤起，多窗口轮换时也会把独立应用排进浏览器轮换队列，造成严重“串台”；
 - **底层根因**：Windows 下普通 Chrome 浏览器窗口标题无论语言环境，结尾必定包含全局品牌后缀 ` - Google Chrome`；而 Chrome 独立应用（PWA / Standalone）窗口标题直接为应用名，**绝不包含** ` - Google Chrome`；
-- **物理隔离方案**：
+- **双向物理隔离方案（防假阳性串台绝对红线）**：
   - 普通浏览器使用复合选择器：`target := ' - Google Chrome ahk_exe chrome.exe'`；
-  - 独立应用使用专属标题选择器：`target := 'DeepSeek Harness ahk_exe chrome.exe'`；
-  通过标题特征实现 100% 物理隔离，两套快捷键各司其职，互不串扰。
+  - 独立应用使用专属标题 + 反向排除：`WinExist('DeepSeek Harness ahk_exe chrome.exe', , ' - Google Chrome')`；
+  - **避坑警示**：AHK v2 默认使用模糊匹配（`SetTitleMatchMode 2`）。若独立应用只写 `'DeepSeek Harness ahk_exe chrome.exe'` 而不传入第三个参数 `ExcludeTitle`，当普通浏览器中打开了包含 `"DeepSeek Harness"` 的标签页（如 GitHub 仓库、文档或搜索页）时，窗口标题会变成 `... DeepSeek Harness ... - Google Chrome`，此时 AHK 会严重误判，将普通 Chrome 误当成独立应用强行置顶或最小化！
 
-### 9. 原生客户端（Native Client）与 Web PWA 独立应用「双模优先级降级」调度模式
-- **场景痛点**：对于既有本地独立客户端（如 `DeepSeek Harness.exe`）又有 Chrome Web PWA 版本的工具，若分配两个不同快捷键会挤占左手单手按键资源并增加肌肉记忆负担；
-- **双模调度设计**：
+### 9. 原生客户端、Web PWA 与浏览器常驻标签「三模优先级平滑降级」调度模式
+- **场景痛点**：对于既有本地独立客户端（如 `DeepSeek Harness.exe`）、Chrome Web PWA 版本，又经常在普通 Chrome 浏览器中常驻固定标签页（如 `http://127.0.0.1:11111/`）的工具，若分配不同按键会极大破坏盲切手感；而若未运行程序时盲目冷启动，又极易在服务未开时唤出浏览器报错窗口；
+- **三模调度架构**：
   1. **第一优先（原生桌面端）**：通过 `WinExist('ahk_exe DeepSeek Harness.exe')` 检测桌面端是否在运行，若存在则优先对其生效（置顶激活 / 最小化收起）；
-  2. **第二兜底（Web PWA 独立应用）**：若桌面端未开启，自动降级接管 Chrome PWA 应用（`DeepSeek Harness ahk_exe chrome.exe`）；
-  3. **缺省秒起**：若两者均未开启，按热键时自动通过开始菜单的 Chrome 快捷方式拉起 Web 应用，兼顾免手动寻找与全自动兜底。
+  2. **第二优先（Web PWA 独立应用）**：若桌面端未开启，检测并接管 Chrome PWA 独立窗口（通过 `ExcludeTitle: ' - Google Chrome'` 反向精准隔离）；
+  3. **第三兜底（普通 Chrome 专属固定标签页直达）**：若前两者均未打开，但普通 Chrome 窗口存在，激活 Chrome 并派发内部命令信号（如 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>9</kbd>），联动内核级 Chrome 扩展直接原地切至 `127.0.0.1:11111` 标签页；
+  4. **全工具一致性静默**：若以上全部未运行，彻底保持静默，绝不盲目调用外部快捷方式冷启动。
 
 ### 10. 终端远程热重载 AHK 的 Job Object 强杀陷阱与 WMI 脱钩规范（参见第 095 篇）
 - **致命陷阱**：在 Agent、CI 或远程 PowerShell 终端中执行修改后，若直接使用常规的 `Start-Process` 或 `& AutoHotkey64.exe` 重启脚本，子进程会被自动绑定到**当前终端会话的 Job Object（作业对象）树**中。当远程命令执行完毕、子进程退出时，Windows **会将整棵作业树下的所有子进程（包括刚刚启动的 AHK）连带强行杀死**，表现为终端提示启动成功但实际界面立刻退出的假象；
 - **标准解法**：必须执行第 095 篇 SOP，使用 WMI `Invoke-CimMethod -ClassName Win32_Process -MethodName Create` 将 AHK 进程从终端树中彻底脱钩剥离，创建真正的系统独立后台常驻守护。
 
----
+### 11. 浏览器标签页精准直达的架构选型与踩坑复盘
+- **为什么外部 Win32 / UIA 无法做到**：当 Chrome 切到其他标签页时，Win32 窗口标题与地址栏显示的是“当前标签页”的信息；未激活后台标签页的 URL 在 Win32 与 UIAutomation (UIA) 树中完全不透明，且垂直侧边栏插件会破坏标准 Chromium Tab 控件树，外部轮询极易失灵或串台；
+- **内核扩展 API 直达优势**：编写仅几十行代码的本地解包 Chrome MV3 扩展（`dsh-tab-switcher`），借助 `chrome.commands` 监听内部命令，通过 `chrome.tabs.query` 读取标签列表并在运行时以 `url.startsWith('http://127.0.0.1:11111/')` 纯前缀过滤，毫秒级直接激活目标 Tab，零界面闪烁，且绝对不会误切任何带 `deepseek` 前缀的外部网页；
+- **单向锁定直达 vs 双向 Toggle 抉择**：实践证明，按快捷键唤起核心生产力工具时，用户心智模型是“立刻看到并锁定该界面”。若在扩展中加入“再次按下跳回上一个网页”的双向逻辑，极易产生“按 Alt+D 找 DSH 却被擅自切走”的违和感。保持单向坚决直达是最稳健的工程选择。
 
 ## 五、验证标准
 
