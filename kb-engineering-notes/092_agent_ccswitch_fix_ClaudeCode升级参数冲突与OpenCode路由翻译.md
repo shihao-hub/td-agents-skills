@@ -1,22 +1,22 @@
 ---
 name: kb-claude-code-upgrade-opencode-router-fix
 description: |
-  Claude Code 升级后连接 OpenCode/第三方网关报 400 inference_failed、ModelProtocolUnsupported、双鉴权头冲突与 CC Switch 路由代理排障：Claude Code 强制携带 adaptive thinking 与大量 anthropic-beta 扩展参数导致第三方网关拒收；直连 Cloudflare 1010 拦截；Zed Claude ACP 弹窗 auto-mode-classifier-billing 警告；通过 CC Switch 路由代理（15721）开启 openai_chat 协议翻译桥接、注入 x-opencode-session 路由会话头、清洗双键鉴权（Bearer vs API Key）、抑制非必要流量与 1M 上下文（[1M] / Fable 档位）全套实战落地 SOP。
-version: 1.1.0
+  Claude Code 升级后连接 OpenCode/第三方网关报 400 inference_failed、ModelProtocolUnsupported、双鉴权头冲突与 CC Switch 路由代理排障：Claude Code 强制携带 adaptive thinking 与大量 anthropic-beta 扩展参数导致第三方网关拒收；直连 Cloudflare 1010 拦截；Zed Claude ACP 弹窗 auto-mode-classifier-billing 警告；ACP v0.97.0+ 鉴权守卫拦截仅保留 AUTH_TOKEN 导致 Zed 报 Authentication required 并在后台死锁 auth login --console 致 Authenticating to Claude Agent... 永久转圈；通过 CC Switch 路由代理（15721）开启 openai_chat 协议翻译桥接、注入 x-opencode-session 路由会话头、清洗双键鉴权（Bearer vs API Key）、Zed ACP 显式注入代理及伪装通行凭证全套实战落地 SOP。
+version: 1.2.0
 created: 2026-10-22
-updated: 2026-10-22
+updated: 2026-10-27
 id: "092"
 domain: agent
 scope: ccswitch
 type: fix
 slug: "ClaudeCode升级参数冲突与OpenCode路由翻译"
 status: verified
-last_verified: "2026-10-22"
+last_verified: "2026-10-27"
 compatibility:
   os: ["windows"]
 invocation:
   auto_trigger: true
-  trigger_keywords: ["claude code 400 inference_failed", "ModelProtocolUnsupported", "Go requires a credential", "Both ANTHROPIC_AUTH_TOKEN and ANTHROPIC_API_KEY set", "Header is managed by the local proxy and cannot be overridden", "opencode glm 400", "claude code 1m 上下文", "claude code cc-switch 路由", "auto-mode-classifier-billing", "Claude reported a warning", "requests go through 127.0.0.1:15721"]
+  trigger_keywords: ["claude code 400 inference_failed", "ModelProtocolUnsupported", "Go requires a credential", "Both ANTHROPIC_AUTH_TOKEN and ANTHROPIC_API_KEY set", "Header is managed by the local proxy and cannot be overridden", "opencode glm 400", "claude code 1m 上下文", "claude code cc-switch 路由", "auto-mode-classifier-billing", "Claude reported a warning", "requests go through 127.0.0.1:15721", "Authenticating to Claude Agent...", "session account carries no identity signal", "Authentication required", "auth login --console", "claude acp 转圈"]
 ---
 
 # agent_ccswitch_fix_092_ClaudeCode升级参数冲突与OpenCode路由翻译
@@ -78,6 +78,23 @@ Header 覆盖格式错误: Header "x-api-key" is managed by the local proxy and 
 We're changing auto mode to no longer charge for classifier requests in Claude Code. However, this session isn't eligible because your requests go through 127.0.0.1:15721, which isn't compatible with this update. Nothing breaks: auto mode keeps working, and its classifier requests are billed as before. To fix it and access the new version of auto mode, ask your gateway to implement: https://code.claude.com/docs/en/auto-mode-classifier-billing
 ```
 
+### 6. 衍生现场 E：Zed Claude ACP 升级 0.97.0+ 底部转圈 `Authenticating to Claude Agent...` 且后台卡死 `auth login --console`
+
+在遵照步骤 5 从 `~/.claude/settings.json` 中移除 `ANTHROPIC_API_KEY`、仅保留 `ANTHROPIC_AUTH_TOKEN` 后，终端 CLI 运行完全正常，但 Zed 内置的 Claude Agent（升级至 `@agentclientprotocol/claude-agent-acp@0.97.0+` 后）出现以下现象：
+- Zed 界面底部状态栏永久转圈：`ⓘ Authenticating to Claude Agent...`，对话框输入消息无响应；
+- 查看 `%LOCALAPPDATA%\Zed\logs\Zed.log`，记录以下错误：
+  ```text
+  [agent_servers::acp::transport] agent stderr: [session/query] sessionId=... resume=none apiType=native baseUrl=native
+  [agent_servers::acp::transport] agent stderr: [authStatus] session account carries no identity signal; keeping probe
+  [acp_thread] Error in run turn: Authentication required
+  ```
+- 检查系统运行进程，发现 Zed 在后台静默生成了无窗口的孤儿登录进程并陷入永久等待：
+  ```powershell
+  # Win32_Process 取证
+  ProcessId: 7860  node.exe ... claude-agent-acp\dist/index.js --cli auth login --console
+  ProcessId: 11864 claude.exe auth login --console
+  ```
+
 ---
 
 ## 二、底层根因剖析
@@ -108,6 +125,18 @@ CC Switch 本地代理默认以宿主直连方式发起外部请求，未继承�
 - 当流量经过 `127.0.0.1:15721` 本地代理时，SDK 检测到非原生端点未实现该计费协议，遂抛出告知性 Warning；
 - 官方明确标注 **`Nothing breaks: auto mode keeps working`**（功能完全无损，分类请求仅按普通请求计费）；
 - 但对于通过 CC Switch 转接 **OpenCode（GLM / DeepSeek）** 等第三方模型体系的用户而言，Token 消耗完全走第三方计费，Anthropic 官方体系内的自营分类器免计费机制天然无关，该 Warning 仅为 UI 视觉噪音。
+
+### 6. ACP v0.97.0+ 鉴权守卫（`holdsNonSubscriptionCredential`）对双键的严苛分流与 Zed 脱节
+新版 `@agentclientprotocol/claude-agent-acp` 增加了严格的单会话鉴权拦截机制（`refuseClaudeSubscriptionTurn` 与 `auth-status.js`）：
+- **鉴权判定逻辑（`accountInfoHasIdentitySignal`）**：
+  必须具备以下三者之一才算“已认证有效身份”：
+  1. `account.apiKeySource` 有效（如 `ANTHROPIC_API_KEY`、`apiKeyHelper`）；
+  2. `account.subscriptionType` 有效（Claude 官方 Pro/Max 网页订阅）；
+  3. `apiProvider` 为非 `firstParty`（Bedrock / Vertex / Gateway）。
+- **`ANTHROPIC_AUTH_TOKEN` 的断层陷阱**：
+  步骤 5 移除 `ANTHROPIC_API_KEY` 后，`claude.exe auth status --json` 仅返回 `authMethod: "oauth_token"`，既不包含 `subscriptionType`，也不包含 `apiKeySource`。ACP 内部判定 `holdsNonSubscriptionCredential(account)` 为 `false`，遂在每次发送 prompt 前拦截并直接抛出 `RequestError.authRequired`。
+- **Zed 进程隔离脱节与后台盲拉死锁**：
+  Zed 启动的 `claude-acp` 是独立 Node.js 进程，若未显式配置 `env`，它走 `apiType=native baseUrl=native`（未读取 `127.0.0.1:15721` 代理）。接收到 `authRequired` 后，Zed 自动调用 `terminal-auth` 启动 `claude.exe auth login --console`，在 Windows 无终端窗口的环境下永久死锁，造成前端无限卡在 `Authenticating to Claude Agent...`。
 
 ---
 
@@ -196,10 +225,38 @@ INSERT OR REPLACE INTO settings (key, value) VALUES ('global_proxy_url', 'http:/
 Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = '"D:\Users\29580\AppData\Local\Programs\CC Switch\cc-switch.exe"' }
 ```
 
-### 步骤 7：收敛原则：由 CC Switch 统管，禁止污染下游 IDE（如 Zed ACP）
+### 步骤 7：修正：下游 IDE（Zed ACP）对接代理的必备环境注入
 
-- **统一中心化原则**：所有环境变量一律由 CC Switch 供应商配置统一注入至 `~/.claude/settings.json`，下游所有消费者（包括 Claude Code 原生终端 CLI、Zed Claude ACP、Cursor 等）自动继承；
-- **下游零污染原则**：Zed 的 `agent_servers.claude-acp` 保持原生默认配置（开箱即用 `type: "registry"`），**严禁在 Zed `settings.json` 中随意硬编码添加 `env`**，防止供应商切换时下游配置脱节或导致 ACP 进程行为分叉。
+> ⚠️ **2026-10-27 机制演进修正（防转圈死锁）**：  
+> 原“下游零污染”假设在 ACP v0.97.0+ 升级后被证伪。由于 Zed 的外部 ACP Agent 作为独立 Node.js 进程运行，且新版 ACP 引入了对 `apiKeySource` 的强校验守卫，**必须在 Zed 配置文件中显式注入代理地址与伪装通行凭证**。
+
+在 `%APPDATA%\Zed\settings.json` 的 `agent_servers.claude-acp` 中显式添加 `env`：
+```json
+"claude-acp": {
+  "default_config_options": {
+    "fast": true,
+    "effort": "max",
+    "model": "default",
+    "mode": "auto"
+  },
+  "type": "registry",
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:15721",
+    "ANTHROPIC_API_KEY": "sk-ccswitch-dummy"
+  }
+}
+```
+- **参数说明**：
+  - `ANTHROPIC_BASE_URL`：确保 Zed 的 ACP 子进程请求准确发往 CC Switch 本地端口（`15721`），而非直连官方；
+  - `ANTHROPIC_API_KEY`：填入任意占位字符串即可（如 `sk-ccswitch-dummy`）。作用是使底层 `claude.exe auth status --json` 输出 `apiKeySource: "ANTHROPIC_API_KEY"`，令 ACP 鉴权守卫直接放行；且请求发送给 CC Switch 本地代理时，由代理层完成真实鉴权转译，不会干扰内部 token 路由。
+
+### 步骤 8：清理后台孤儿登录进程与 Zed 验证
+
+修改配置前/后，必须清理后台遗留的无窗口死锁进程：
+```powershell
+Get-Process | Where-Object { $_.ProcessName -in 'claude', 'node' -and $_.CommandLine -like '*claude-agent-acp*' } | Stop-Process -Force
+```
+彻底退出并重启 Zed 编辑器即可恢复就绪。
 
 ---
 
@@ -231,3 +288,9 @@ with opener.open(req) as resp:
 1. 打开 Zed 的 Agent Panel，切换至 Claude Agent；
 2. 若保留 `auto` 模式，该弹窗属通知型非阻塞 Warning，点击右上角 `×` 即可直接关闭，后续多轮对话代码生成与工具调用均不受任何影响；
 3. 若切换至 `acceptEdits` 模式，会话启动时零弹窗，全程静默。
+
+### 4. Zed Claude ACP 无鉴权卡死与代理流通断言
+
+1. 重启 Zed 后打开 Claude Agent，底部 `Authenticating to Claude Agent...` 立即消失，直接呈可用就绪态；
+2. 任务管理器无残留的 `claude.exe auth login --console` 孤儿进程；
+3. 发送任意对话消息，请求经 `127.0.0.1:15721` 代理转发至 OpenCode Go，正常获得模型流式回答。
