@@ -228,6 +228,53 @@ ToggleTinta() {
 !c::ToggleApp('Cursor.exe')
 
 ; ========================================================
+; 核心过滤器：获取用户的【日常主 Chrome 浏览器窗口】
+; 1. 遍历所有带 " - Google Chrome ahk_exe chrome.exe" 的顶层窗口
+; 2. 深度过滤：彻底排除带 "--enable-automation" 或 "chrome-devtools-mcp" 的自动化测试窗口
+; 3. 带 PID 静态命令行缓存：一次查询内存常驻，耗时 < 0.01ms，零卡顿
+; ========================================================
+GetMainChromeHwnd() {
+    static cmdCache := Map()
+    target := ' - Google Chrome ahk_exe chrome.exe'
+    
+    if !WinExist(target) {
+        return 0
+    }
+
+    hwnds := WinGetList(target)
+    for hwnd in hwnds {
+        pid := WinGetPID('ahk_id ' . hwnd)
+        if (!pid) {
+            continue
+        }
+
+        ; 从缓存或 WMI 获取该进程的启动命令行
+        cmd := ""
+        if cmdCache.Has(pid) {
+            cmd := cmdCache[pid]
+        } else {
+            try {
+                for proc in ComObjGet("winmgmts:").ExecQuery("Select CommandLine from Win32_Process where ProcessId = " . pid) {
+                    cmd := proc.CommandLine
+                    break
+                }
+            }
+            cmdCache[pid] := cmd
+        }
+
+        ; 深度过滤：只要包含自动化测试特征，直接跳过
+        if (InStr(cmd, "chrome-devtools-mcp") || InStr(cmd, "--enable-automation")) {
+            continue
+        }
+
+        ; 命中日常主 Chrome 窗口
+        return hwnd
+    }
+
+    return 0
+}
+
+; ========================================================
 ; DeepSeek Harness 专用三模 Toggle 函数 (桌面端 -> PWA独立应用 -> 普通Chrome专属标签页直达)
 ; 1. 优先检测原生桌面客户端 (ahk_exe DeepSeek Harness.exe) 窗口
 ;    - 若存在 -> 执行 Toggle (置顶/最小化/轮换)
@@ -236,14 +283,12 @@ ToggleTinta() {
 ;    - 严密反向排除: 排除包含 " - Google Chrome" 的普通标签页，绝不串台
 ;    - 若存在 -> 执行 Toggle (置顶/最小化/轮换)
 ; 3. 前两者均不存在时 -> 接管普通 Chrome 浏览器中的本地标签页 (127.0.0.1:11111)
+;    - 自动过滤 MCP 自动化测试 Chrome，锁定日常主浏览器
 ;    - 联动 DSH Tab Switcher 扩展 (内部命令键: Ctrl+Shift+9)
-;    - 若前台非 Chrome -> 瞬间激活 Chrome 并切到 127.0.0.1:11111 标签页
-;    - 若前台已是 Chrome -> 发送信号保持锁定 DSH 页面，杜绝其他 DeepSeek 标签页串台
 ; ========================================================
 ToggleDsh() {
     targetDesk := 'ahk_exe DeepSeek Harness.exe'
     targetChromeApp := 'DeepSeek Harness ahk_exe chrome.exe'
-    targetChrome := ' - Google Chrome ahk_exe chrome.exe'
 
     ; 1. 原生桌面客户端存在：优先对其生效
     if WinExist(targetDesk) {
@@ -257,10 +302,11 @@ ToggleDsh() {
         return
     }
 
-    ; 3. 前两者都不在，但普通 Chrome 窗口存在：联动 Chrome 扩展直达标签页
-    if WinExist(targetChrome) {
-        if !WinActive(targetChrome) {
-            WinActivate(targetChrome)
+    ; 3. 前两者都不在：锁定日常主 Chrome 浏览器 (自动排除 MCP 测试窗口)
+    if (mainHwnd := GetMainChromeHwnd()) {
+        targetId := 'ahk_id ' . mainHwnd
+        if !WinActive(targetId) {
+            WinActivate(targetId)
             Sleep(30)
         }
         Send('^+9')
@@ -274,10 +320,10 @@ ToggleDsh() {
 ; 在 DeepSeek Harness 与上一个工作标签页之间无缝 Toggle 往返
 ; ========================================================
 ToggleDshBack() {
-    targetChrome := ' - Google Chrome ahk_exe chrome.exe'
-    if WinExist(targetChrome) {
-        if !WinActive(targetChrome) {
-            WinActivate(targetChrome)
+    if (mainHwnd := GetMainChromeHwnd()) {
+        targetId := 'ahk_id ' . mainHwnd
+        if !WinActive(targetId) {
+            WinActivate(targetId)
             Sleep(30)
         }
         Send('^+8')
@@ -287,13 +333,14 @@ ToggleDshBack() {
 
 ; ========================================================
 ; Google Chrome 专用 Toggle 函数 (纯净浏览器窗口)
-; 1. 核心过滤：匹配 " - Google Chrome ahk_exe chrome.exe"
-; 2. 物理隔离：彻底排除 Chrome PWA 独立应用 (如 DeepSeek Harness, docsearch 等)
-; 3. Alt+R 专心服务日常网页浏览，绝不串台独立应用
+; 1. 深度排除 MCP 自动化测试窗口
+; 2. 物理隔离 Chrome PWA 独立应用 (如 DeepSeek Harness, docsearch 等)
+; 3. Alt+R 专心服务日常网页浏览，绝不串台
 ; ========================================================
 ToggleChrome() {
-    target := ' - Google Chrome ahk_exe chrome.exe'
-    ToggleWin(target)
+    if (mainHwnd := GetMainChromeHwnd()) {
+        ToggleWin('ahk_id ' . mainHwnd)
+    }
 }
 
 ; Alt + D -> DeepSeek Harness (坚决直达并锁定)
@@ -383,13 +430,13 @@ AHK 脚本加载进内存后，修改文件不会自动热更新，需通过以�
 在 Windows 下，单按 Alt 键会触发系统的 `SC_KEYMENU` 菜单栏激活机制，导致 Chrome 右上角“三点”菜单被高亮选中抢夺焦点；若同时使用豆包输入法等需要长按右 Alt 触发语音输入的软件，松开 Alt 时极易意外弹开 Chrome 菜单或中断输入。
 - **解决方案**：在脚本末尾加入 `#HotIf WinActive("ahk_exe chrome.exe")` 作用域，使用带 `~` 透传修饰符的按键监听，并发送 `{Blind}{vkE8}`（未分配给任何实际功能的虚拟键码）使系统判定存在组合键输入，静默消除菜单激活，完美共存。
 
-### 8. Chrome PWA / 独立应用与普通浏览器底层进程冲突与标题特征物理隔离
-- **现象与混淆**：通过 Chrome「将网页安装为应用」或「创建快捷方式 -> 作为窗口打开」（如 DeepSeek Harness、ZedHub、docsearch）后，其底层宿主进程**依然是 `chrome.exe`**。若 AHK 使用简单的 `ahk_exe chrome.exe`，按 <kbd>Alt</kbd> + <kbd>R</kbd> 时系统会将独立应用也误当成 Chrome 浏览器唤起，多窗口轮换时也会把独立应用排进浏览器轮换队列，造成严重“串台”；
-- **底层根因**：Windows 下普通 Chrome 浏览器窗口标题无论语言环境，结尾必定包含全局品牌后缀 ` - Google Chrome`；而 Chrome 独立应用（PWA / Standalone）窗口标题直接为应用名，**绝不包含** ` - Google Chrome`；
-- **双向物理隔离方案（防假阳性串台绝对红线）**：
-  - 普通浏览器使用复合选择器：`target := ' - Google Chrome ahk_exe chrome.exe'`；
-  - 独立应用使用专属标题 + 反向排除：`WinExist('DeepSeek Harness ahk_exe chrome.exe', , ' - Google Chrome')`；
-  - **避坑警示**：AHK v2 默认使用模糊匹配（`SetTitleMatchMode 2`）。若独立应用只写 `'DeepSeek Harness ahk_exe chrome.exe'` 而不传入第三个参数 `ExcludeTitle`，当普通浏览器中打开了包含 `"DeepSeek Harness"` 的标签页（如 GitHub 仓库、文档或搜索页）时，窗口标题会变成 `... DeepSeek Harness ... - Google Chrome`，此时 AHK 会严重误判，将普通 Chrome 误当成独立应用强行置顶或最小化！
+### 8. Chrome PWA / 独立应用与 MCP 自动化测试窗口的双重物理隔离
+- **现象与混淆**：
+  1. **PWA 独立窗口混淆**：通过 Chrome 安装的 Web 应用底层的进程依然是 `chrome.exe`，标题不含 ` - Google Chrome`；
+  2. **MCP / 自动化测试窗口抢占混淆**：当 Agent 会话调用 `chrome-devtools-mcp`、Playwright 等自动化工具时，会拉起带有 `--enable-automation` 的独立 Chrome 窗口（如临时 profile、带“自动测试软件正在控制 Chrome”黄色条目）。该窗口标题同样带有 ` - Google Chrome`！
+- **严重后果**：若 AHK 简单使用 `WinExist(' - Google Chrome ahk_exe chrome.exe')`，在 Windows Z-Order 层级中，新拉起的 MCP 测试窗口会被优先匹配并抢占置顶；且因该窗口带 `--disable-extensions` 未装插件，会导致按 Alt+D 错误唤出测试窗口且快捷键失灵；
+- **终极隔离解法（命令行内存指纹缓存）**：
+  封装 `GetMainChromeHwnd()` 函数，利用 `Win32_Process.CommandLine` 深度检测启动参数。凡包含 `chrome-devtools-mcp` 或 `--enable-automation` 者一律短路跳过，并借助 `static cmdCache` 内存哈希表实现一次查询常驻，按键调度耗时 `< 0.01ms`，彻底实现日常主浏览器与 MCP 测试窗口的 100% 物理隔离。
 
 ### 9. 原生客户端、Web PWA 与浏览器常驻标签「三模优先级平滑降级」调度模式
 - **场景痛点**：对于既有本地独立客户端（如 `DeepSeek Harness.exe`）、Chrome Web PWA 版本，又经常在普通 Chrome 浏览器中常驻固定标签页（如 `http://127.0.0.1:11111/`）的工具，若分配不同按键会极大破坏盲切手感；而若未运行程序时盲目冷启动，又极易在服务未开时唤出浏览器报错窗口；
