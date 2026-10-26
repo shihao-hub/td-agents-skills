@@ -269,6 +269,23 @@ ToggleDsh() {
 }
 
 ; ========================================================
+; DeepSeek Harness 标签页专属往返返回函数 (Ctrl + Alt + D)
+; 联动 DSH Tab Switcher 扩展 (内部命令键: Ctrl+Shift+8)
+; 在 DeepSeek Harness 与上一个工作标签页之间无缝 Toggle 往返
+; ========================================================
+ToggleDshBack() {
+    targetChrome := ' - Google Chrome ahk_exe chrome.exe'
+    if WinExist(targetChrome) {
+        if !WinActive(targetChrome) {
+            WinActivate(targetChrome)
+            Sleep(30)
+        }
+        Send('^+8')
+        return
+    }
+}
+
+; ========================================================
 ; Google Chrome 专用 Toggle 函数 (纯净浏览器窗口)
 ; 1. 核心过滤：匹配 " - Google Chrome ahk_exe chrome.exe"
 ; 2. 物理隔离：彻底排除 Chrome PWA 独立应用 (如 DeepSeek Harness, docsearch 等)
@@ -279,8 +296,11 @@ ToggleChrome() {
     ToggleWin(target)
 }
 
-; Alt + D -> DeepSeek Harness (桌面端优先，Chrome 应用兜底)
+; Alt + D -> DeepSeek Harness (坚决直达并锁定)
 !d::ToggleDsh()
+
+; Ctrl + Alt + D -> DeepSeek Harness 专属往返返回 (切回上一个工作标签页)
+^!d::ToggleDshBack()
 
 ; Alt + E -> IntelliJ IDEA
 !e::ToggleApp('idea64.exe')
