@@ -16,7 +16,7 @@ compatibility:
   os: ["windows"]
 invocation:
   auto_trigger: true
-  trigger_keywords: ["claude code 400 inference_failed", "ModelProtocolUnsupported", "Go requires a credential", "Both ANTHROPIC_AUTH_TOKEN and ANTHROPIC_API_KEY set", "Header is managed by the local proxy and cannot be overridden", "opencode glm 400", "claude code 1m 上下文", "claude code cc-switch 路由", "auto-mode-classifier-billing", "Claude reported a warning", "requests go through 127.0.0.1:15721", "Authenticating to Claude Agent...", "session account carries no identity signal", "Authentication required", "auth login --console", "claude acp 转圈"]
+  trigger_keywords: ["claude code 400 inference_failed", "ModelProtocolUnsupported", "Go requires a credential", "Both ANTHROPIC_AUTH_TOKEN and ANTHROPIC_API_KEY set", "Header is managed by the local proxy and cannot be overridden", "opencode glm 400", "claude code 1m 上下文", "claude code cc-switch 路由", "auto-mode-classifier-billing", "Claude reported a warning", "requests go through 127.0.0.1:15721", "Authenticating to Claude Agent...", "session account carries no identity signal", "Authentication required", "auth login --console", "claude acp 转圈", "@zed-industries/claude-code-acp", "@agentclientprotocol/claude-agent-acp", "claude acp 弃用", "claude acp 静默升级"]
 ---
 
 # agent_ccswitch_fix_092_ClaudeCode升级参数冲突与OpenCode路由翻译
@@ -137,6 +137,16 @@ CC Switch 本地代理默认以宿主直连方式发起外部请求，未继承�
   步骤 5 移除 `ANTHROPIC_API_KEY` 后，`claude.exe auth status --json` 仅返回 `authMethod: "oauth_token"`，既不包含 `subscriptionType`，也不包含 `apiKeySource`。ACP 内部判定 `holdsNonSubscriptionCredential(account)` 为 `false`，遂在每次发送 prompt 前拦截并直接抛出 `RequestError.authRequired`。
 - **Zed 进程隔离脱节与后台盲拉死锁**：
   Zed 启动的 `claude-acp` 是独立 Node.js 进程，若未显式配置 `env`，它走 `apiType=native baseUrl=native`（未读取 `127.0.0.1:15721` 代理）。接收到 `authRequired` 后，Zed 自动调用 `terminal-auth` 启动 `claude.exe auth login --console`，在 Windows 无终端窗口的环境下永久死锁，造成前端无限卡在 `Authenticating to Claude Agent...`。
+
+### 7. 实体迁移与静默升级陷阱：`@zed-industries` 弃用与 `@agentclientprotocol` 动态静默更新
+- **包名变迁与假性停更陷阱（Anti-Pattern）**：
+  - 早期历史包：`@zed-industries/claude-code-acp` 已于 2026 年 2 月被官方正式废弃，npm 显式声明：`"This package has been renamed to @agentclientprotocol/claude-agent-acp. Please migrate to continue receiving updates."`，版本永久停留在 `v0.16.2`；
+  - 官方现役包：**`@agentclientprotocol/claude-agent-acp`**（由 Anthropic、Zed Industries 与 JetBrains 联合成立的 Agent Client Protocol 组织共同维护），版本已演进至 `v0.97.0`；
+  - **AI 查错包警示**：排查时若仅按历史经验检索 `@zed-industries/claude-code-acp`，会误得出“该包停留在 2 月份已数月未维护”的严重假象。
+- **Zed Registry 动态静默 Hydrate 机制（零操作暴雷归因）**：
+  - Zed 的外部 Agent（`type: "registry"`）通过内置注册表与 `npx` 机制动态解析远端最新版本；
+  - 2026-10-26 12:48 UTC 上游刚发布 `v0.97.0`，用户次日冷启动 Zed 时被自动拉取覆盖，无需任何显式升级命令；
+  - 这种“远端日更 + 宿主静默 Hydrate”机制解释了为什么原本正常的配置会在一夜之间突发鉴权拦截死锁（Zero-action Regression）。
 
 ---
 
