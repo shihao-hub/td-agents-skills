@@ -176,7 +176,7 @@ if __name__ == "__main__":
 ## 四、`scripts/build.py`（完整实现）
 
 > 通用模板：把 `your_app` 换成项目名、`TAG_PREFIX` 换成 monorepo 前缀即可直接用。
-> 关键点：同一通道内循环构建两次，只有 GUI 目标追加 `-H windowsgui`，只有 CLI 目标追加 `-tags cli`。
+> 关键点：同一通道内循环构建两次，只有 GUI 目标追加 `-H windowsgui`（dev / release 一致，dev 产物同样没有控制台），只有 CLI 目标追加 `-tags cli`。
 
 ```python
 # /// script

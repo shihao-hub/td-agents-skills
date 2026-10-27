@@ -72,6 +72,12 @@
       "prompt": "桌面壳在控制台里按 Ctrl+C 完全没反应，只能去任务管理器杀；页面切了浅色主题，下次打开又变回暗色。",
       "expected_output": "Ctrl+C 无反应：pywebview 把主线程交给 WinForms 消息循环，Python SIGINT 不派发；用 kernel32.SetConsoleCtrlHandler 注册回调（跑在独立线程）触发 quitting/window.destroy，回调禁止抛异常，退出时反注册。主题不持久：webview.start 默认 private_mode=True 会清空站点数据，改 private_mode=False + storage_path=<dataDir>/webview，同时满足数据只落自有目录；若启用深色标题栏，用 DwmSetWindowAttribute(20/19) + js_api 桥，重建窗口后按标题重新找 HWND。验收：Ctrl+C 优雅退出、切主题重开仍保持。",
       "files": []
+    },
+    {
+      "id": 13,
+      "prompt": "我双击 dev 版 gui exe，没看到任何控制台窗口，日志去哪了？是不是构建把日志关掉了？要不要给 dev 单独保留控制台方便调试？",
+      "expected_output": "dev 没有控制台是设计如此，不是日志被关掉：GUI 产物在 dev 与 release 都加 -H windowsgui（Subsystem=2），构建出的 -gui-dev.exe 不分配控制台，stderr 不可见。日志与通道无关地落盘：internal/logx.Init(dataDir) 双写 <appDataDir>/{dev,prod}/<app>.log（teeWriter 忽略 stderr 失败、2MB+1 份轮转、启动横幅 version/commit/mode、filterHandler 去掉 [AssetFileServerFS] Handling request）。验收：跑 build/<app>-gui-dev.exe --hidden 5s 后 <appDataDir>/dev/<app>.log 有启动横幅，双击零黑框。不要为 dev 单独放开 console 子系统或加 console_windows.go + AttachConsole：那会导致终端启动阻塞、双击闪黑框、prompt 错位。需要实时控制台时用 go run . / wails3 dev；panic 弹窗只在 release 提供，dev 一律看日志文件。",
+      "files": []
     }
   ]
 }

@@ -106,7 +106,7 @@ func Init(dataDir string) *slog.Logger {
 3. Wails 内部日志用过滤后的 `SystemLogger()`，去掉 `[AssetFileServerFS] Handling request` 噪音，否则错误会被逐请求日志淹没；
 4. 2 MB + 1 份轮转，避免无限增长；启动横幅记录 `version / commit / mode`。
 
-排障路径：`%APPDATA%\language_projects\<app>\<dev|prod>\<app>.log`。启动失败、单实例冲突、备份失败、前端 JS 异常（`[FE]` 前缀）都在这一个文件里。release 无控制台时靠 panic 弹窗提示日志位置。
+排障路径：`%APPDATA%\language_projects\<app>\<dev|prod>\<app>.log`。启动失败、单实例冲突、备份失败、前端 JS 异常（`[FE]` 前缀）都在这一个文件里。GUI 产物在 dev / release 都没有控制台，一律靠落盘日志；panic 弹窗只在 release 提供（dev 弹窗会打断调试）。
 
 ### 3.4 前端白屏 / 交互异常
 

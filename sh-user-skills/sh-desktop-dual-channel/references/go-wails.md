@@ -207,9 +207,9 @@ go test ./internal/app/ -run WindowState -v   # 往返 / 无文件 / 脏 JSON / 
 2. 关窗（进程留托盘）→ 再次启动 exe → 新窗口精确恢复上次尺寸与位置；
 3. 最大化后关窗重开 → 仍是最大化，且 `window.json` 里保留的还原尺寸没被写成满屏值。
 
-### Step 4c 可观测性（dev 控制台 + 全通道落盘日志）
+### Step 4c 可观测性（全通道落盘日志 + 调试期控制台）
 
-`-H windowsgui` 的 release 产物没有 stdout/stderr，启动失败或行为异常时就是纯黑盒。**日志必须与通道无关地落盘**，dev 只是额外可见：
+GUI 产物在 dev 与 release 都是 windowsgui 子系统（`-H windowsgui`），启动后没有 stdout/stderr，启动失败或行为异常时就是纯黑盒。**日志必须与通道无关地落盘**；控制台输出只出现在 `go run .` / `wails3 dev` 这类 console 子系统进程里，不要指望构建出的 `-gui-dev.exe` 有控制台：
 
 - **双写**：`internal/logx.Init(dataDir)` 打开 `<appDataDir>/<app>.log`（追加），`teeWriter` 同时写 `os.Stderr` 与文件；**stderr 写失败必须忽略**（GUI 子系统句柄无效），绝不能让 `io.MultiWriter` 因第一个 writer 失败而阻断文件落盘。
 - **单一真源**：`dataDir` 由调用方传入（通常 `store.DataDir()`），`logx` 不 import store，避免 `store → logx → store` 依赖环。
@@ -220,7 +220,7 @@ go test ./internal/app/ -run WindowState -v   # 往返 / 无文件 / 脏 JSON / 
 - **前端异常**：`window.error` + `unhandledrejection` → 复用现有服务方法上报，后端同消息 1 分钟去重，日志带 `[FE]` 前缀。
 - **安全红线**：日志不记录可能含令牌的完整命令行、注册表值内容；只记来源、名称、错误。
 
-**校验**：release 产物 `--hidden` 启动 5s → `<appDataDir>/<app>.log` 出现启动横幅且无 `Handling request` 噪音；dev 同样生成该文件（控制台也能看到）；`go test ./internal/logx` 覆盖往返/轮转/幂等/stderr 故障容错。
+**校验**：release 产物 `--hidden` 启动 5s → `<appDataDir>/<app>.log` 出现启动横幅且无 `Handling request` 噪音；dev 产物同样只落盘（`<appDataDir>/dev/<app>.log`），控制台输出只在 `go run` / `wails3 dev` 可见；`go test ./internal/logx` 覆盖往返/轮转/幂等/stderr 故障容错。
 
 ### Step 5 图标资产（release 专属 + dev 地鼠）
 
@@ -367,7 +367,7 @@ git tag -d <project>/vX.Y.Z                                                     
 | CLI serve WebUI（新项目 / 有 serve 的项目） | `.\bin\<app>-cli.exe serve` 后浏览器打开输出地址 | 根路径 200 显示完整工作台；`/api/*` 正常 |
 | 自启门禁 | dev 勾选自启 | 菜单置灰 + 注册表无写入 |
 | 关窗释放 | 关窗后看任务管理器 | WebView2 子进程退出，内存回落 |
-| dev 控制台日志 | 运行 `.\bin\<app>-gui-dev.exe` | 控制台可见启动横幅与 Wails 日志 |
+| dev 落盘日志 | 跑 `.\bin\<app>-gui-dev.exe --hidden` 5s | `<appDataDir>/dev/<app>.log` 有启动横幅；双击无黑框 |
 | release 落盘日志 | release 运行后看 `<appDataDir>/<app>.log` | 有启动横幅（version/mode），无逐请求噪音；无控制台也能排障 |
 | 窗口记忆 | 移窗 + 缩放 → 关窗 → 从托盘重开 | 恢复上次尺寸与位置 |
 | 最大化记忆 | 最大化 → 关窗 → 重开 → 点还原 | 重开即最大化；还原回到记忆的还原尺寸，不是满屏 |

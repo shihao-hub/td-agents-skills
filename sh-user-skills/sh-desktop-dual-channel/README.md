@@ -1,9 +1,9 @@
 ---
 name: sh-desktop-dual-channel
 description: 桌面双通道应用脚手架（Go/Wails 与 Python/pywebview）：GUI 只开窗口、CLI 只跑终端，内嵌 WebUI、托盘常驻、关窗销毁重建、窗口几何记忆、dev/release 五维隔离与图标双通道。点名使用
-version: 2.1.0
+version: 2.1.1
 created: 2026-10-21
-updated: 2026-10-25
+updated: 2026-10-27
 disable-model-invocation: true
 ---
 
@@ -38,7 +38,7 @@ disable-model-invocation: true
 4. **dev/prod 五维隔离**：产物名、版本号、数据目录（`%APPDATA%\language_projects\<app>\{dev,prod}`）、单实例标识、图标全部分离。
 5. **窗口几何记忆**：`<dataDir>/window.json`，移动/缩放防抖保存；最大化只记标记、不覆盖还原尺寸；离屏坐标不写回。
 6. **关窗销毁 + 托盘重建**：关闭窗口必须销毁 WebView（释放子进程内存），进程留托盘；托盘「显示窗口」按上次几何重建。
-7. **无控制台可观测性**：日志与通道无关地落盘；GUI 无 stdout 也能排障。
+7. **无控制台可观测性**：日志与通道无关地落盘；GUI 产物在 dev / release 都使用 `-H windowsgui`（无 stdout），控制台只属于 `go run` / `wails3 dev` 与 CLI 产物。
 8. **本地数据只写自有目录**：只落 `%APPDATA%\language_projects\<app>\`，绝不写入外部数据库 / 编辑器凭据目录。
 
 ## 三、模块地图
