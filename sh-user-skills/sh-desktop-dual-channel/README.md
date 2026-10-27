@@ -1,7 +1,7 @@
 ---
 name: sh-desktop-dual-channel
 description: 桌面双通道应用脚手架（Go/Wails 与 Python/pywebview）：GUI 只开窗口、CLI 只跑终端，内嵌 WebUI、托盘常驻、关窗销毁重建、窗口几何记忆、dev/release 五维隔离与图标双通道。点名使用
-version: 2.0.0
+version: 2.1.0
 created: 2026-10-21
 updated: 2026-10-25
 disable-model-invocation: true
@@ -50,7 +50,8 @@ disable-model-invocation: true
 
 ### Python / pywebview
 
-- 前置检查、目录结构、Step 1–12、与 Go 差异、实测踩坑、验收 → `references/python-webview.md`
+- 运行时：前置检查、Step 1–12、差异、踩坑、测试与验收 → `references/python-webview.md`
+- 打包：Nuitka 双产物、PE 图标/版本、五条实测坑 → `references/python-nuitka.md`
 - 验证锚点：`python_projects/zedhub`
 
 ## 四、快速验收对照
@@ -73,4 +74,5 @@ disable-model-invocation: true
 | `references/go-architecture.md` | Go 架构与实现细节 |
 | `references/go-build-pipeline.md` | Go 构建脚本与图标 |
 | `references/go-troubleshooting.md` | Go 排障 |
-| `references/python-webview.md` | Python / pywebview 完整 SOP |
+| `references/python-webview.md` | Python 运行时：壳 / 托盘 / 几何 / 通道 / 日志 / 内存 |
+| `references/python-nuitka.md` | Python 打包：Nuitka 双产物 / PE / 实测坑 |

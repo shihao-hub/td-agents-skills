@@ -60,6 +60,18 @@
       "prompt": "Nuitka 打出来的 dev 版和 release 版图标一模一样，分不清哪个是开发版；而且窗口每次打开都是默认大小，关窗后从托盘点显示也打不开。",
       "expected_output": "图标双通道：运行时 app_icon() 按 is_production_build() 分流，dev 用语言默认图标（如 Python 双蛇，源码态读父仓 python-default.ico、打包态读包内 icon-dev.ico），release 用专属图标；构建脚本 dev 用语言图标并 --include-data-file 为 icon-dev.ico，release 用专属 ico。几何记忆：<dataDir>/window.json + moved/resized 700ms 防抖，最大化只记标记不覆盖还原尺寸，最小化 -25600 坐标用 MonitorFromPoint 过滤。托盘点显示打不开：窗口销毁后主循环已退出，必须用主线程循环 + show_requested 事件 + 二次 webview.start() 重建。",
       "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "pywebview 桌面壳一开窗内存就冲到 600MB 以上，关窗后 WebView2 进程还在、工作集也不降，有没有办法压下来？",
+      "expected_output": "两层治理：开窗前设置 WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS（--renderer-process-limit=1、--disable-features=NetworkServiceOutOfProcess，按需再加 --disable-gpu 但注明可能影响动画/视频），开窗峰值约降 100MB；关窗必须销毁窗口（不要 hide），gc.collect() 后再调 psapi.EmptyWorkingSet(GetCurrentProcess()) 把工作集还给系统。验收：关窗后该进程的 msedgewebview2.exe 子进程归零、工作集明显回落，重开功能正常。",
+      "files": []
+    },
+    {
+      "id": 12,
+      "prompt": "桌面壳在控制台里按 Ctrl+C 完全没反应，只能去任务管理器杀；页面切了浅色主题，下次打开又变回暗色。",
+      "expected_output": "Ctrl+C 无反应：pywebview 把主线程交给 WinForms 消息循环，Python SIGINT 不派发；用 kernel32.SetConsoleCtrlHandler 注册回调（跑在独立线程）触发 quitting/window.destroy，回调禁止抛异常，退出时反注册。主题不持久：webview.start 默认 private_mode=True 会清空站点数据，改 private_mode=False + storage_path=<dataDir>/webview，同时满足数据只落自有目录；若启用深色标题栏，用 DwmSetWindowAttribute(20/19) + js_api 桥，重建窗口后按标题重新找 HWND。验收：Ctrl+C 优雅退出、切主题重开仍保持。",
+      "files": []
     }
   ]
 }
