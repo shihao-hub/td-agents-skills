@@ -5,11 +5,11 @@ description: |
   第一优先——内置工程避坑知识库（kb-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、【特大高危】Zed 信任表家目录污染致全盘监听与 10G 内存暴涨及 Defender 死锁、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理、Office原图提取、CMake构建排障、Bruno测试集生成、GitHub仓库大扫除、本地服务PWA窗口、SQLAlchemy查询抽取等；全量索引以知识库内部路由表为准，随条目持续生长。
   直调命令门面（sh-cmd-*：交付计划、规格驱动、Monorepo提交、排障复盘、会话交接、桌面双通道构建（Go/Python））；
   开发与重构（后端系统设计、OOP 重构、饥荒模组逆向探索、前端去 AI 味、UI浮层与弹窗选型、PyStand 打包、Nuitka 单文件打包、WT 独立版定制守卫）；
-  文档、检索与媒资归档（PRD/技术方案、技能创作与知识库规范、书转 skill、全盘找文件/大文件、本地文档知识库语义检索、Everything秒搜、音视频下载转写字幕、网页存档、飞书归档）；
-  另有飞书、Redis/Iris、antigravity、Matt Pocock、备用库五个族路由器；用户直接点名 `sh-*` 或 `sh-cmd-*`（含拼写近似）时均由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
-version: 1.12.0
+  文档、检索与媒资归档（PRD/技术方案、技能创作与知识库规范、书转 skill、全盘找文件/大文件、本地文档知识库语义检索、Everything秒搜、音视频下载转写字幕、网页存档、飞书归档、简历制作与木及mujicv导出）；
+  另有飞书、Redis/Iris、Mem0、antigravity、Matt Pocock、备用库六个族路由器；用户直接点名 `sh-*` 或 `sh-cmd-*`（含拼写近似）时均由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
+version: 1.14.0
 created: 2026-10-07
-updated: 2026-10-25
+updated: 2026-10-27
 ---
 
 # sh-user-skills：个人技能库总目录与分流导航
@@ -67,6 +67,8 @@ updated: 2026-10-25
 | Matt Pocock工程流／软件基本功／审问对齐／垂直切片拆票／曳光弹开发／深模块重构／双轴审查 | `sh-pocock-workflow`（可直接点名） |
 | Matt Pocock官方技能／mattpocock/skills／ask-matt／Matt技能库／下载matt技能／同步matt技能 | `sh-mattpocock-skills`（二级族路由器，可直接点名） |
 | 调取备用技能／冷备技能／查看暂存技能／调用未启用技能／找回不常用技能 | `sh-standby-skills`（二级族路由器，可直接点名） |
+| 木及简历／mujicv 简历／简历导入导出／简历导出 PDF 裁字／更新简历内容／简历制作 SOP | `sh-muji-resume` |
+| 智能体长期记忆／记住我的偏好／跨会话记忆／mem0／记忆状态／检索以往记忆／清除记忆／暂停记忆捕获／Vercel AI记忆 | `sh-mem0-skills`（二级族路由器，可直接点名） |
 
 ### ⚡ 领域技能族路由器（二级分流）
 
@@ -75,6 +77,7 @@ updated: 2026-10-25
 | `sh-agy-skills` | antigravity 斜杠命令技能族路由器：点名使用后，按用户后续内容自动分流到子目录 skill（goal/schedule/browser/grill-me/teamwork/learn/boost/plan）。点名使用 |
 | `sh-lark-skills` | 飞书全域技能族路由器：集成飞书 28 域原生能力（IM、文档、表格、多维表格、审批、任务、邮件、日历、会议、妙记等）。点名使用 |
 | `sh-redis-skills` | Redis 与 Iris 全域技能族路由器：集成 Redis 官方核心建模、连接池、集群分片、全文/向量检索、监控排障与 Iris AI 长短期记忆库。点名使用 |
+| `sh-mem0-skills` | Mem0 全域技能族分流路由器：集成 Mem0 官方 12 域原子能力（Agent长期记忆与检索/状态/清除/暂停/恢复、Python/TS SDK开发、CLI运维、工程集成与测试）。点名使用 |
 | `sh-pocock-workflow` | Matt Pocock 软件工程全域工作流：源自《软件基本功没死，它在 AI 时代变得更值钱了》方法论，串联大雾寻路、无情审问对齐、领域建模、规范合成、垂直切片、TDD实现、双轴审查到深模块演进。点名使用 |
 | `sh-mattpocock-skills` | Matt Pocock 官方技能库分流路由器：收纳官方全量原子技能，点名时按已下载技能动态感知并主动询问用户意图分流。点名使用 |
 | `sh-standby-skills` | 备用与低频技能收拢库：集中存放架构模式、整洁代码、前端设计、Git高级流、Python设计模式、代码库wiki等备查技能。点名使用 |
@@ -110,6 +113,12 @@ updated: 2026-10-25
 | `sh-wt-customizer` | Windows Terminal (wt) 独立版定制：PE 图标注入、任务栏守卫、右键菜单与 Win+R 全链路接管及一键原生复原。点名使用 |
 | `sh-wt-session-guard` | Windows Terminal (wt) 与 agy CLI 会话恢复守卫：右上角关闭全部标签页时双保险保底追加恢复命令、无窗口静默守护与开机自启动治理。点名使用 |
 | `sh-agy-session-governance` | Antigravity (App 与 CLI 双端) 会话标题批量治理与汉化：支持导出待治理会话、AI 协同生成中文标题、SQLite/Protobuf/annotations 四重原子双写、常驻 language_server 进程 ConnectRPC 实时热推送、自动前置快照与一键还原。点名使用 |
+
+### 📄 简历与求职产出
+
+| 技能名称 | 核心职责与功能（一句话） |
+| :--- | :--- |
+| `sh-muji-resume` | 木及简历(mujicv.com)全流程制作 SOP：飞书内容转写、md 导入、极简色+思源黑体+墨线 CSS 配置、平台裁字 bug 修复与 PDF 导出验收。点名使用 |
 
 ### 📖 技能沉淀与技术文档
 

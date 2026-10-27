@@ -2,10 +2,11 @@
 name: kb-engineering-notes
 description: |
   开发者通用工程实战手记、疑难排障与自动化流水线知识库（两级渐进式检索总入口）：遇到系统/IDE/终端异常、底层报错或落地工程自动化时优先查阅。
-   【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中复制Ctrl+C假死与剪贴板锁争用；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、Zed信任表污染致全盘监听10G内存与Defender死锁、外部 ACP 线程不自动命名（New Agent Thread）、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh误唤起Grok与x.ai弹窗；Claude Code升级400与OpenCode协议分立路由代理；父目录Low完整性闪退；Chrome扩展MatchPattern端口报错等。
+   【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中复制Ctrl+C假死与剪贴板锁争用；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、Zed信任表污染致全盘监听10G内存与Defender死锁、外部 ACP 线程不自动命名、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh误唤起Grok与x.ai弹窗；Claude Code升级400与OpenCode协议分立路由代理；父目录Low完整性闪退；Chrome扩展MatchPattern端口报错等。
+  【简历排版】木及简历mujicv、简历导入导出、PDF行首裁字、简历CSS不生效、简历制作SOP。
   【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计；AGY外观Rider配色；AHK非侵入启动外挂与WMI脱离。
-  检索协议：先读本总控文件路由表命中对应条目，再按需读取具体手记SOP；条目持续生长，全量索引以本文件路由表为准；遇到上述报错或用户点名查阅避坑知识库时使用。命中条目后先看 frontmatter status：deprecated 直接弃用并改读 superseded_by，suspect 须先只读探测再执行。
-version: 2.2.0
+  检索协议：先读本路由表命中条目，再读具体手记SOP；条目持续生长，全量索引以本路由表为准；报错或点名查阅时使用。命中后先看status：deprecated弃用改读superseded_by，suspect先只读探测再执行。
+version: 2.3.0
 created: 2026-10-07
 updated: 2026-10-27
 ---
@@ -153,6 +154,8 @@ kb-engineering-notes/
 ├── 100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md # [Stage 2: 专项排障] 针对 Windows 11 DWM 显存泄漏逼近 1GB、Alt+Tab XAML 宿主 DirectComposition 表面创建失败完全失效与 Winlogon AutoRestartShell 0.5 秒平滑自愈
 ├── 101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md # [Stage 2: 专项排障] 针对 Windows 11 开始菜单固定区偶尔莫名其妙追加一整排官方默认应用（画图/计算器/OEM工具/纸牌）、强杀 StartMenuExperienceHost 破坏 start2.bin 触发崩溃自愈与 ContentDeliveryManager 静默推送通道加固
 ├── 102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md # [Stage 2: 专项排障] 针对 Chrome 扩展 Match Pattern 不支持在 host 中指定端口号致 tabs.query 抛 Invalid url pattern 语法错误排障与 JS 运行时精准前缀过滤
+├── 103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md # [Stage 2: 专项排障] 针对木及简历 JS 动态 margin-left 内联样式致预览/导出 PDF 行首裁字与自定义 CSS 导出不生效
+└── 104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md # [Stage 2: 专项排障] 针对 chrome-devtools MCP 操作 React/AntD 站点的 el.click 无响应、菜单自动收起、受控组件写入、upload_file 沙箱路径与页面卡死处置
 └── ...（后续顺次扩充）
 ```
 
@@ -336,6 +339,8 @@ kbman touch <id>
 | Windows 11 下按 Alt+Tab 完全失效无反应（弹不出切换器），此前只能靠重启电脑解决，排查 DWM 显存句柄泄漏破 1GB 与 Explorer 崩溃后 XAML 宿主失步，需免重启秒级自愈 | [`100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md) | Alt+Tab失效, 弹不出切换器, 重启解决, DWM内存泄漏, dwm.exe, 7500句柄, ForegroundStaging, XamlExplorerHostIslandWindow, AutoRestartShell, Winlogon, 平滑重启, Stop-Process explorer, AltTabSettings |
 | Windows 11 开始菜单固定区偶尔莫名其妙多出一整排官方应用（画图/计算器/记事本/OEM工具/纸牌游戏），取消固定后又再次冒出，排查 StartMenuExperienceHost 强杀致 start2.bin 崩溃自愈与 ContentDeliveryManager 静默回填 | [`101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md) | 开始菜单固定项变多, 莫名其妙再次显示, 被重置了的感觉, 画图计算器记事本又冒出来了, 机械革命, 幽灵回填, StartMenuExperienceHost, ContentDeliveryManager, OemPreInstalledAppsEnabled, SilentInstalledAppsEnabled, start2.bin |
 | Chrome 扩展通过 chrome.tabs.query 匹配本地特定端口服务（如 127.0.0.1:11111、localhost:8080）报错 Error: Invalid url pattern，需要绕开 Chromium Match Pattern 端口限制并实现毫秒级精准切页 | [`102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md) | Invalid url pattern, chrome.tabs.query 端口, Match Pattern 端口, Chrome 扩展 url pattern, 端口限制, 127.0.0.1, 11111, tabs.query 报错, 扩展切标签页 |
+| 木及简历(mujicv.com)编辑器预览和导出 PDF 每行行首/行尾字被裁掉半个字（"东南大学"缺"东"、"AI"变"AL"），或导出 PDF 不带自定义 CSS 仍是默认模板 | [`103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md) | 木及简历, mujicv, 简历导出裁字, 行首被裁, 缺半个字, AI变AL, 导出PDF没有样式, 自定义CSS不生效, 设置CSS保存, margin-left 内联 |
+| chrome-devtools MCP 操作 React/AntD 网站：el.click()/dispatchEvent 点击"成功"但页面无反应、AntD 下拉菜单几秒自动收起、受控 textarea 写入被冲掉、upload_file 报 not within workspace roots、截图/脚本连续超时 | [`104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md) | mcp 点击没反应, el.click 无效, 合成事件, CDP click, 下拉菜单收起, dropdown 自动关闭, React 受控组件, value setter, upload_file 拒绝, workspace roots, 截图超时, 页面卡死, clipboard, base64 中转 |
 
 ---
 
@@ -467,5 +472,7 @@ kbman touch <id>
 | 100 | [`100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md) | `100_win_sys_fix_Win11DWM显存泄漏AltTab失效与Winlogon平滑自愈.md` | `win` | `fix` | Win11 DWM 显存泄漏致 Alt+Tab 失效根因与 Winlogon 平滑自愈 |
 | 101 | [`101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md) | `101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md` | `win` | `fix` | Win11 开始菜单固定区幽灵回填与强杀 StartMenu 自愈排障 |
 | 102 | [`102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md) | `102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md` | `browser` | `fix` | Chrome 扩展 Match Pattern 端口限制致 tabs.query 报错排障 |
+| 103 | [`103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md) | `103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md` | `browser` | `fix` | 木及简历 JS 动态 margin 裁字与自定义 CSS 导出链路修复 |
+| 104 | [`104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md) | `104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md` | `agent` | `fix` | MCP 浏览器自动化 React/AntD 点击、受控组件、上传与卡死踩坑 |
 
 

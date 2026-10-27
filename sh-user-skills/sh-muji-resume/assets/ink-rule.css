@@ -1,0 +1,188 @@
+/* ============================================================
+   墨线 / Ink & Rule
+   一套不靠时间轴、不靠色块的简历样式
+   用法：木及编辑器 → 插件「自定义CSS」→ 全量粘贴 → 保存
+   前提：主题「极简色」，全局字体「思源黑体2.0_Normal」，主题色 #9A3B2E
+   选择器全部限定在 .rs-view 下（木及官方建议）
+   ============================================================ */
+
+/* ---------- 0. 本机 Bahnschrift（只用于日期/数字，可选） ---------- */
+@font-face {
+  font-family: "BahnschriftLocal";
+  src: local("Bahnschrift"),
+       local("Bahnschrift Light"),
+       local("Bahnschrift SemiBold");
+  font-weight: 100 700;
+  font-display: swap;
+}
+
+/* ---------- 1. 正文基底 ---------- */
+.rs-view {
+  font-family: "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  color: #2B2B2B;
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: 0.1px;
+}
+
+.rs-view p {
+  margin: 1px 0 3px;
+}
+
+/* ---------- 2. 姓名：宋体大字，字距拉开 ---------- */
+.rs-view h1 {
+  font-family: "Noto Serif SC", "Source Han Serif SC", "SimSun", "Songti SC", serif;
+  font-size: 31px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #161616;
+  margin-bottom: 2px;
+}
+
+/* ---------- 3. 岗位：整段只有一个 strong 时，做成字距拉开的副标题 ---------- */
+.rs-view .h1_block + .block p > strong:only-child {
+  font-family: "BahnschriftLocal", "Noto Sans SC", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: #6B6B6B;
+}
+
+/* ---------- 4. 章节标题：一条赭红短竖线 + 一条暖灰细线 ---------- */
+.rs-view h2 {
+  position: relative;
+  font-family: "Noto Sans SC", "Source Han Sans SC", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #161616;
+  border-bottom: 1px solid #E2DDD6;
+  padding-bottom: 5px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.rs-view h2::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 3px;
+  width: 3px;
+  height: 15px;
+  background: #9A3B2E;
+}
+
+/* ---------- 5. 公司 / 项目标题 ---------- */
+.rs-view h3 {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #161616;
+  margin-top: 9px;
+  margin-bottom: 1px;
+  margin-left: 0;
+  padding-left: 0;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+/* 木及模板可能给项目标题块默认缩进，这里压平，和公司名左对齐 */
+.rs-view .h3_block {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+/* ---------- 6. 日期：右对齐，等宽数字，灰色 ---------- */
+.rs-view .lr-container .right,
+.rs-view .lr-container .right p,
+.rs-view .lr-container .right strong {
+  font-family: "BahnschriftLocal", "Noto Sans SC", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #7A7A7A;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ---------- 7. 强调与标签 ---------- */
+.rs-view strong {
+  color: #161616;
+  font-weight: 700;
+}
+
+.rs-view code {
+  background: #F4F1EC;
+  color: #6B4A42;
+  border-radius: 2px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+/* ---------- 8. 列表：不用竖线，只留赭红 marker ---------- */
+.rs-view ul li,
+.rs-view ol li {
+  margin-bottom: 3px;
+  padding-left: 2px;
+}
+
+.rs-view li::marker {
+  color: #9A3B2E;
+  font-family: "BahnschriftLocal", "Noto Sans SC", sans-serif;
+}
+
+/* ---------- 9. 链接 ---------- */
+.rs-view a {
+  color: #9A3B2E;
+  text-decoration: none;
+  border-bottom: 1px solid #D9C3BE;
+}
+
+/* ---------- 10. 覆盖木及模板默认值 ----------
+   木及模板会给 h1 一个较大的默认字距，普通选择器压不住，
+   这里提高选择器权重并加 !important 兜底。
+   如果姓名仍然散开，说明 CSS 没真正替换，检查本段是否在输入框里。 */
+html body .rs-view h1,
+html body .rs-view .h1_block h1 {
+  letter-spacing: 1.2px !important;
+  word-spacing: 0 !important;
+  text-align: left !important;
+  text-align-last: left !important;
+}
+
+html body .rs-view h2 {
+  margin-top: 10px !important;
+}
+
+/* ---------- 11. 导出裁切修复 ----------
+   h2::before 的 left:-16px 会把内容盒撑出纸边（木及页面容器按内容包围盒定宽，
+   居中后左右各溢出约 8px，行首/行尾字符被裁掉一半）。
+   改为盒内画线：h2 文本右移 16px 让出竖线位，竖线 left 归 0，
+   文本与竖线相对位置不变，内容盒不再越界。 */
+.rs-view h2 {
+  padding-left: 16px !important;
+}
+
+.rs-view h2::before {
+  left: 0 !important;
+}
+
+/* ---------- 12. 木及裁字根因修复 ----------
+   现象：编辑器预览与导出 PDF 中，每行行首/行尾字符被纸边裁掉半字。
+   根因（MCP Chrome 实测验证）：木及 JS 会动态向 .rs-view-inner 写入错误的
+   margin-left 内联样式（实测 84.8px 量级，刷新/切主题必重写），内容整体
+   左移后被 overflow 边界隐性裁切；导出渲染复用同一正本层时同样裁字。
+   CSS 无法覆盖内联样式，必须 !important。
+   代价：页面在预览面板中变为贴左显示（不影响导出与内容完整性）。 */
+.rs-view-inner {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* ---------- 12b. 深水区备选（默认注释，勿随意启用） ----------
+   禁用预览缩放层。仅当 margin 锁 0 后预览仍异常时才启用；
+   已知代价：预览面板窄于 794px 时页面溢出、切主题瞬间可能出现双页头残影（刷新即恢复）。
+   实测证据：仅 margin 锁 0（缩放保持开启）时预览与导出均已完整，故默认不需要本段。 */
+/* .rs-page-preview {
+  transform: none !important;
+} */
