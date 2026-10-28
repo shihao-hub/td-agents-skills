@@ -6,17 +6,17 @@ type: "fix"
 slug: "Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障"
 status: "verified"
 created: "2026-10-25"
-last_verified: "2026-10-27"
+last_verified: "2026-10-29"
 superseded_by: null
 deprecation_reason: null
 compatibility:
   os: ["windows"]
 falsification_signals:
   - "若整个开始菜单无法打开或点击无响应，属于 XAML 宿主崩溃或 AppX 注册表断裂，非本篇固定项幽灵回填"
-  - "若固定项中的自定义应用全丢且 LocalState 只剩 start2.bin（0 字节）与 24 项默认 JSON 快照，仍属本篇 explorer 强杀连坐的终态，按 §二.4 重建布局处理，不要误判为磁盘损坏"
+  - "若固定项中的自定义应用全丢且 LocalState 只剩 start2.bin（0 字节）与 24 项默认 JSON 快照，仍属本篇 explorer 强杀连坐的终态，按 §三步骤 4 重建布局处理，不要误判为磁盘损坏"
 invocation:
   auto_trigger: true
-  trigger_keywords: ["开始菜单固定项变多", "莫名其妙再次显示", "被重置了的感觉", "画图计算器记事本又冒出来了", "开始菜单幽灵回填", "重启资源管理器后开始菜单还原", "explorer 重启", "restart-explorer", "taskbarguard", "StartMenuExperienceHost", "ContentDeliveryManager", "OemPreInstalledAppsEnabled", "start2.bin", "88000963"]
+  trigger_keywords: ["开始菜单固定项变多", "莫名其妙再次显示", "被重置了的感觉", "画图计算器记事本又冒出来了", "开始菜单幽灵回填", "重启资源管理器后开始菜单还原", "explorer 重启", "restart-explorer", "taskbarguard", "StartMenuExperienceHost", "ContentDeliveryManager", "OemPreInstalledAppsEnabled", "start2.bin", "88000963", "模板无料化", "删除回填清单"]
 ---
 
 # 101-Windows 11 开始菜单固定区幽灵回填与强杀 StartMenu 进程自愈排障
@@ -63,7 +63,7 @@ Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentD
 | `ContentDeliveryManager` 五个推送键 | 全部 `0`（加固仍生效） | 本次**不是** CDM 静默回填，根治配置没丢 |
 | `explorer.exe` / `StartMenuExperienceHost.exe` 启动时间 | 同为 `20:41:45` | 强杀 explorer 时**开始菜单宿主被连坐重启** |
 | `LocalState\88000963`（JSON，24H2+ 布局快照） | 7806 B，`20:41:46` 被改写，`items[]` 仅 24 项出厂默认（Edge/Office/Store/设置/OEMPrimary/OEMSecondary/照片/纸牌/画图/计算器/时钟/记事本/截图/OneNote/资源管理器） | 宿主重启后第 1 秒执行自愈合并，把默认模板写进快照 |
-| `LocalState\start2.bin` | **0 字节**，`20:56:21` | 写盘事务被切断，留下空文件；下次登录必再触发一次自愈 |
+| `LocalState\start2.bin` | **0 字节**，`20:56:21` | 写盘事务被切断，留下空文件；下次宿主启动会按布局缺失再合并一轮（本机后续实测：再强杀一次可自动重建为 39292 B 健康文件） |
 
 > `88000963` 的 head 是 `7b226974656d733a5b7b226170706c69636174696f6e49`（`{"items":[{"applicationI`），是 24H2 起新增的 JSON 布局快照，与旧 `start2.bin` 并存。排查时两个文件都要看。
 
@@ -156,7 +156,32 @@ Set-ItemProperty -Path $cloudPolicy -Name "DisableWindowsConsumerFeatures" -Valu
   ctypes.windll.shell32.SHChangeNotify(0x08000000, 0x1000, 0, 0)
   ```
 
-### 步骤 3：修复已被写成 0 字节的布局文件（防"每次登录都还原"）
+### 步骤 3：拔掉回填清单（根治手段，2026-10-29 本机三次强杀实测有效）
+
+只封 CDM 通道、只禁强杀都不够——宿主崩溃自愈还会读本机「回填清单」。三处一起清（先全部备份到 `%APPDATA%\language_projects\startmenu-layout-backup\<日期>\`）：
+
+1. **清空出厂布局模板** `%LocalAppData%\Microsoft\Windows\Shell\DefaultLayouts.xml`（出厂 64707 B）→ 替换为最小空模板：
+
+   ```xml
+   <?xml version="1.0" encoding="utf-8"?>
+   <FullDefaultLayoutTemplate
+       xmlns="http://schemas.microsoft.com/Start/2014/FullDefaultLayout"
+       xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout"
+       Version="1">
+     <StartLayout>
+       <Group Name="DesktopApplicationGroup" />
+     </StartLayout>
+     <SecondaryTileLayout />
+   </FullDefaultLayoutTemplate>
+   ```
+
+2. **清空 OEM 追加项** `%LocalAppData%\Microsoft\Windows\Shell\LayoutModification.json`（原文件只含 `primaryOEMPins` → 机械革命 `ControlCenter3_wrbgcf7aesyd8!App`）→ 写入 `{}`；
+
+3. **删除回填清单缓存** `%LocalAppData%\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState\88000963`（7806 B JSON，`{"items":[{"applicationId":...}]}` 共 24 项默认应用）。**删掉后宿主不会自动重建**。
+
+> **关键认知**：`88000963` 是「默认应用清单缓存」而非当前布局。用户自定义固定项与取消固定结果都保存在 `start2.bin`（二进制，正常约 38–40 KB）。实测删掉 `88000963` 后连续强杀 explorer 三次，开始菜单自定义项完好、`start2.bin` 从 39292 B 缩到 38236 B（忠实记录取消操作），默认项零复活。
+
+### 步骤 4：修复已被写成 0 字节的布局文件（防"每次登录都还原"）
 
 先做只读取证：
 
@@ -171,7 +196,7 @@ Get-ChildItem $ls -File | Select-Object Name, Length, LastWriteTime
 - 处置顺序：先执行步骤 1、2 封死推送与强杀 → 打开开始菜单，随便固定/取消固定一个应用，让宿主写出一份健康布局（`start2.bin` 恢复为几百字节到数 KB）→ 再逐一取消固定多余默认项 → **正常注销或重启一次**，确认布局稳定；
 - 若自定义项已全丢且手头有旧布局备份（`start2.bin` / `88000963` 的历史副本），停掉 `StartMenuExperienceHost.exe` 前**先备份现有两份文件**再回填，回填后同样走一次正常注销。
 
-### 步骤 4：最后一次清理并固化
+### 步骤 5：最后一次清理并固化
 1. 打开 Windows 11 开始菜单；
 2. 对当前残留的画图、计算器、记事本、机械革命、纸牌等图标逐一右键选择 **“从'开始'屏幕取消固定”**；
 3. 由于策略已封死且再无外部脚本强杀中断事务，此时 `start2.bin` 将安全完成最终状态持久化，不再复发。
@@ -212,4 +237,19 @@ Get-ChildItem $ls -File | Select-Object Name, Length, LastWriteTime
 
 - 两者 `StartTime` 完全相同 → 本次发生过 explorer 强杀连坐；
 - 数字快照文件 `LastWriteTime` 紧贴该时刻（+1 秒内）→ 自愈合并已完成，追加的就是 `DefaultLayouts.xml` + `LayoutModification.json` 里的条目；
-- `start2.bin` 长度为 0 → 还欠一次健康写盘，按 §三步骤 3 收尾，否则下次登录继续还原。
+- `start2.bin` 长度为 0 → 还欠一次健康写盘，按 §三步骤 4 收尾，否则下次登录继续还原。
+
+### 4. 根治验收记录（2026-10-29，本机三次强杀实测）
+
+| 阶段 | 操作 | 结果 |
+|---|---|---|
+| 基线 | 备份并清空两份模板 + 备份 88000963 | `DefaultLayouts.xml` 64707→356 B，`LayoutModification.json` 106→3 B，均无 BOM、XML/JSON 校验通过 |
+| 实验一 | 清空模板后强杀 explorer | 模板未被重建；`88000963` 被重写仍为 24 项；`start2.bin` 由 0 B 修复为 39292 B；自定义项未丢 |
+| 实验二 | 删除 `88000963` 后强杀 | 文件未重建（MISSING）；`start2.bin` 保持 39292 B |
+| 实验三 | 用户取消固定 14 项默认应用后再强杀 | `88000963` 仍 MISSING；`start2.bin` 39292→38236 B；默认项**零复活**，自定义项完好 |
+
+**边界与复检**：
+
+- `C:\Users\Default\AppData\Local\Microsoft\Windows\Shell\` 下还有一套同源模板（64707 B / 106 B，新用户模板，需管理员权限），运行时自愈未读取它；若日后复发，先查这里是否被回灌；
+- `Settings\settings.dat` 被宿主独占，无法离线解析；布局真实数据以 `start2.bin` 二进制为准（正常 38 KB 量级，0 字节即异常）；
+- 系统大版本更新或功能更新后复检 `88000963` 是否再生、两份模板是否被还原；一旦被还原，重跑 §三步骤 3。
