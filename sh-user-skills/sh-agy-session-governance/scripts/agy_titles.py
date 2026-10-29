@@ -366,9 +366,26 @@ def try_call_app_rpc(tasks: List[Tuple[str, str, str]]) -> Dict[str, bool]:
     return results
 
 
+TAG_PATTERN = re.compile(r"^[\[【](.*?)[\]】]\s*")
+
+
 def is_chinese_title(title: str) -> bool:
-    """检测标题中是否已包含中文字符。"""
-    return bool(CHINESE_PATTERN.search(title))
+    """严格判断标题主体是否为中文，剥离分类标签前缀后判断汉字占比。"""
+    if not title or not title.strip():
+        return False
+    # 剥离常见的分类前缀，如 【待办】、【知识】、【存档】、[WIP] 等
+    stripped = TAG_PATTERN.sub("", title).strip()
+    if not stripped:
+        return True
+    # 检查主体中是否有汉字
+    cn_chars = re.findall(r"[一-龥]", stripped)
+    if not cn_chars:
+        return False
+    # 若有英文单词，但汉字过少（<=2），判定为未充分汉化
+    en_words = re.findall(r"[a-zA-Z]{2,}", stripped)
+    if en_words and len(cn_chars) <= 2:
+        return False
+    return True
 
 
 # ----------------------------------------------------------------------
@@ -587,6 +604,7 @@ def cmd_rename(args: argparse.Namespace) -> int:
             else:
                 cursor.execute("UPDATE conversation_summaries SET title = ? WHERE conversation_id = ?", (new_title, cid))
             conn.commit()
+            cursor.execute("PRAGMA wal_checkpoint(TRUNCATE);")
             success_count += 1
         except Exception as e:
             conn.rollback()
@@ -729,6 +747,7 @@ def cmd_batch_rename(args: argparse.Namespace) -> int:
                 update_annotation_file(anno_dir, cid, new_t)
                 total_updated += 1
             conn.commit()
+            cursor.execute("PRAGMA wal_checkpoint(TRUNCATE);")
             print(f"-> [{env_name}] SQLite 数据库与 annotations 已成功更新 ({len(tasks)} 条)")
         except Exception as e:
             conn.rollback()
