@@ -224,7 +224,7 @@ headers: {
 ## 六、复现方法
 
 1. 官方文档：`https://opencode.ai/docs/go`、`/docs/config`、`/docs/models`、`/docs/network`（加 `.md` 后缀可直接取 Markdown 原文）。
-2. 官方模型元数据：`https://models.dev/api.json`（本机缓存于 `~/.cache/opencode/models.json`）、`https://opencode.ai/zen/go/v1/models`（需 `Authorization: Bearer <key>`）。
+2. 官方模型元数据：`https://models.dev/api.json`（本机缓存于 `~/.cache/opencode/models.json`）、`https://opencode.ai/zen/go/v1/models`（需 `x-api-key`，仅带 `Authorization: Bearer` 可能 401）；Anthropic 入口已迁至 `/inference/go/anthropic/v1/messages`，迁移与 503 归因见 `092_agent_ccswitch_fix……` §五。
 3. 延迟压测：用 Python 标准库 `http.client.HTTPSConnection`（走代理时 `set_tunnel`）发 `stream:true` + `stream_options.include_usage` 请求，分别计时「首个 SSE 字节」与「总耗时」，读 `usage.prompt_tokens_details.cached_tokens` 判断缓存命中。关键控制项：交替顺序消除次序偏差、连接预热、`max_tokens` 取小值。
 4. 客户端行为取证：`strings`/正则扫 `opencode.exe` 提取请求构造源码片段；`OPENCODE_CONFIG_CONTENT` 环境变量可在**不改动用户配置**的前提下注入内联配置做 A/B。
 
