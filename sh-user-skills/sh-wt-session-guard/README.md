@@ -1,15 +1,15 @@
 ---
 name: sh-wt-session-guard
-description: Windows Terminal (wt) 与 agy CLI 会话保持与恢复双保险守卫引擎：右上角关闭全部标签页时双保险保底追加恢复命令、无窗口静默守护、开机自启动治理与会话生命周期追踪。点名使用
-version: 1.0.0
+description: Windows Terminal (wt) 会话保持与恢复双保险守卫引擎：面向 agy 与 pi 双 Agent，右上角关闭全部标签页时双保险保底追加恢复命令、无窗口静默守护、开机自启动治理与会话生命周期追踪。点名使用
+version: 1.1.0
 created: 2026-10-13
-updated: 2026-10-13
+updated: 2026-10-30
 disable-model-invocation: true
 ---
 
-# sh-wt-session-guard：Windows Terminal 与 agy CLI 会话恢复双保险守卫引擎
+# sh-wt-session-guard：Windows Terminal 与 Coding Agent (agy & pi) 会话恢复双保险守卫引擎
 
-> 针对定制版 / 原生 Windows Terminal (WT) 在点击窗口右上角 `[X]` 并在弹窗中选择【全部关闭】时，各 Tab 内运行的 Google Antigravity CLI (`agy`) 任务会被直接强制终结、导致下次 WT 重启恢复标签页时丢失 `agy --conversation=<uuid>` 恢复命令的问题，本技能提供一整套**零侵入、零黑框弹窗、免 Python 环境依赖、支持 Windows 开机自启**的独立二进制守护引擎与运维 SOP。
+> 针对定制版 / 原生 Windows Terminal (WT) 在点击窗口右上角 `[X]` 并在弹窗中选择【全部关闭】时，各 Tab 内运行的 Google Antigravity CLI (`agy`) 或 Pi Coding Agent (`pi`) 任务会被直接强制终结、导致下次 WT 重启恢复标签页时丢失恢复命令（`agy --conversation=<uuid>` 或 `pi --session <uuid>`）的问题，本技能提供一整套**零侵入、零黑框弹窗、免 Python 环境依赖、支持 Windows 开机自启**的独立二进制守护引擎与运维 SOP。
 
 ---
 
@@ -17,9 +17,9 @@ disable-model-invocation: true
 
 | 痛点场景 | 传统表现 | 本守卫引擎解决方式 |
 | :--- | :--- | :--- |
-| **习惯点击右上角 `[X]`** | 终端强制杀死控制台进程，`agy` 来不及输出优雅停机提示 | 实时感知 WT 进程树，在 WT 退出落盘瞬间以 UTF-16LE 原子补写 `Resume with -c` 恢复命令块 |
+| **习惯点击右上角 `[X]`** | 终端强制杀死控制台进程，`agy` 或 `pi` 来不及输出优雅停机提示 | 实时感知 WT 进程树，在 WT 退出落盘瞬间以 UTF-16LE 原子补写各 Agent 原生格式恢复命令块 |
 | **手滑误点关闭弹窗【取消】** | 若提前拦截发送 Ctrl+C 会导致误杀正在工作的会话 | **退出确认后才收敛**：只有在确认点击【全部关闭】、WT 进程彻底退出后才触发补写，无任何误杀风险 |
-| **多 Tab / 多项目并发工作** | 重启 WT 后所有 Tab 历史丢失会话 ID，`/resume` 容易串项目 | 跨进程树精准提取各 Tab 的 `WT_SESSION` GUID，精确反查对应工作区的真实会话 UUID，100% 精准对应 |
+| **多 Agent / 多 Tab 并发工作** | 重启 WT 后所有 Tab 历史丢失会话 ID，恢复容易串项目 | 跨进程树精准提取各 Tab 的 `WT_SESSION` GUID，精确反查对应工作区的真实会话 UUID，100% 精准对应 |
 | **后台常驻弹出黑框控制台** | 传统 Python/CLI 后台进程每次启动都会在桌面弹出黑框窗口 | 编译为 PE Subsystem=2 (GUI) 兼容二进制 + Win32 句柄隐藏保底，启动与运行全局 0 闪烁 0 黑框 |
 | **电脑重启后守护失效** | 每次系统重启都需要手动重新启动守护进程 | 内置 `autostart` 子命令，一键注册/卸载 `HKCU` 注册表静默自启动，开机全自动护航 |
 
@@ -32,21 +32,21 @@ flowchart TD
     subgraph Windows Terminal 交互层
         WT["WindowsTerminal.exe (定制版)"]
         Tab1["Tab 1: powershell.exe<br/>WT_SESSION: 14D3...<br/>运行 agy (会话 A)"]
-        Tab2["Tab 2: powershell.exe<br/>WT_SESSION: BBC...<br/>运行 agy (会话 B)"]
+        Tab2["Tab 2: pwsh.exe<br/>WT_SESSION: BBC...<br/>运行 pi (会话 B)"]
         CloseBtn["右上角 [X] ➔ 确认【全部关闭】"]
     end
 
     subgraph 守卫引擎 (wt_session_guard.exe)
         Daemon["后台守护进程 (PID 常驻)"]
-        Tracker["活跃追踪器: scan_wt_agy_sessions()<br/>缓存 wt_session_guid ➔ 会话 UUID"]
+        Tracker["活跃追踪器: scan_wt_agent_sessions()<br/>缓存 wt_session_guid ➔ Agent 类型 + 会话 UUID"]
         Detector["进程退出监听器: known_wt_pids ➔ empty"]
         Patcher["原子补丁引擎: patch_buffer_file()<br/>追加 UTF-16LE 恢复指令块"]
     end
 
     subgraph WT 磁盘持久化
-        Buf1["buffer_14D3...txt"]
-        Buf2["buffer_BBC...txt"]
-        Restore["下次启动 WT ➔ 恢复标签页<br/>底部直接展示 agy --conversation=..."]
+        Buf1["buffer_14D3...txt (agy 补丁)"]
+        Buf2["buffer_BBC...txt (pi 补丁)"]
+        Restore["下次启动 WT ➔ 恢复标签页<br/>底部直接展示原生恢复命令"]
     end
 
     WT --> Tab1 & Tab2
@@ -63,9 +63,12 @@ Windows Terminal 在会话结束时，会将各个标签页的屏幕文本序列
 下次 WT 启动还原会话时，WT 会忠实地读取该文件内容并渲染在各 Tab 历史缓冲区尾部。
 
 ### 2. 精准防重复补写（Anti-False-Positive Invariant）
-守卫引擎严格仅检测缓冲区**最底部的最后 6 行有效文本**：
-- 只有当真正的 `Resume with -c` 及目标会话 UUID 紧贴光标尾部时才判定无需补写；
-- 避免聊天历史或代码中包含教学用词时引发假阴性漏补。
+守卫引擎遵循“**还原隔离（Restore Isolation）**”与“**严格尾部紧贴（Strict Tail Adjacency）**”两大不变式：
+1. **还原隔离**：若缓冲区包含 `[已还原` 标记，标记之前的所有历史行一律隔离抛弃，避免多轮恢复时误判历史命令导致漏补；
+2. **整句校验**：
+   - 对于 `pi`：只有当完整整句 `To resume this session: pi --session <uuid>` 紧贴末尾（其后至多跟随 1 行 Shell 提示符）时才跳过；
+   - 对于 `agy`：只有当 `agy --conversation=<uuid>` 伴随 `Resume with -c` 紧贴末尾时才跳过；
+3. 一旦其后跟随了 `Model scope:`、用户重新输入的命令或任何运行中输出，立即判定为活跃新会话，退出时强制补写保底。
 
 ---
 
@@ -81,20 +84,20 @@ $guard = "D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session
 # 1. 启动后台静默守护引擎（推荐日常使用）
 & $guard guard --daemon
 
-# 2. 查询当前守护状态与在线受保护的会话列表
+# 2. 查询当前守护状态与在线受保护的会话列表（agy / pi）
 & $guard status
 
 # 3. 停止后台守护进程
 & $guard stop-guard
 
-# 4. 扫描并详细列出当前各 WT 窗口、Shell、Tab GUID 与挂载的 agy 会话
+# 4. 扫描并详细列出当前各 WT 窗口、Shell、Tab GUID 与挂载的 agy / pi 会话
 & $guard scan
 
 # 5. 手动模拟校对当前各标签页 buffer 文件（可 dry-run 预览）
 & $guard patch-all --dry-run
 & $guard patch-all
 
-# 6. 主动向当前全部 agy 会话广播真实 Win32 Ctrl+C 信号优雅停机
+# 6. 主动向当前全部 agy / pi 会话广播真实 Win32 Ctrl+C 信号优雅停机
 & $guard stop-all
 ```
 

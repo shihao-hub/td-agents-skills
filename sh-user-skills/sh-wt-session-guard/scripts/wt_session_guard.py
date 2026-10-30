@@ -6,31 +6,35 @@
 # ///
 """
 ========================================================================================
-Windows Terminal (wt) 与 Antigravity CLI (agy) 会话恢复守卫引擎
+Windows Terminal (wt) 会话恢复守卫引擎：Antigravity CLI (agy) & Pi Coding Agent (pi)
 ========================================================================================
 【架构定位】
-面向 Windows Terminal 独立定制版与 agy CLI 的双保险会话保持与优雅收敛守卫工具。
+面向 Windows Terminal 独立定制版与主流 Coding Agent (agy / pi) 的双保险会话保持与优雅收敛守卫工具。
 
 【核心痛点】
-当用户在 Windows Terminal 中运行多个 agy 会话时，如果直接点击右上角 [X] 并确认“全部关闭”，
-WT 会直接切断 ConPTY 管道并强杀子进程树，导致 agy 来不及向终端标准输出打印
-`Resume with -c: agy --conversation=<id>`。
+当用户在 Windows Terminal 中运行多个 agy 或 pi 会话时，如果直接点击右上角 [X] 并确认“全部关闭”，
+WT 会直接切断 ConPTY 管道并强杀子进程树，导致 Agent 来不及向终端标准输出打印会话恢复命令：
+- agy: `Resume with -c: agy --conversation=<uuid>`
+- pi:  `To resume this session: pi --session <uuid>`
 在 WT 重启还原各标签页时，用户无法从还原历史中直接复制命令恢复会话。
 
 【双保险解决方案】
 1. 内存态精准追踪：
    - 实时解析 WindowsTerminal.exe 进程树；
    - 提取各标签页的 WT_SESSION (GUID)；
-   - 识别子进程中的 agy.exe，提取 --conversation=<uuid> 或关联其活跃工作区历史。
+   - 识别子进程中的 agy.exe 与 pi (node.exe / pi.exe)；
+   - 解析命令行参数或反查其工作区持久化历史（~/.pi/agent/sessions/ 与 agy history.jsonl）。
 2. 优雅停机信号注入：
-   - 支持通过 Win32 AttachConsole + GenerateConsoleCtrlEvent(CTRL_C_EVENT) 向指定或全部 agy 广播信号。
+   - 支持通过 Win32 AttachConsole + GenerateConsoleCtrlEvent(CTRL_C_EVENT) 向指定或全部 Agent 广播优雅停机信号。
 3. 退出后 Buffer 原子补写保底（100% 视觉还原）：
    - 当 WT 窗口关闭/退出落盘后，守卫自动定位 %LOCALAPPDATA%\\Microsoft\\Windows Terminal\\buffer_<GUID>.txt；
    - 校验文件尾部，若未包含恢复提示，以 UTF-16LE 格式自动追加标准化恢复行：
-       Resume with -c (or command below):
-       agy --conversation=<uuid>
-       PS C:\\Users\\29580>
-   - 确保下次 WT 还原会话时，屏幕上方 100% 呈现与手动 Ctrl+C 完全一致的恢复命令。
+       [agy] Resume with -c (or command below):
+             agy --conversation=<uuid>
+             PS <cwd>>
+       [pi]  To resume this session: pi --session <uuid>
+             PS <cwd>>
+   - 确保下次 WT 还原会话时，屏幕尾部 100% 呈现与手动 Ctrl+C 完全一致的恢复命令。
 ========================================================================================
 """
 
@@ -53,51 +57,81 @@ import psutil
 # -----------------------------------------------------------------------------
 # 模块常量与开关配置
 # -----------------------------------------------------------------------------
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 LOCALAPPDATA = os.environ.get("LOCALAPPDATA", "")
 USERPROFILE = os.environ.get("USERPROFILE", "")
 
+# Windows Terminal 状态目录
 WT_STATE_DIR = Path(LOCALAPPDATA) / "Microsoft" / "Windows Terminal" if LOCALAPPDATA else Path.home() / "AppData" / "Local" / "Microsoft" / "Windows Terminal"
+
+# agy CLI 状态目录与文件
 AGY_HOME = Path(USERPROFILE) / ".gemini" / "antigravity-cli" if USERPROFILE else Path.home() / ".gemini" / "antigravity-cli"
 AGY_HISTORY_FILE = AGY_HOME / "history.jsonl"
 AGY_PRESENCE_DIR = AGY_HOME / "presence"
 
+# pi CLI (Pi Coding Agent) 状态目录
+PI_HOME = Path(USERPROFILE) / ".pi" / "agent" if USERPROFILE else Path.home() / ".pi" / "agent"
+PI_SESSIONS_DIR = PI_HOME / "sessions"
+
 # 正则表达式
 UUID_REGEX = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-CONV_ARG_REGEX = re.compile(r"--conversation=([0-9a-fA-F-]+)")
+AGY_CONV_ARG_REGEX = re.compile(r"--conversation=([0-9a-fA-F-]+)")
+PI_SESSION_ARG_REGEX = re.compile(r"(?:--session|-s)(?:=|\s+)([0-9a-fA-F-]+)")
 
-# Win32 API 定义
-kernel32 = ctypes.windll.kernel32
+# Win32 API 常量
 CTRL_C_EVENT = 0
+kernel32 = ctypes.windll.kernel32
+
+# 守卫锁文件与日志
+GUARD_PID_FILE = WT_STATE_DIR / "session_guard.pid"
+GUARD_LOG_FILE = WT_STATE_DIR / "session_guard.log"
+AUTOSTART_REG_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+AUTOSTART_VAL_NAME = "WindowsTerminalSessionGuard"
 
 
 # -----------------------------------------------------------------------------
 # 数据结构定义
 # -----------------------------------------------------------------------------
 @dataclass
-class AgySession:
+class AgentSession:
+    agent_type: str  # "agy" | "pi"
     wt_pid: int
     shell_name: str
     shell_pid: int
     wt_session_guid: str
-    agy_pid: int
+    proc_pid: int
     cmdline: List[str]
-    conversation_id: str
+    session_id: str
     cwd: str
     buffer_file: Path
 
+    @property
+    def conversation_id(self) -> str:
+        """向后兼容属性，等价于 session_id"""
+        return self.session_id
+
+    @property
+    def agy_pid(self) -> int:
+        """向后兼容属性，等价于 proc_pid"""
+        return self.proc_pid
+
     def to_dict(self) -> Dict[str, object]:
         return {
+            "agent_type": self.agent_type,
             "wt_pid": self.wt_pid,
             "shell_name": self.shell_name,
             "shell_pid": self.shell_pid,
             "wt_session_guid": self.wt_session_guid,
-            "agy_pid": self.agy_pid,
-            "conversation_id": self.conversation_id,
+            "proc_pid": self.proc_pid,
+            "session_id": self.session_id,
             "cwd": self.cwd,
             "buffer_file": str(self.buffer_file),
             "buffer_exists": self.buffer_file.exists(),
         }
+
+
+# 向后兼容别名
+AgySession = AgentSession
 
 
 # -----------------------------------------------------------------------------
@@ -117,8 +151,11 @@ def setup_console_encoding() -> None:
             sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 
+# -----------------------------------------------------------------------------
+# agy 会话解析逻辑
+# -----------------------------------------------------------------------------
 def get_latest_conversation_for_workspace(workspace_dir: str) -> Optional[str]:
-    """从 history.jsonl 反查指定工作区最近活跃的会话 ID"""
+    """从 agy 的 history.jsonl 反查指定工作区最近活跃的会话 ID"""
     if not AGY_HISTORY_FILE.exists():
         return None
 
@@ -147,11 +184,11 @@ def get_latest_conversation_for_workspace(workspace_dir: str) -> Optional[str]:
     return None
 
 
-def resolve_conversation_id(agy_proc: psutil.Process, cmdline: List[str], cwd: str) -> str:
-    """综合命令行参数与工作区历史解析出真实 conversation_id"""
+def resolve_agy_conversation_id(agy_proc: psutil.Process, cmdline: List[str], cwd: str) -> str:
+    """综合命令行参数与工作区历史解析出真实 agy conversation_id"""
     # 1. 优先从命令行参数中提取 --conversation=...
     cmd_str = " ".join(cmdline)
-    match = CONV_ARG_REGEX.search(cmd_str)
+    match = AGY_CONV_ARG_REGEX.search(cmd_str)
     if match:
         return match.group(1)
 
@@ -179,9 +216,69 @@ def resolve_conversation_id(agy_proc: psutil.Process, cmdline: List[str], cwd: s
     return "unknown-conversation-id"
 
 
-def scan_wt_agy_sessions() -> List[AgySession]:
-    """全盘扫描 Windows Terminal 进程树下所有运行中的 agy 会话"""
-    sessions: List[AgySession] = []
+def resolve_conversation_id(agy_proc: psutil.Process, cmdline: List[str], cwd: str) -> str:
+    """向后兼容接口"""
+    return resolve_agy_conversation_id(agy_proc, cmdline, cwd)
+
+
+# -----------------------------------------------------------------------------
+# pi 会话解析逻辑
+# -----------------------------------------------------------------------------
+def encode_pi_session_dir(cwd: str, agent_dir: Path = PI_HOME) -> Path:
+    """按 pi 官方规范将 cwd 编码为 session 目录路径。
+    规则：`--${resolvedCwd.replace(/^[/\\]/, "").replace(/[/\\:]/g, "-")}--`
+    """
+    resolved = str(Path(cwd).resolve()) if cwd else str(Path.home().resolve())
+    clean = re.sub(r"^[/\\]", "", resolved)
+    safe = re.sub(r"[/\\:]", "-", clean)
+    return agent_dir / "sessions" / f"--{safe}--"
+
+
+def resolve_pi_session_id(proc: psutil.Process, cmdline: List[str], cwd: str) -> str:
+    """综合命令行参数与工作区 sessions 目录反查出真实的 pi 会话 UUID"""
+    # 1. 优先从命令行参数匹配 --session <uuid> 或 -s <uuid>
+    cmd_str = " ".join(cmdline)
+    match = PI_SESSION_ARG_REGEX.search(cmd_str)
+    if match:
+        return match.group(1)
+
+    # 2. 从 cwd 对应的 sessions 目录中寻找最新修改的 *.jsonl
+    if cwd:
+        sdir = encode_pi_session_dir(cwd)
+        if sdir.exists():
+            try:
+                jsonls = sorted(sdir.glob("*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)
+                if jsonls:
+                    m = UUID_REGEX.search(jsonls[0].name)
+                    if m:
+                        return m.group(0)
+            except Exception:
+                pass
+
+    # 3. 兜底扫描所有 sessions 子目录中最近修改的 *.jsonl
+    if PI_SESSIONS_DIR.exists():
+        try:
+            recent_files = sorted(
+                PI_SESSIONS_DIR.glob("*/*.jsonl"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            if recent_files:
+                m = UUID_REGEX.search(recent_files[0].name)
+                if m:
+                    return m.group(0)
+        except Exception:
+            pass
+
+    return "unknown-session-id"
+
+
+# -----------------------------------------------------------------------------
+# 进程树扫描与会话识别
+# -----------------------------------------------------------------------------
+def scan_wt_agent_sessions() -> List[AgentSession]:
+    """全盘扫描 Windows Terminal 进程树下所有运行中的 agy 与 pi 会话"""
+    sessions: List[AgentSession] = []
 
     # 查找所有 WindowsTerminal.exe 进程
     wt_procs: Dict[int, psutil.Process] = {}
@@ -226,7 +323,7 @@ def scan_wt_agy_sessions() -> List[AgySession]:
                 except (psutil.AccessDenied, psutil.NoSuchProcess):
                     break
 
-            # 寻找该 Shell 下的子进程 agy.exe
+            # 寻找该 Shell 下的子进程（递归检测 agy / pi）
             try:
                 children = proc.children(recursive=True)
             except (psutil.AccessDenied, psutil.NoSuchProcess):
@@ -235,28 +332,55 @@ def scan_wt_agy_sessions() -> List[AgySession]:
             for child in children:
                 try:
                     cname = (child.name() or "").lower()
-                    if cname == "agy.exe" or cname == "agy":
-                        cmdline = child.cmdline()
-                        try:
-                            cwd = child.cwd()
-                        except Exception:
-                            cwd = ""
-                        cid = resolve_conversation_id(child, cmdline, cwd)
-                        buf_file = WT_STATE_DIR / f"buffer_{wt_session.upper()}.txt"
+                    agent_type: Optional[str] = None
 
-                        sessions.append(
-                            AgySession(
-                                wt_pid=wt_pid or (parent.pid if parent else 0),
-                                shell_name=pname,
-                                shell_pid=proc.pid,
-                                wt_session_guid=wt_session,
-                                agy_pid=child.pid,
-                                cmdline=cmdline,
-                                conversation_id=cid,
-                                cwd=cwd,
-                                buffer_file=buf_file,
-                            )
+                    if cname in ("agy.exe", "agy"):
+                        agent_type = "agy"
+                    elif cname in ("pi.exe", "pi"):
+                        agent_type = "pi"
+                    elif cname in ("node.exe", "node"):
+                        try:
+                            cmdline = child.cmdline()
+                        except Exception:
+                            cmdline = []
+                        cmd_str = " ".join(cmdline).lower()
+                        if "pi-coding-agent" in cmd_str or (("dist\\bundle\\cli.js" in cmd_str or "dist/bundle/cli.js" in cmd_str) and "pi" in cmd_str):
+                            agent_type = "pi"
+
+                    if not agent_type:
+                        continue
+
+                    try:
+                        cmdline = child.cmdline()
+                    except Exception:
+                        cmdline = []
+
+                    try:
+                        cwd = child.cwd()
+                    except Exception:
+                        cwd = ""
+
+                    if agent_type == "agy":
+                        sid = resolve_agy_conversation_id(child, cmdline, cwd)
+                    else:
+                        sid = resolve_pi_session_id(child, cmdline, cwd)
+
+                    buf_file = WT_STATE_DIR / f"buffer_{wt_session.upper()}.txt"
+
+                    sessions.append(
+                        AgentSession(
+                            agent_type=agent_type,
+                            wt_pid=wt_pid or (parent.pid if parent else 0),
+                            shell_name=pname,
+                            shell_pid=proc.pid,
+                            wt_session_guid=wt_session,
+                            proc_pid=child.pid,
+                            cmdline=cmdline,
+                            session_id=sid,
+                            cwd=cwd,
+                            buffer_file=buf_file,
                         )
+                    )
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
         except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -265,6 +389,14 @@ def scan_wt_agy_sessions() -> List[AgySession]:
     return sessions
 
 
+def scan_wt_agy_sessions() -> List[AgentSession]:
+    """向后兼容接口"""
+    return scan_wt_agent_sessions()
+
+
+# -----------------------------------------------------------------------------
+# 信号与缓冲区修补
+# -----------------------------------------------------------------------------
 def send_ctrl_c_to_pid(pid: int) -> bool:
     """向指定控制台进程安全广播 Win32 CTRL_C_EVENT"""
     try:
@@ -279,30 +411,86 @@ def send_ctrl_c_to_pid(pid: int) -> bool:
     return False
 
 
-def is_patch_needed(content: str, conversation_id: str) -> bool:
-    """精准判断终端缓冲区末尾是否已存在本会话的恢复命令。
+def build_resume_block(agent_type: str, session_id: str, cwd: str = "") -> str:
+    """构造与各 Agent 原生退出输出 100% 吻合的恢复命令文本块"""
+    prompt_dir = cwd if cwd else (USERPROFILE or r"C:\Users\29580")
+    if agent_type == "pi":
+        return (
+            f"\nTo resume this session: pi --session {session_id}\n"
+            f"PS {prompt_dir}>\n"
+        )
+    else:  # agy
+        return (
+            "\nResume with -c (or command below):\n"
+            f"agy --conversation={session_id}\n"
+            f"PS {prompt_dir}>\n"
+        )
 
-    防御规则：
-    1. 严禁全量搜索或回溯过多行：会话聊天历史或模型回复中极易出现教学用的
-       'Resume with -c' 或 '[已还原' 文本，若回溯过多会导致严重误判（假阴性），
-       误以为终端已具备恢复命令而漏补；
-    2. 仅检查文件最后 6 行有效非空文本：只有当真正的恢复命令块紧贴文件尾部时，
-       才判定无需重复追加。
+
+def is_patch_needed(content: str, agent_type: str, session_id: str) -> bool:
+    """精准判断终端缓冲区末尾是否已存在本会话紧贴光标尾部的有效恢复命令。
+
+    不变式约束：
+    1. 还原隔离（Restore Isolation）：若内容中包含 '[已还原' 分隔符，
+       则在该标记之前的所有历史文本均属于上一轮生命周期，严禁作为当前轮次的判定依据；
+    2. 严格紧贴尾部（Strict Tail Adjacency）：
+       一个真正的恢复提示块，在它之后至多只能有一个 Shell 提示符行（如 'PS C:\\Users\\...'），
+       绝对不可能跟随任何运行中日志（如 'Model scope:'、'Resumed session'）或命令行输入；
+    3. 整句校验（Full Phrase Match）：
+       - pi: 某一行必须完整包含 f'To resume this session: pi --session {session_id}'；
+       - agy: 必须在尾部紧贴处完整出现 f'agy --conversation={session_id}' 并伴随 'Resume with -c'。
     """
+    if not content:
+        return True
+
+    # 1. 还原隔离：若存在 '[已还原'，只截取最后一次还原标记之后的内容
+    if "[已还原" in content:
+        content = content.rsplit("[已还原", 1)[1]
+
     lines = [line.strip() for line in content.splitlines() if line.strip()]
     if not lines:
         return True
 
-    tail_lines = lines[-6:]
-    tail_text = "\n".join(tail_lines)
+    # 取最后 4 行有效非空文本
+    tail = lines[-4:]
 
-    target_cmd = f"agy --conversation={conversation_id}"
-    if target_cmd in tail_text and "Resume with -c" in tail_text:
-        return False
+    if agent_type == "pi":
+        target_exact = f"To resume this session: pi --session {session_id}"
+        found_idx = -1
+        for idx, line in enumerate(tail):
+            if target_exact in line:
+                found_idx = idx
+                break
+
+        if found_idx != -1:
+            remaining = tail[found_idx + 1 :]
+            # 找到恢复提示行后，其后至多允许 1 行且必须是 Shell 提示符
+            if len(remaining) == 0:
+                return False
+            if len(remaining) == 1 and (remaining[0].startswith("PS ") or remaining[0].endswith(">")):
+                return False
+
+    else:  # agy
+        target_exact = f"agy --conversation={session_id}"
+        found_idx = -1
+        for idx, line in enumerate(tail):
+            if target_exact in line:
+                found_idx = idx
+                break
+
+        if found_idx != -1:
+            has_resume_hint = any("Resume with -c" in l for l in tail[: found_idx + 1])
+            if has_resume_hint:
+                remaining = tail[found_idx + 1 :]
+                if len(remaining) == 0:
+                    return False
+                if len(remaining) == 1 and (remaining[0].startswith("PS ") or remaining[0].endswith(">")):
+                    return False
+
     return True
 
 
-def patch_buffer_file(buffer_file: Path, conversation_id: str, dry_run: bool = False) -> bool:
+def patch_buffer_file(buffer_file: Path, agent_type: str, session_id: str, cwd: str = "", dry_run: bool = False) -> bool:
     """原子校对并以 UTF-16LE 格式追加会话恢复命令"""
     if not buffer_file.exists():
         # 若 buffer 文件尚未生成，暂不强制创建空文件避免影响 WT 内部加载状态
@@ -314,18 +502,14 @@ def patch_buffer_file(buffer_file: Path, conversation_id: str, dry_run: bool = F
         print(f"[-] 读取 buffer 文件异常 {buffer_file.name}: {e}")
         return False
 
-    # 若尾部在最近周期中已存在恢复提示，说明已经正常写入过，无需重复补写
-    if not is_patch_needed(content, conversation_id):
+    # 若尾部已存在恢复提示，说明已经正常写入过，无需重复补写
+    if not is_patch_needed(content, agent_type, session_id):
         return False
 
-    resume_block = (
-        "\nResume with -c (or command below):\n"
-        f"agy --conversation={conversation_id}\n"
-        "PS C:\\Users\\29580>\n"
-    )
+    resume_block = build_resume_block(agent_type, session_id, cwd)
 
     if dry_run:
-        print(f"[Dry-Run] 拟向 {buffer_file.name} 追加补丁:\n{resume_block.strip()}")
+        print(f"[Dry-Run] 拟向 {buffer_file.name} 追加 [{agent_type}] 补丁:\n{resume_block.strip()}")
         return True
 
     try:
@@ -338,72 +522,8 @@ def patch_buffer_file(buffer_file: Path, conversation_id: str, dry_run: bool = F
 
 
 # -----------------------------------------------------------------------------
-# 命令行子命令入口
+# 守卫与自启动底层支撑
 # -----------------------------------------------------------------------------
-def cmd_scan(args: argparse.Namespace) -> None:
-    """扫描并展示当前 WT 窗口与各标签页中的 agy 会话"""
-    sessions = scan_wt_agy_sessions()
-    if not sessions:
-        print("[*] 当前未检测到在 Windows Terminal 标签页内运行的 agy 会话。")
-        return
-
-    print(f"[+] 检测到 {len(sessions)} 个在 Windows Terminal 内运行的 agy 会话:\n")
-    for idx, s in enumerate(sessions, 1):
-        print(f"[{idx}] 会话 ID (Conversation): {s.conversation_id}")
-        print(f"    ├─ agy PID:          {s.agy_pid}")
-        print(f"    ├─ Shell (PID):      {s.shell_name} ({s.shell_pid})")
-        print(f"    ├─ WT PID:           {s.wt_pid}")
-        print(f"    ├─ WT 标签页 GUID:   {s.wt_session_guid}")
-        print(f"    ├─ 工作目录 (Cwd):   {s.cwd}")
-        print(f"    └─ WT Buffer 路径:   {s.buffer_file} (存在: {s.buffer_file.exists()})")
-        print()
-
-
-def cmd_stop_all(args: argparse.Namespace) -> None:
-    """优雅向所有在 WT 内运行的 agy 会话发送 Ctrl+C"""
-    current_pid = os.getpid()
-    sessions = scan_wt_agy_sessions()
-    if not sessions:
-        print("[*] 当前未检测到需要终止的 agy 会话。")
-        return
-
-    print(f"[*] 准备向 {len(sessions)} 个 agy 会话广播 Ctrl+C 优雅停机信号...")
-    stopped = 0
-    for s in sessions:
-        if s.agy_pid == current_pid:
-            print(f"    [-] 跳过当前正在执行脚本的自身进程 (PID {s.agy_pid})")
-            continue
-
-        print(f"    ├─ 向 PID {s.agy_pid} (会话: {s.conversation_id[:8]}...) 发送 Ctrl+C...")
-        ok = send_ctrl_c_to_pid(s.agy_pid)
-        if ok:
-            stopped += 1
-
-    print(f"[+] 信号广播完成 (成功投递: {stopped}/{len(sessions)})。")
-
-
-def cmd_patch_all(args: argparse.Namespace) -> None:
-    """手动扫描并修补对应 WT 标签页的 buffer 文件"""
-    sessions = scan_wt_agy_sessions()
-    if not sessions:
-        print("[*] 当前未检测到活跃会话。")
-        return
-
-    patched = 0
-    for s in sessions:
-        if patch_buffer_file(s.buffer_file, s.conversation_id, dry_run=args.dry_run):
-            print(f"[+] 成功修补 {s.buffer_file.name} ➔ 会话 {s.conversation_id}")
-            patched += 1
-        else:
-            print(f"[*] {s.buffer_file.name} 无需修补或文件不存在。")
-
-    print(f"\n[+] 处理完成，共补写 {patched} 个 buffer 文件。")
-
-
-GUARD_PID_FILE = WT_STATE_DIR / "session_guard.pid"
-GUARD_LOG_FILE = WT_STATE_DIR / "session_guard.log"
-
-
 def is_compiled() -> bool:
     """判断当前进程是否已编译为独立二进制 exe"""
     if "__compiled__" in globals() or getattr(sys, "frozen", False):
@@ -548,6 +668,69 @@ def stop_daemon() -> None:
                 pass
 
 
+# -----------------------------------------------------------------------------
+# 命令行子命令入口
+# -----------------------------------------------------------------------------
+def cmd_scan(args: argparse.Namespace) -> None:
+    """扫描并展示当前 WT 窗口与各标签页中的 agy 与 pi 会话"""
+    sessions = scan_wt_agent_sessions()
+    if not sessions:
+        print("[*] 当前未检测到在 Windows Terminal 标签页内运行的 agy / pi 会话。")
+        return
+
+    print(f"[+] 检测到 {len(sessions)} 个在 Windows Terminal 内运行的 Agent 会话:\n")
+    for idx, s in enumerate(sessions, 1):
+        print(f"[{idx}] 类型: [{s.agent_type.upper()}]  会话 ID: {s.session_id}")
+        print(f"    ├─ Agent PID:        {s.proc_pid}")
+        print(f"    ├─ Shell (PID):      {s.shell_name} ({s.shell_pid})")
+        print(f"    ├─ WT PID:           {s.wt_pid}")
+        print(f"    ├─ WT 标签页 GUID:   {s.wt_session_guid}")
+        print(f"    ├─ 工作目录 (Cwd):   {s.cwd}")
+        print(f"    └─ WT Buffer 路径:   {s.buffer_file} (存在: {s.buffer_file.exists()})")
+        print()
+
+
+def cmd_stop_all(args: argparse.Namespace) -> None:
+    """优雅向所有在 WT 内运行的 Agent 会话发送 Ctrl+C"""
+    current_pid = os.getpid()
+    sessions = scan_wt_agent_sessions()
+    if not sessions:
+        print("[*] 当前未检测到需要终止的 Agent 会话。")
+        return
+
+    print(f"[*] 准备向 {len(sessions)} 个 Agent 会话广播 Ctrl+C 优雅停机信号...")
+    stopped = 0
+    for s in sessions:
+        if s.proc_pid == current_pid:
+            print(f"    [-] 跳过当前正在执行脚本的自身进程 (PID {s.proc_pid})")
+            continue
+
+        print(f"    ├─ 向 [{s.agent_type.upper()}] PID {s.proc_pid} (会话: {s.session_id[:8]}...) 发送 Ctrl+C...")
+        ok = send_ctrl_c_to_pid(s.proc_pid)
+        if ok:
+            stopped += 1
+
+    print(f"[+] 信号广播完成 (成功投递: {stopped}/{len(sessions)})。")
+
+
+def cmd_patch_all(args: argparse.Namespace) -> None:
+    """手动扫描并修补对应 WT 标签页的 buffer 文件"""
+    sessions = scan_wt_agent_sessions()
+    if not sessions:
+        print("[*] 当前未检测到活跃会话。")
+        return
+
+    patched = 0
+    for s in sessions:
+        if patch_buffer_file(s.buffer_file, s.agent_type, s.session_id, cwd=s.cwd, dry_run=args.dry_run):
+            print(f"[+] 成功修补 {s.buffer_file.name} ➔ [{s.agent_type}] 会话 {s.session_id}")
+            patched += 1
+        else:
+            print(f"[*] {s.buffer_file.name} 无需修补或文件不存在。")
+
+    print(f"\n[+] 处理完成，共补写 {patched} 个 buffer 文件。")
+
+
 def cmd_status(args: argparse.Namespace) -> None:
     """查询守护状态与当前受保护的会话"""
     daemon_pid = get_daemon_pid()
@@ -556,10 +739,10 @@ def cmd_status(args: argparse.Namespace) -> None:
     else:
         print("[-] 守卫状态: 未运行 (可通过 `guard --daemon` 启动)")
 
-    sessions = scan_wt_agy_sessions()
-    print(f"[*] 当前在线受保护的 agy 会话数: {len(sessions)}")
+    sessions = scan_wt_agent_sessions()
+    print(f"[*] 当前在线受保护的 Agent 会话数: {len(sessions)}")
     for idx, s in enumerate(sessions, 1):
-        print(f"    [{idx}] {s.conversation_id[:8]}... (PID {s.agy_pid}, Tab GUID: {s.wt_session_guid[:8]}...)")
+        print(f"    [{idx}] [{s.agent_type.upper()}] {s.session_id[:8]}... (PID {s.proc_pid}, Tab GUID: {s.wt_session_guid[:8]}...)")
 
 
 def cmd_guard(args: argparse.Namespace) -> None:
@@ -577,7 +760,7 @@ def cmd_guard(args: argparse.Namespace) -> None:
     # 前台/工作线程执行
     if not is_headless:
         print("==================================================================")
-        print("Windows Terminal (wt) agy 会话恢复守护引擎已启动")
+        print("Windows Terminal (wt) 会话恢复守护引擎已启动 (agy & pi)")
         print("监听模式：双保险协同（WT 退出自动落盘修补 + 活跃追踪）")
         print("按 Ctrl+C 可停止当前守护进程。")
         print("==================================================================")
@@ -589,13 +772,13 @@ def cmd_guard(args: argparse.Namespace) -> None:
     except Exception:
         pass
 
-    # 缓存上一次扫描到的活跃会话：wt_session_guid -> AgySession
-    last_known_sessions: Dict[str, AgySession] = {}
+    # 缓存上一次扫描到的活跃会话：wt_session_guid -> AgentSession
+    last_known_sessions: Dict[str, AgentSession] = {}
     known_wt_pids: set[int] = set()
 
     try:
         while True:
-            active_sessions = scan_wt_agy_sessions()
+            active_sessions = scan_wt_agent_sessions()
             current_wt_pids = set()
 
             for s in active_sessions:
@@ -614,8 +797,11 @@ def cmd_guard(args: argparse.Namespace) -> None:
                 for guid, session in list(last_known_sessions.items()):
                     buf_file = session.buffer_file
                     if buf_file.exists():
-                        if patch_buffer_file(buf_file, session.conversation_id):
-                            info = f"成功补写标签页 {guid} ➔ 会话恢复命令: agy --conversation={session.conversation_id}"
+                        if patch_buffer_file(buf_file, session.agent_type, session.session_id, cwd=session.cwd):
+                            if session.agent_type == "pi":
+                                info = f"成功补写标签页 {guid} ➔ pi 会话恢复命令: pi --session {session.session_id}"
+                            else:
+                                info = f"成功补写标签页 {guid} ➔ agy 会话恢复命令: agy --conversation={session.session_id}"
                             print(f"    [+] {info}")
                             log_guard(info)
                             patched_count += 1
@@ -651,10 +837,6 @@ def cmd_guard(args: argparse.Namespace) -> None:
                     GUARD_PID_FILE.unlink()
             except Exception:
                 pass
-
-
-AUTOSTART_REG_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-AUTOSTART_VAL_NAME = "WindowsTerminalSessionGuard"
 
 
 def cmd_autostart(args: argparse.Namespace) -> None:
@@ -711,20 +893,20 @@ def main() -> None:
     setup_console_encoding()
 
     parser = argparse.ArgumentParser(
-        description="Windows Terminal (wt) 与 agy CLI 会话保持与恢复双保险守卫引擎",
+        description="Windows Terminal (wt) 会话保持与恢复双保险守卫引擎 (agy & pi)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
     subparsers = parser.add_subparsers(dest="subcommand", help="子命令")
 
     # scan
-    subparsers.add_parser("scan", help="扫描并列出当前 WT 内运行的所有 agy 会话")
+    subparsers.add_parser("scan", help="扫描并列出当前 WT 内运行的所有 agy 与 pi 会话")
 
     # status
     subparsers.add_parser("status", help="查询守护进程运行状态与受保护会话")
 
     # stop-all
-    subparsers.add_parser("stop-all", help="向当前所有 WT 内的 agy 广播 Ctrl+C 优雅停机信号")
+    subparsers.add_parser("stop-all", help="向当前所有 WT 内的 Agent 广播 Ctrl+C 优雅停机信号")
 
     # patch-all
     p_patch = subparsers.add_parser("patch-all", help="手动校对并修补当前各标签页的 buffer 文件")
