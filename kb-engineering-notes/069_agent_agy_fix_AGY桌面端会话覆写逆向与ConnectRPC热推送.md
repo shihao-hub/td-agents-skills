@@ -3,7 +3,7 @@ name: kb-antigravity-app-session-rpc
 description: 针对 Google Antigravity 桌面端应用（Antigravity App）离线修改 SQLite / Protobuf 会话标题被常驻 language_server.exe 内存缓存定时覆盖回滚、raw_summary Protobuf BLOB 字段反序列化优先级以及官方 ConnectRPC (UpdateConversationAnnotations) 动态端口探测与 CSRF 鉴权实时热推送的逆向排障与实战指南。
 version: 1.0.0
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-30
 id: "069"
 domain: agent
 scope: agy
@@ -219,3 +219,18 @@ import json, re, subprocess, urllib.request
    现代 AI 辅助 IDE（如 VS Code、Cursor、Antigravity、Windsurf）普遍采用“前端 UI + 后台 Language Server”的双进程解耦架构。核心数据往往由后台长驻服务持有内存缓存并单向刷盘。
 2. **切忌外部裸改 SQLite**：
    凡遇到后台有长常驻进程对同一文件进行管理的场景，外部离线写文件极易被其后台定时 reconciliation 线程冲掉。最佳实践永远是：**探测 RPC 接口 -> 动态提取鉴权凭证 -> 经由官方通道热推送 -> 辅以底层多源落盘兜底**。
+
+---
+
+## 五、进阶避坑与迭代沉淀（v1.2.0 实战增补）
+
+### 1. “中文分类标签 + 英文主体”的伪中文识别盲区
+- **现象**：部分会话标题以业务标签开头（如 `【知识】Douyin Video Summary And Insights` 或 `【待办】Vibe Coding Skill Recommendations`）。
+- **根因**：基础中文正则 `re.search(r"[\u4e00-\u9fa5]", title)` 只要匹配到全串任意一个汉字（如“知”、“识”）就会返回 `True`，导致这批“带中文前缀但主体全是英文”的混血标题被彻底漏检。
+- **解法**：在判定前通过正则 `TAG_PATTERN = re.compile(r"^[\[【](.*?)[\]】]\s*")` 先行剔除方括号标签，基于主体内容的汉字数与多字符英文单词占比进行严格研判，彻底杜绝伪中文。
+
+### 2. SQLite WAL 事务截断检查点（`PRAGMA wal_checkpoint(TRUNCATE)`）
+- **现象**：离线更新了 `conversation_summaries.db` 后，短时间内正常，但语言服务器触发后台内存对齐或重启时，数据库再度被旧数据冲掉。
+- **根因**：SQLite 处于 WAL 模式时，更新数据仅追加在 `-wal` 文件中，尚未合并到主数据库文件。当 `language_server.exe` 触发后台 reconciliation 时，易因内存版本较新直接把旧主本覆写主库并截断 WAL，导致离线修改静默丢失。
+- **解法**：在所有单条或批量 SQLite UPDATE 事务提交后，显式执行 `PRAGMA wal_checkpoint(TRUNCATE);`，强制将 WAL 日志完整合并并空出主库，确保落盘数据具备最高权威。
+
