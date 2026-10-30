@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional, Tuple
 # ----------------------------------------------------------------------
 # 模块常量与配置
 # ----------------------------------------------------------------------
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 CHINESE_PATTERN = re.compile(r"[\u4e00-\u9fa5]")
 
 KNOWN_ENVIRONMENTS: Dict[str, Path] = {
@@ -381,9 +381,11 @@ def is_chinese_title(title: str) -> bool:
     cn_chars = re.findall(r"[一-龥]", stripped)
     if not cn_chars:
         return False
-    # 若有英文单词，但汉字过少（<=2），判定为未充分汉化
+    # 纯英文主体（0个汉字）判定为未汉化；若英文单词>=3个且汉字<=1个亦判定为未汉化
     en_words = re.findall(r"[a-zA-Z]{2,}", stripped)
-    if en_words and len(cn_chars) <= 2:
+    if not cn_chars:
+        return False
+    if len(en_words) >= 3 and len(cn_chars) <= 1:
         return False
     return True
 

@@ -1,9 +1,9 @@
 ---
 name: sh-agy-session-governance
 description: Google Antigravity (App 与 CLI 双端) 会话标题批量治理与汉化工具 SOP。支持查看导出英文会话、AI 协同智能翻译生成中文标题、SQLite 字段与 Protobuf raw_summary / agyhub_summaries_proto.pb / annotations 四重原子双写更新、自动前置快照备份与一键还原。点名使用
-version: 1.1.0
+version: 1.2.0
 created: 2026-10-13
-updated: 2026-10-17
+updated: 2026-10-30
 disable-model-invocation: true
 ---
 
@@ -39,7 +39,21 @@ disable-model-invocation: true
   - 动态探测：工具自动通过 WMI 探测 `language_server.exe` 进程，解析其启动命令行获取 `--csrf_token`，并扫描本地监听端口建立 HTTP 通信；
   - 热推送更新：调用 `UpdateConversationAnnotations` 载入 `{"cascadeIds": [...], "annotations": {"title": "..."}, "mergeAnnotations": true}`，直接驱使语言服务器在内存中更新状态并写回 SQLite，彻底根绝覆写冲突。
 
-### 4. 自动前置快照备份与一键回滚
+### 4. 启发式标签剥离与伪中文识别盲区消除（v1.2.0+）
+- **误判盲区**：很多会话带有业务分类前缀（如 `【知识】Douyin Video Summary And Insights` 或 `【待办】Vibe Coding Skill Recommendations`）。旧正则只要在全串中命中任意一个汉字（如“知”、“待”）即判定为已汉化，导致主体全为英文的会话漏网。
+- **剥离研判算法**：
+  - 采用正则 `^[\[【](.*?)[\]】]\s*` 剥离分类标签前缀，提取纯主体字符串；
+  - 严格分析主体文本中的汉字数与多字符英文单词占比，若主体无汉字或汉字过少且含英文单词，强制判定为未汉化，消灭混血伪中文。
+
+### 5. SQLite WAL 事务截断检查点（WAL Checkpoint Invariant）
+- **WAL 模式驻留风险**：Antigravity 数据库默认开启 WAL（Write-Ahead Logging）模式，离线更新若仅停留在 `-wal` 临时日志中未并入主库，后台 `language_server.exe` 触发定期内存协调时极易用旧主本覆写主库并截断 WAL，导致修改丢失。
+- **强制落盘截断**：工具在所有单次或批量 SQLite 事务提交后，显式执行：
+  ```sql
+  PRAGMA wal_checkpoint(TRUNCATE);
+  ```
+  强制将 WAL 事务完整同步写入主数据库文件并清空 WAL，确保磁盘数据状态具备最高确定性。
+
+### 6. 自动前置快照备份与一键回滚
 - 任何写入操作执行前，工具均会自动对受影响环境中的 SQLite 数据库、`.pb` 文件与 `.pbtxt` 创建时间戳快照并存入对应目录下的 `backups/titles/`；
 - 用户可随时通过 `agy_titles.exe restore --list` 与 `agy_titles.exe restore <snapshot>` 一键秒级复原。
 
