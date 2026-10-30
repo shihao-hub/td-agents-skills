@@ -153,27 +153,27 @@ Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" 
 
 ---
 
-## 五、环境与编译打包 SOP
+## 五、环境与编译打包流水线（防退化不变式）
 
-当修改了 `scripts/wt_session_guard.py` 源码需要重新生成单文件二进制时：
+当修改了 `scripts/wt_session_guard.py` 源码需要重新生成单文件二进制时，**严禁手动裸调 nuitka 导致漏转 GUI**，必须通过自动化构建脚本一键闭环：
 
 ### 1. 依赖与环境
 - 运行时：Python 3.12+ / `uv`
-- 核心库：`psutil`（需随单文件二进制一并打包）
+- 核心库：`nuitka`、`psutil`
 - 编译器：MSVC `cl.exe` (Visual Studio 2022 Build Tools)
 
-### 2. 编译打包命令
+### 2. 一键自动化构建命令（自动派生双镜像与 PE 校验）
 ```powershell
 cd "D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session-guard"
 
-# 使用 uv 驱动 Nuitka 单文件编译（必须包含 psutil 依赖）
-uv run --with nuitka --with psutil python -m nuitka `
-  --standalone `
-  --onefile `
-  --output-dir=dist `
-  --remove-output `
-  scripts/wt_session_guard.py
+# 使用 uv 一键驱动 build.py（自动编译 CLI 版 + 自动派生无窗口 GUI 版 + 严格 PE 校验）
+uv run scripts/build.py
 ```
+
+构建脚本会自动完成：
+1. 编译 `dist/wt_session_guard.exe`（Subsystem 3, CUI）；
+2. 自动修改 PE Optional Header 生成 `dist/wt_session_guardw.exe`（Subsystem 2, GUI）；
+3. 严格断言校验两者的 PE 子系统属性，确保开机自启和后台守护 100% 具备物理级防黑框属性。
 
 ---
 

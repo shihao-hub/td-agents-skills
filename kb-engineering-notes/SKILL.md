@@ -155,7 +155,8 @@ kb-engineering-notes/
 ├── 101_win_sys_fix_Win11开始菜单固定区幽灵回填与强杀StartMenu自愈排障.md # [Stage 2: 专项排障] 针对 Windows 11 开始菜单固定区偶尔莫名其妙追加一整排官方默认应用（画图/计算器/OEM工具/纸牌）、强杀 StartMenuExperienceHost 或重启 explorer 连坐破坏 start2.bin 触发崩溃自愈（含 24H2 起 88000963 JSON 快照 0 字节残局）与 ContentDeliveryManager 静默推送通道加固
 ├── 102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md # [Stage 2: 专项排障] 针对 Chrome 扩展 Match Pattern 不支持在 host 中指定端口号致 tabs.query 抛 Invalid url pattern 语法错误排障与 JS 运行时精准前缀过滤
 ├── 103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md # [Stage 2: 专项排障] 针对木及简历 JS 动态 margin-left 内联样式致预览/导出 PDF 行首裁字与自定义 CSS 导出不生效
-└── 104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md # [Stage 2: 专项排障] 针对 chrome-devtools MCP 操作 React/AntD 站点的 el.click 无响应、菜单自动收起、受控组件写入、upload_file 沙箱路径与页面卡死处置
+├── 104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md
+└── 105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md # [Stage 2: 专项排障] 针对 Python 后台守护引擎使用 Nuitka 单文件打包后因 PE Subsystem 3 (CUI) 导致开机自启或后台启动弹黑框，及“二次修改重新编译防黑框属性退化”根因与双镜像 build.py 自动化流水线 # [Stage 2: 专项排障] 针对 chrome-devtools MCP 操作 React/AntD 站点的 el.click 无响应、菜单自动收起、受控组件写入、upload_file 沙箱路径与页面卡死处置
 └── ...（后续顺次扩充）
 ```
 
@@ -341,6 +342,7 @@ kbman touch <id>
 | Chrome 扩展通过 chrome.tabs.query 匹配本地特定端口服务（如 127.0.0.1:11111、localhost:8080）报错 Error: Invalid url pattern，需要绕开 Chromium Match Pattern 端口限制并实现毫秒级精准切页 | [`102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md) | Invalid url pattern, chrome.tabs.query 端口, Match Pattern 端口, Chrome 扩展 url pattern, 端口限制, 127.0.0.1, 11111, tabs.query 报错, 扩展切标签页 |
 | 木及简历(mujicv.com)编辑器预览和导出 PDF 每行行首/行尾字被裁掉半个字（"东南大学"缺"东"、"AI"变"AL"），或导出 PDF 不带自定义 CSS 仍是默认模板 | [`103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md) | 木及简历, mujicv, 简历导出裁字, 行首被裁, 缺半个字, AI变AL, 导出PDF没有样式, 自定义CSS不生效, 设置CSS保存, margin-left 内联 |
 | chrome-devtools MCP 操作 React/AntD 网站：el.click()/dispatchEvent 点击"成功"但页面无反应、AntD 下拉菜单几秒自动收起、受控 textarea 写入被冲掉、upload_file 报 not within workspace roots、截图/脚本连续超时 | [`104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md) | mcp 点击没反应, el.click 无效, 合成事件, CDP click, 下拉菜单收起, dropdown 自动关闭, React 受控组件, value setter, upload_file 拒绝, workspace roots, 截图超时, 页面卡死, clipboard, base64 中转 |
+| Windows 下 Python 后台常驻守护进程（如 wt-session-guard）使用 Nuitka 单文件打包后，开机自启或后台运行桌面弹出全黑 conhost 窗口，且每次二次修改重新编译后黑框防退化机制失效 | [`105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md) | 黑框一直显示, 重启弹黑窗, wt_session_guard 黑框, Nuitka 黑窗, 开机自启黑框, PE Subsystem 2 GUI, Subsystem 3 CUI, conhost 黑窗 标题为exe路径, 双镜像, build.py |
 
 ---
 
@@ -474,5 +476,6 @@ kbman touch <id>
 | 102 | [`102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md) | `102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md` | `browser` | `fix` | Chrome 扩展 Match Pattern 端口限制致 tabs.query 报错排障 |
 | 103 | [`103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md) | `103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md` | `browser` | `fix` | 木及简历 JS 动态 margin 裁字与自定义 CSS 导出链路修复 |
 | 104 | [`104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md) | `104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md` | `agent` | `fix` | MCP 浏览器自动化 React/AntD 点击、受控组件、上传与卡死踩坑 |
+| 105 | [`105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md) | `105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md` | `win` | `fix` | Nuitka 单文件双镜像编译与自启动零黑框防退化流水线 |
 
 
