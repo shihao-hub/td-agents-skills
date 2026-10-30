@@ -70,18 +70,23 @@ Windows Terminal 在会话结束时，会将各个标签页的屏幕文本序列
    - 对于 `agy`：只有当 `agy --conversation=<uuid>` 伴随 `Resume with -c` 紧贴末尾时才跳过；
 3. 一旦其后跟随了 `Model scope:`、用户重新输入的命令或任何运行中输出，立即判定为活跃新会话，退出时强制补写保底。
 
+### 3. 双镜像机制（Dual-Binary Architecture，物理级杜绝黑框）
+参考 Python 官方 `python.exe`（控制台交互）与 `pythonw.exe`（无窗口 GUI）的标准设计：
+- **`dist/wt_session_guard.exe`（PE Subsystem = 3, CUI）**：前台 CLI 工具，供终端用户执行 `status`、`scan`、`patch-all` 时输出人类可读日志；
+- **`dist/wt_session_guardw.exe`（PE Subsystem = 2, GUI）**：后台无窗口镜像，专门用于开机自启动（`HKCU Run`）和后台守护。因其声明为 GUI 子系统，Windows 内核在启动时**从物理底层绝对禁止创建 `conhost.exe` 宿主窗口**，彻底杜绝开机和重启时的黑框与闪烁。
+
 ---
 
 ## 三、CLI 常用命令速查
 
-产物位置：[`dist/wt_session_guard.exe`](file:///D:/Users/language_projects/.agents/skills/sh-user-skills/sh-wt-session-guard/dist/wt_session_guard.exe) 或单脚本 [`scripts/wt_session_guard.py`](file:///D:/Users/language_projects/.agents/skills/sh-user-skills/sh-wt-session-guard/scripts/wt_session_guard.py)。
+产物位置：[`dist/wt_session_guard.exe`](file:///D:/Users/language_projects/.agents/skills/sh-user-skills/sh-wt-session-guard/dist/wt_session_guard.exe) 与无窗口镜像 [`dist/wt_session_guardw.exe`](file:///D:/Users/language_projects/.agents/skills/sh-user-skills/sh-wt-session-guard/dist/wt_session_guardw.exe)。
 
 ### 1. 核心运行命令
 
 ```powershell
 $guard = "D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session-guard\dist\wt_session_guard.exe"
 
-# 1. 启动后台静默守护引擎（推荐日常使用）
+# 1. 启动后台静默守护引擎（自动调起 wt_session_guardw.exe，零黑框）
 & $guard guard --daemon
 
 # 2. 查询当前守护状态与在线受保护的会话列表（agy / pi）
@@ -105,14 +110,14 @@ $guard = "D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session
 
 ## 四、开机自启配置与治理（Windows Startup）
 
-为了保证电脑重启或注销登录后无需手动启动守护，守卫内置了开机自启动管理功能。
+为了保证电脑重启或注销登录后无需手动启动守护，守卫内置了开机自启动管理功能（自动注册 `wt_session_guardw.exe`，保证开机 0 黑框）。
 
 ### 1. 方式一：CLI 一键开关（推荐）
 
 ```powershell
 $guard = "D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session-guard\dist\wt_session_guard.exe"
 
-# 开启开机自启
+# 开启开机自启（自动注册 wt_session_guardw.exe）
 & $guard autostart on
 
 # 查询开机自启配置状态
@@ -128,14 +133,14 @@ $guard = "D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session
 
 - **注册表路径**：`HKCU:\Software\Microsoft\Windows\CurrentVersion\Run`
 - **键名**：`WindowsTerminalSessionGuard`
-- **键值**：`"D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session-guard\dist\wt_session_guard.exe" guard --daemon`
+- **键值**：`"D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session-guard\dist\wt_session_guardw.exe" guard --foreground`
 
 **手动添加/查看命令**：
 ```powershell
 # 开启自启
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" `
   -Name "WindowsTerminalSessionGuard" `
-  -Value '"D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session-guard\dist\wt_session_guard.exe" guard --daemon'
+  -Value '"D:\Users\language_projects\.agents\skills\sh-user-skills\sh-wt-session-guard\dist\wt_session_guardw.exe" guard --foreground'
 
 # 检查项是否存在
 Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "WindowsTerminalSessionGuard"

@@ -573,6 +573,26 @@ def get_self_executable() -> str:
     return str(py_exec)
 
 
+def get_windowless_executable() -> str:
+    """获取专用于后台静默常驻与自启动的无窗口 PE Subsystem=2 (GUI) 镜像路径"""
+    main_exe = Path(get_self_executable()).resolve()
+    if is_compiled():
+        # 若存在配套的无窗口 GUI 镜像 (wt_session_guardw.exe)，优先使用
+        name = main_exe.stem
+        if not name.endswith("w"):
+            mirror = main_exe.with_name(name + "w.exe")
+            if mirror.exists():
+                return str(mirror)
+        return str(main_exe)
+
+    # 脚本模式：优先使用 pythonw.exe
+    py_exec = Path(sys.executable).resolve()
+    pyw_exec = py_exec.parent / "pythonw.exe"
+    if pyw_exec.exists():
+        return str(pyw_exec)
+    return str(py_exec)
+
+
 def get_daemon_pid() -> Optional[int]:
     """检查后台守护进程是否正在运行"""
     if GUARD_PID_FILE.exists():
@@ -609,10 +629,10 @@ def start_daemon() -> None:
 
     import subprocess
 
-    target_exe = get_self_executable()
+    target_exe = get_windowless_executable()
     if is_compiled():
-        # 已编译为独立 exe：直接拉起自身二进制
-        cmd = [target_exe, "guard", "--foreground", "--headless"]
+        # 已编译为独立 exe：直接拉起无窗口 GUI 镜像自身二进制
+        cmd = [target_exe, "guard", "--foreground"]
     else:
         # 单脚本运行：优先使用同虚拟环境下的 pythonw.exe
         script_path = str(Path(__file__).resolve())
@@ -635,7 +655,8 @@ def start_daemon() -> None:
             print(f"[+] 守护进程已成功在后台静默启动 (PID: {daemon_pid})。")
         else:
             print(f"[+] 守护进程已发起启动 (Launcher PID: {proc.pid})。")
-        print(f"    日志文件: {GUARD_LOG_FILE}")
+        print(f"    可执行程序: {target_exe}")
+        print(f"    日志文件:   {GUARD_LOG_FILE}")
         print("    可通过 `status` 查看状态，`stop-guard` 停止。")
     except Exception as e:
         print(f"[-] 启动后台守护进程失败: {e} (调用命令: {cmd})")
@@ -844,12 +865,13 @@ def cmd_autostart(args: argparse.Namespace) -> None:
     import winreg
 
     action = (getattr(args, "action", "") or "status").lower()
-    target_exe = get_self_executable()
+    target_exe = get_windowless_executable()
     if is_compiled():
-        cmd_str = f'"{target_exe}" guard --daemon'
+        # 若为无窗口镜像，开机自启无需再通过二级 daemon 启动，直接作为静默常驻进程
+        cmd_str = f'"{target_exe}" guard --foreground'
     else:
         script_path = str(Path(__file__).resolve())
-        cmd_str = f'"{target_exe}" "{script_path}" guard --daemon'
+        cmd_str = f'"{target_exe}" "{script_path}" guard --foreground'
 
     if action in ("on", "enable", "install", "add"):
         try:
