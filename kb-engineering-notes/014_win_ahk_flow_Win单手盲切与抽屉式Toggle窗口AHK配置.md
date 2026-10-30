@@ -106,6 +106,7 @@ ToggleWin(target, runCmd := "") {
         ; 单窗口：直接最小化收起
         if (winList.Length <= 1) {
             WinMinimize('A')
+            Send("{Blind}{vkE8}")
             return
         }
         
@@ -125,6 +126,7 @@ ToggleWin(target, runCmd := "") {
             WinActivate('ahk_id ' . nextId)
         } else {
             WinMinimize('ahk_id ' . currentId)
+            Send("{Blind}{vkE8}")
         }
     } else {
         ; 3. 软件在后台：立即置顶激活
@@ -159,6 +161,7 @@ ToggleExplorer() {
         ; 单窗口：直接最小化收起
         if (winList.Length <= 1) {
             WinMinimize('A')
+            Send("{Blind}{vkE8}")
             return
         }
         
@@ -178,6 +181,7 @@ ToggleExplorer() {
             WinActivate('ahk_id ' . nextId)
         } else {
             WinMinimize('ahk_id ' . currentId)
+            Send("{Blind}{vkE8}")
         }
     } else {
         ; 3. 资源管理器在后台：立即置顶激活
@@ -377,7 +381,11 @@ ToggleChrome() {
 ; ========================================================
 #HotIf WinActive("ahk_exe chrome.exe")
 ~RAlt::Send "{Blind}{vkE8}"
-~LAlt::Send "{Blind}{vkE8}"
+~LAlt Up:: {
+    if (A_PriorKey != "Tab") {
+        Send("{Blind}{vkE8}")
+    }
+}
 #HotIf
 ```
 

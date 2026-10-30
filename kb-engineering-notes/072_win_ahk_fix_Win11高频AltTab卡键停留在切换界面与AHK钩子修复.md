@@ -201,7 +201,7 @@ Win32 子系统的键盘状态由两层完全不同的数据结构维护：
 - **豆包输入法语音仅使用【右侧 Alt (RAlt)】**，日常生活与打字绝无使用【左侧 Alt (LAlt)】进行语音输入的场景；
 - **Alt+Tab 99.9% 依赖【左侧 Alt (LAlt)】**；
 - **方案 A（最强壮推荐）**：**彻底废除对 `~LAlt` 的 Down 劫持**，仅保留 `~RAlt` 掩码透传。左 Alt 回归 100% 纯净系统原生输入流，杜绝任何 Alt+Tab 竞态；
-- **方案 B（完美兼顾）**：若用户仍希望保留“单按左 Alt 不弹出 Chrome 菜单”，**改用 `~LAlt Up` 并在其内部借助 `A_PriorKey` 进行严密判定**：只有当上一个按下的按键**确属 LAlt 本身**（即没有按过 Tab、没有按过 1~3，纯单按释放）时才发 `vkE8`。当用户按 Alt+Tab 时，`A_PriorKey` 必定为 `"Tab"`，该分支被完全短路跳过，实现零干扰！
+- **方案 B（完美兼顾）**：若用户仍希望保留“单按左 Alt 不弹出 Chrome 菜单”，**改用 `~LAlt Up` 并在其内部借助 `A_PriorKey` 排除 `"Tab"`**：只要上一个按键不是 `"Tab"`（即不是 Alt+Tab 切换窗口），释放 Alt 时均发送 `vkE8` 掩码。不仅消除了单纯单按 Alt 的菜单弹窗，而且在其他窗口通过 `Alt+A` / `Alt+1` 等快捷键最小化退回底层的 Chrome 时，也能稳定消除 Chrome 的三点菜单激活，同时确保高频 Alt+Tab 零干扰！
 
 ---
 
@@ -336,9 +336,9 @@ ToggleExplorer() {
 ; 豆包输入法语音录入透传与三点菜单消除
 ~RAlt::Send "{Blind}{vkE8}"
 
-; 左 Alt 防菜单安全守卫 (单按释放才掩码，Alt+Tab 零干扰)
+; 左 Alt 防菜单安全守卫 (只要不是 Alt+Tab，单按或组合键后释放均发 vkE8 消除三点菜单)
 ~LAlt Up:: {
-    if (A_PriorKey = "LAlt") {
+    if (A_PriorKey != "Tab") {
         Send("{Blind}{vkE8}")
     }
 }
