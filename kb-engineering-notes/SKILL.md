@@ -2,13 +2,13 @@
 name: kb-engineering-notes
 description: |
   开发者通用工程实战手记、疑难排障与自动化流水线知识库（两级渐进式检索总入口）：遇到系统/IDE/终端异常、底层报错或落地工程自动化时优先查阅。
-   【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、Worktree依赖复用、多Git账号SSH；Win11输入法图标删不掉与Windhawk注入、高频Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音输入透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm控制台委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中复制Ctrl+C假死与剪贴板锁争用；Chrome固定标签丢失SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、Zed信任表污染致全盘监听10G内存与Defender死锁、外部 ACP 线程不自动命名、SQLite会话恢复、终端丢失agy历史ID恢复；Terminal分屏治理与BOM报错；Antigravity Manager切换target-conflict、桌面端ConnectRPC热推送；Wails v3 WebView2内存暴涨释放；DarkReader暗黑插件冲突；dsh误唤起Grok与x.ai弹窗；Claude Code升级400与OpenCode协议分立路由代理及零内存纯直连；父目录Low完整性闪退；Chrome扩展MatchPattern端口报错等。
+   【排障救火】Win文件锁Permission denied、Restart Manager句柄占用原子替换静默丢失；Git变基rescheduled队列挂起、SublimeMerge非相邻Squash、多Git账号SSH；Win11输入法图标删不掉与Windhawk注入、Alt+Tab卡键粘滞、单按Alt抢Chrome焦点与语音透传；Win声卡爆音无声、代理下UWP回环、C盘清理与软链Junction、内存防死机与Pagefile；DefTerm委托断层与MCP黑框闪窗；划词工具Ctrl+C误杀终端、WT选中Ctrl+C假死与剪贴板锁争用；Chrome固定标签SNSS快照抢救；Zed/VSCode崩溃、LSP下载独占锁、ACP进程池堆积、Zed信任表污染致10G内存与Defender死锁、外部ACP线程不自动命名、SQLite会话恢复、Zed多agent会话割裂与归属迁移、终端丢失agy历史ID恢复；Terminal分屏与BOM报错；AGYManager切换target-conflict、ConnectRPC热推送；Wails v3 WebView2内存暴涨；DarkReader暗黑插件冲突；dsh误唤起Grok与x.ai弹窗；Claude Code升级400与OpenCode路由代理；父目录Low完整性闪退；Chrome扩展MatchPattern端口报错等。
   【简历排版】木及简历mujicv、简历导入导出、PDF行首裁字、简历CSS不生效、简历制作SOP。
-  【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；开源上游Issue高穿透提交与证据链设计；AGY外观Rider配色；AHK非侵入启动外挂与WMI脱离；Zed ACP代理架构与Mode拦截及YOLO安全手刹。
+  【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；Issue高穿透提交与证据链；AGY外观Rider配色；AHK非侵入启动外挂与WMI脱离；Zed ACP代理架构与Mode拦截及YOLO安全手刹；Zed会话归属过户与归档。
   检索协议：先读本路由表命中条目，再读具体手记SOP；条目持续生长，全量索引以本路由表为准；报错或点名查阅时使用。命中后先看status：deprecated弃用改读superseded_by，suspect先只读探测再执行。
-version: 2.3.2
+version: 2.3.3
 created: 2026-10-07
-updated: 2026-10-31
+updated: 2026-11-01
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -478,5 +478,6 @@ kbman touch <id>
 | 104 | [`104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md) | `104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md` | `agent` | `fix` | MCP 浏览器自动化 React/AntD 点击、受控组件、上传与卡死踩坑 |
 | 105 | [`105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md) | `105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md` | `win` | `fix` | Nuitka 单文件双镜像编译与自启动零黑框防退化流水线 |
 | 106 | [`106_agent_acp_flow_ACP代理架构与ZedMode拦截及默认YOLO安全手刹.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/106_agent_acp_flow_ACP代理架构与ZedMode拦截及默认YOLO安全手刹.md) | `106_agent_acp_flow_ACP代理架构与ZedMode拦截及默认YOLO安全手刹.md` | `agent` | `flow` | Zed ACP 代理架构实现、configOptions Mode 拦截接管与底层 YOLO 解耦及安全手刹流水线 |
+| 107 | [`107_ide_zed_flow_Zed会话Agent归属过户与归档.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/107_ide_zed_flow_Zed会话Agent归属过户与归档.md) | `107_ide_zed_flow_Zed会话Agent归属过户与归档.md` | `ide` | `flow` | Zed 会话 agent 归属过户、批量归档与 VACUUM INTO 快照回滚流水线 |
 
 
