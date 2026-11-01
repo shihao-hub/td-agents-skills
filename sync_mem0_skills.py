@@ -79,8 +79,8 @@ def find_known_routed_domains() -> set[str]:
         try:
             content = router_skill_md.read_text(encoding="utf-8")
             for line in content.splitlines():
-                line = line.strip()
-                if line.startswith("- `") or line.startswith("| `"):
+                stripped = line.strip().lstrip(">").strip()
+                if stripped.startswith("- `") or stripped.startswith("|"):
                     parts = line.split("`")
                     for p in parts:
                         p_clean = p.strip()
