@@ -5,7 +5,7 @@ description: |
   第一优先——内置工程避坑知识库（kb-engineering-notes，两级渐进式检索）：用户报出症状即优先查阅，涵盖 Windows 声卡爆音无声、代理下 UWP/微软商店回环、C 盘空间清理、内存防死机、文件锁 Permission denied、Git 变基 rescheduled、多 Git 账号 SSH 共存、Zed/Cursor/VSCode 崩溃与 LSP/ACP/会话恢复、【特大高危】Zed 信任表家目录污染致全盘监听与 10G 内存暴涨及 Defender 死锁、终端改键与 Atuin 历史、PowerShell7 绿色部署、字体渲染与右键菜单、Sublime 搜索与 Markdown 预览、浏览器静默插件、Word/试卷自动化排版、无 API 事实核查、跨盘软链接机制、进程启动来源取证、Windows Terminal 分屏治理、Office原图提取、CMake构建排障、Bruno测试集生成、GitHub仓库大扫除、本地服务PWA窗口、SQLAlchemy查询抽取等；全量索引以知识库内部路由表为准，随条目持续生长。
   直调命令门面（sh-cmd-*：交付计划、规格驱动、Monorepo提交、排障复盘、会话交接、桌面双通道构建（Go/Python））；
   开发与重构（后端系统设计、OOP 重构、饥荒模组逆向探索、前端去 AI 味、UI浮层与弹窗选型、PyStand 打包、Nuitka 单文件打包、WT 独立版定制守卫）；
-  文档、检索与媒资归档（PRD/技术方案、技能创作与知识库规范、书转 skill、全盘找文件/大文件、本地文档知识库语义检索、Everything秒搜、音视频下载转写字幕、网页存档、飞书归档、简历制作与木及mujicv导出）；
+  文档、检索与媒资归档（PRD/技术方案、技能创作与知识库规范、书转 skill、全盘找文件/大文件、本地文档知识库语义检索、Everything秒搜、音视频下载转写字幕、字幕转精读本HTML、网页存档、飞书归档、简历制作与木及mujicv导出）；
   另有飞书、Redis/Iris、Mem0、antigravity、Matt Pocock、备用库六个族路由器；用户直接点名 `sh-*` 或 `sh-cmd-*`（含拼写近似）时均由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
 version: 1.14.0
 created: 2026-10-07
@@ -48,6 +48,7 @@ updated: 2026-10-27
 | 加个弹窗／浮层选型／弹窗还是抽屉／Modal规范／Tooltip与Toast／弹窗防坑／UI弹出提示 | `sh-ui-layer-guide` |
 | 编写技能规范／新建技能规则／技能创作规则／知识库沉淀规范／子技能回填闭环／技能提级暴露 | `sh-skill-authoring-rules`（全局规范技能，已暴露，可直接点名） |
 | 把视频/音频转成字幕 | `sh-video-transcribe` |
+| 字幕转精读本／访谈转写做成HTML／对话转网页阅读／生成精读单页 | `sh-transcript-reader` |
 | 抖音/B站无水印下载、知乎文章存 Markdown | `sh-zhangshihao-douyin-dl` |
 | 图片去水印／去角标 | `sh-image-watermark-removal` |
 | 网页存档／离线保存网页 | `sh-web-archive` |
@@ -136,6 +137,7 @@ updated: 2026-10-27
 | `sh-docsearch` | 本地文档与知识库语义检索（docsearch 一次性查询，即查即退，0 内存驻留）。点名使用 |
 | `sh-zhangshihao-douyin-dl` | 本机抖音/B 站视频下载 + 知乎文章提取为 Markdown 与本地原图。点名使用 |
 | `sh-video-transcribe` | 视频/音频提取字幕并总结：ffmpeg 抽音轨→faster-whisper 本地转写 SRT/TXT→AI 总结。点名使用 |
+| `sh-transcript-reader` | 字幕与访谈转写稿转杂志风精读本 HTML：解析 SRT/TXT、提炼模型与金句、生成规范命名的独立阅读单页。点名使用 |
 | `sh-image-watermark-removal` | 去水印/角标：PIL+numpy 局部修补，擅长水印压在图案笔画上的复杂情形。点名使用 |
 | `sh-web-archive` | 公开网页存档为离线三 tab 页面（原文转录+AI 总结+可编辑），媒体本地化。点名使用 |
 | `sh-lark-chat-archive` | 飞书聊天记录归档为单文件 HTML（私聊/群聊/话题，纸面排版+图注+lightbox）。点名使用 |
