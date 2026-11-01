@@ -1,9 +1,9 @@
 ---
 name: sh-agy-session-governance
 description: Google Antigravity (App 与 CLI 双端) 会话标题批量治理与汉化工具 SOP。支持查看导出英文会话、AI 协同智能翻译生成中文标题、SQLite 字段与 Protobuf raw_summary / agyhub_summaries_proto.pb / annotations 四重原子双写更新、自动前置快照备份与一键还原。点名使用
-version: 1.2.0
+version: 1.3.0
 created: 2026-10-13
-updated: 2026-10-30
+updated: 2026-11-01
 disable-model-invocation: true
 ---
 
@@ -56,6 +56,14 @@ disable-model-invocation: true
 ### 6. 自动前置快照备份与一键回滚
 - 任何写入操作执行前，工具均会自动对受影响环境中的 SQLite 数据库、`.pb` 文件与 `.pbtxt` 创建时间戳快照并存入对应目录下的 `backups/titles/`；
 - 用户可随时通过 `agy_titles.exe restore --list` 与 `agy_titles.exe restore <snapshot>` 一键秒级复原。
+
+### 7. 原生自动生成中文标题不可行性定论与架构隔离 (v1.3.0+)
+- **二进制逆向铁证**：基于对 `language_server.exe`（.rdata 数据段 RVA `0x371c7f2`）的逆向工程，会话标题生成由 `CascadeManager.maybeGenerateConversationTitle` 触发独立的远程 RPC（`JetskiRemoteAgentProxyService/GenerateConversationTitle`）；
+- **规则沙箱物理隔离**：该 RPC 是完全独立的 Out-of-band Sidecar 请求，请求负载仅含用户输入文本与附件，**完全不携带**主会话的任何系统提示词。因此，在 `AGENTS.md` / `GLOBAL.md` 中无论如何强调“必须使用中文”，标题生成模型完全无法读取；
+- **硬编码 Prompt 束缚**：底层硬编码的 System Prompt 明确指定：`Respond with ONLY a short conversation title (3-5 words, title-cased, no prefix)`。由于缺少 `in the same language as the prompt` 指令，云端 Gemini 模型严格执行 `title-cased`（首字母大写）指令，强行将中文意图翻译为英文短语；
+- **双轨工程解法**：
+  1. **日常自动化**：使用纯 Go 编写的常驻后台守护进程 [`agyapptitle`](file:///d:/Users/language_projects/go_projects/agyapptitle)，实时监听 DB 写入并自动调用极速 LLM 汉化 + ConnectRPC 热推送；
+  2. **批量治理保底**：维持本技能提供的 Python/CLI 批处理脚本，在积累较多会话时一键全量审计治理。
 
 ---
 
