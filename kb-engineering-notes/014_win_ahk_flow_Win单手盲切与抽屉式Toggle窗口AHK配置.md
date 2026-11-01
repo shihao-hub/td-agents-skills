@@ -8,7 +8,7 @@ type: flow
 slug: "Win单手盲切与抽屉式Toggle窗口AHK配置"
 status: verified
 created: "2026-09-22"
-last_verified: "2026-10-27"
+last_verified: "2026-11-01"
 compatibility:
   os: ["windows"]
 invocation:
@@ -91,9 +91,9 @@ Windows 用户自启目录快捷路径为 `shell:startup`（对应 `C:\Users\<�
 ; 3. 软件当前已在最前 -> 再次按下则最小化收起
 ; 4. 多窗口处理：若有多个窗口，依次轮换，最后一个最小化收起
 ; ========================================================
-ToggleWin(target, runCmd := "") {
+ToggleWin(target, runCmd := "", excludeTitle := "") {
     ; 1. 软件未运行
-    if !WinExist(target) {
+    if !WinExist(target, , excludeTitle) {
         if (runCmd != "") {
             try Run(runCmd)
         }
@@ -101,8 +101,8 @@ ToggleWin(target, runCmd := "") {
     }
 
     ; 2. 如果当前激活窗口正是该目标
-    if WinActive(target) {
-        winList := WinGetList(target)
+    if WinActive(target, , excludeTitle) {
+        winList := WinGetList(target, , excludeTitle)
         ; 单窗口：直接最小化收起
         if (winList.Length <= 1) {
             WinMinimize('A')
@@ -130,7 +130,7 @@ ToggleWin(target, runCmd := "") {
         }
     } else {
         ; 3. 软件在后台：立即置顶激活
-        WinActivate(target)
+        WinActivate(target, , excludeTitle)
     }
 }
 
@@ -302,7 +302,7 @@ ToggleDsh() {
 
     ; 2. Chrome PWA 独立应用存在：对其生效 (通过 ExcludeTitle 杜绝误匹配普通 Chrome)
     if WinExist(targetChromeApp, , ' - Google Chrome') {
-        ToggleWin(targetChromeApp)
+        ToggleWin(targetChromeApp, , ' - Google Chrome')
         return
     }
 
@@ -443,8 +443,10 @@ AHK 脚本加载进内存后，修改文件不会自动热更新，需通过以�
   1. **PWA 独立窗口混淆**：通过 Chrome 安装的 Web 应用底层的进程依然是 `chrome.exe`，标题不含 ` - Google Chrome`；
   2. **MCP / 自动化测试窗口抢占混淆**：当 Agent 会话调用 `chrome-devtools-mcp`、Playwright 等自动化工具时，会拉起带有 `--enable-automation` 的独立 Chrome 窗口（如临时 profile、带“自动测试软件正在控制 Chrome”黄色条目）。该窗口标题同样带有 ` - Google Chrome`！
 - **严重后果**：若 AHK 简单使用 `WinExist(' - Google Chrome ahk_exe chrome.exe')`，在 Windows Z-Order 层级中，新拉起的 MCP 测试窗口会被优先匹配并抢占置顶；且因该窗口带 `--disable-extensions` 未装插件，会导致按 Alt+D 错误唤出测试窗口且快捷键失灵；
-- **终极隔离解法（命令行内存指纹缓存）**：
-  封装 `GetMainChromeHwnd()` 函数，利用 `Win32_Process.CommandLine` 深度检测启动参数。凡包含 `chrome-devtools-mcp` 或 `--enable-automation` 者一律短路跳过，并借助 `static cmdCache` 内存哈希表实现一次查询常驻，按键调度耗时 `< 0.01ms`，彻底实现日常主浏览器与 MCP 测试窗口的 100% 物理隔离。
+- **终极隔离解法（命令行内存指纹缓存与 ExcludeTitle 穿透）**：
+  1. 封装 `GetMainChromeHwnd()` 函数，利用 `Win32_Process.CommandLine` 深度检测启动参数。凡包含 `chrome-devtools-mcp` 或 `--enable-automation` 者一律短路跳过，并借助 `static cmdCache` 内存哈希表实现一次查询常驻，按键调度耗时 `< 0.01ms`，彻底实现日常主浏览器与 MCP 测试窗口的 100% 物理隔离；
+  2. **ExcludeTitle 穿透传递必检（防误切普通浏览器与 Alt+D 触发地址栏）**：
+     AHK v2 默认使用模糊匹配（`SetTitleMatchMode 2`）。若在 `ToggleDsh` 外部判定时虽写了 `WinExist(..., , ' - Google Chrome')`，但在调用 `ToggleWin` 时未将 `ExcludeTitle` 穿透传递，`ToggleWin` 内部的 `WinGetList` 依然会捕获普通 Chrome（标签页包含同名关键词），导致抽屉式单窗口误判为“多窗口轮换”，从而将窗口切到普通 Chrome 并触发浏览器原生的 <kbd>Alt</kbd> + <kbd>D</kbd>（聚焦地址栏）。必须给 `ToggleWin` 显式增加 `excludeTitle` 参数并在全链路穿透。
 
 ### 9. 原生客户端、Web PWA 与浏览器常驻标签「三模优先级平滑降级」调度模式
 - **场景痛点**：对于既有本地独立客户端（如 `DeepSeek Harness.exe`）、Chrome Web PWA 版本，又经常在普通 Chrome 浏览器中常驻固定标签页（如 `http://127.0.0.1:11111/`）的工具，若分配不同按键会极大破坏盲切手感；而若未运行程序时盲目冷启动，又极易在服务未开时唤出浏览器报错窗口；
