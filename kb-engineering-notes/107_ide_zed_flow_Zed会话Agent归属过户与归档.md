@@ -185,6 +185,9 @@ Remove-Item "$env:LOCALAPPDATA\Zed\db\0-stable\db.sqlite-wal",
 
 ### 扩展方向
 
-- **双向迁移**：同一套 `adopt` 逻辑可反向执行（代理 → 官方），排查代理问题时用得上；
+- **精确回迁**：`adopt` 反向执行即可把会话还给原条目，但库里**没有来源标记**，`agent_id`
+  一旦改写就无法反推归属，全量反向会误伤原本就在代理名下的会话；正确做法是
+  `--snapshot <迁移前快照> --from <代理> --to <原条目>`，只回迁快照里属于目标条目的那些
+  （`--snapshot-agent` 可指定判定基准，默认取 `--to`）；
 - **与 zedhub 的 `sessions link` 合并**：后者解决“会话不在 Zed 索引里”，本条目解决“在索引里但归属不对”，两者都只动 `sidebar_threads`，可收敛成一个会话运维入口；
 - **跨机迁移**：`session_id` 不变 + `conversations/<sid>.db` 整文件搬运，即可把会话带到另一台机器后重新登记。
