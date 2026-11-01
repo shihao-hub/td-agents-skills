@@ -326,21 +326,50 @@ def try_call_app_rpc(tasks: List[Tuple[str, str, str]]) -> Dict[str, bool]:
         res2 = subprocess.run(cmd2, capture_output=True, text=True, encoding="utf-8", errors="replace", shell=True)
         ports = [int(p.strip()) for p in res2.stdout.split() if p.strip().isdigit()]
 
-        http_port = None
+        rpc_port = None
+        is_https = False
+        import ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
         for p in ports:
+            # 1. 尝试 HTTPS Heartbeat
             try:
-                req = urllib.request.Request(f"http://127.0.0.1:{p}/", headers={"User-Agent": "antigravity"})
-                with urllib.request.urlopen(req, timeout=0.8) as resp:
+                req = urllib.request.Request(
+                    f"https://127.0.0.1:{p}/exa.language_server_pb.LanguageServerService/Heartbeat",
+                    data=b"{}",
+                    headers={"Content-Type": "application/json", "x-codeium-csrf-token": csrf_token, "User-Agent": "antigravity"}
+                )
+                with urllib.request.urlopen(req, context=ctx, timeout=0.8) as resp:
                     if resp.status == 200:
-                        http_port = p
+                        rpc_port = p
+                        is_https = True
                         break
             except Exception:
                 pass
 
-        if not http_port:
+            # 2. 尝试 HTTP Heartbeat
+            try:
+                req = urllib.request.Request(
+                    f"http://127.0.0.1:{p}/exa.language_server_pb.LanguageServerService/Heartbeat",
+                    data=b"{}",
+                    headers={"Content-Type": "application/json", "x-codeium-csrf-token": csrf_token, "User-Agent": "antigravity"}
+                )
+                with urllib.request.urlopen(req, timeout=0.8) as resp:
+                    if resp.status == 200:
+                        rpc_port = p
+                        is_https = False
+                        break
+            except Exception:
+                pass
+
+        if not rpc_port:
             return results
 
-        rpc_url = f"http://127.0.0.1:{http_port}/exa.language_server_pb.LanguageServerService/UpdateConversationAnnotations"
+        scheme = "https" if is_https else "http"
+        rpc_url = f"{scheme}://127.0.0.1:{rpc_port}/exa.language_server_pb.LanguageServerService/UpdateConversationAnnotations"
+        req_ctx = ctx if is_https else None
         for cid, _, new_title in tasks:
             payload = json.dumps({
                 "cascadeIds": [cid],
@@ -357,7 +386,7 @@ def try_call_app_rpc(tasks: List[Tuple[str, str, str]]) -> Dict[str, bool]:
                 }
             )
             try:
-                with urllib.request.urlopen(req, timeout=3) as resp:
+                with urllib.request.urlopen(req, context=req_ctx, timeout=3) as resp:
                     results[cid] = (resp.status == 200)
             except Exception:
                 results[cid] = False
