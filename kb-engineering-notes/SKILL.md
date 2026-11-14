@@ -6,9 +6,9 @@ description: |
   【简历排版】木及简历mujicv、简历导入导出、PDF行首裁字、简历CSS不生效、简历制作SOP。
   【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；Issue高穿透提交与证据链；AGY外观Rider配色；AHK非侵入启动外挂与WMI脱离；Zed ACP代理架构与Mode拦截及YOLO安全手刹；Zed会话归属过户与归档。
   检索协议：先读本路由表命中条目，再读具体手记SOP；条目持续生长，全量索引以本路由表为准；报错或点名查阅时使用。命中后先看status：deprecated弃用改读superseded_by，suspect先只读探测再执行。
-version: 2.3.3
+version: 2.3.5
 created: 2026-10-07
-updated: 2026-11-01
+updated: 2026-11-14
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -156,7 +156,14 @@ kb-engineering-notes/
 ├── 102_browser_chrome_fix_扩展MatchPattern端口限制与tabs查询排障.md # [Stage 2: 专项排障] 针对 Chrome 扩展 Match Pattern 不支持在 host 中指定端口号致 tabs.query 抛 Invalid url pattern 语法错误排障与 JS 运行时精准前缀过滤
 ├── 103_browser_mujicv_fix_木及简历自定义CSS行首裁字与导出无样式修复.md # [Stage 2: 专项排障] 针对木及简历 JS 动态 margin-left 内联样式致预览/导出 PDF 行首裁字与自定义 CSS 导出不生效
 ├── 104_agent_dsh_fix_MCP浏览器自动化antd表单与文件上传踩坑.md
-└── 105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md # [Stage 2: 专项排障] 针对 Python 后台守护引擎使用 Nuitka 单文件打包后因 PE Subsystem 3 (CUI) 导致开机自启或后台启动弹黑框，及“二次修改重新编译防黑框属性退化”根因与双镜像 build.py 自动化流水线 # [Stage 2: 专项排障] 针对 chrome-devtools MCP 操作 React/AntD 站点的 el.click 无响应、菜单自动收起、受控组件写入、upload_file 沙箱路径与页面卡死处置
+├── 105_win_conhost_fix_Nuitka单文件双镜像编译与自启动零黑框防退化流水线.md # [Stage 2: 专项排障] 针对 Python 后台守护引擎使用 Nuitka 单文件打包后因 PE Subsystem 3 (CUI) 导致开机自启或后台启动弹黑框，及“二次修改重新编译防黑框属性退化”根因与双镜像 build.py 自动化流水线
+├── 106_agent_acp_flow_ACP代理架构与ZedMode拦截及默认YOLO安全手刹.md # [Stage 2: 专项流水线] 针对 Zed ACP 代理架构实现、configOptions Mode 拦截接管与底层 YOLO 解耦及安全手刹流水线
+├── 107_ide_zed_flow_Zed会话Agent归属过户与归档.md # [Stage 2: 专项流水线] 针对 Zed 会话 agent 归属过户、批量归档与 VACUUM INTO 快照回滚流水线
+├── 108_agent_agy_fix_Antigravity原生标题英文硬编码逆向与官方RPC隔离.md # [Stage 2: 专项排障] 针对 Antigravity 原生标题英文硬编码逆向、独立 RPC 隔离机制与解决方案谱系
+├── 109_agent_rea_flow_REA接入DSH与Ghidra引擎部署.md # [Stage 2: 专项流水线] 针对 REA 源码部署、只接入 DSH（Cordis patch）与 Ghidra 12.1.x 引擎配置流水线
+├── 110_agent_opencode_fix_OpenCode插件ACP斜杠命令静默无响应排障.md # [Stage 2: 专项排障] 针对 OpenCode v2 插件注册 skills 为斜杠命令致 ACP 协议提前终结 (acp_turn Eager Return) 与未 await ctx.session.wait 导致 Zed 静默无响应排障
+├── 111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md # [Stage 2: 专项排障] 针对 MSYS2 runtime 路径转换吞掉 cmd 斜杠开关、交互态 EOF 退出码 0 的静默失败链路与命令成功判据，以及 Agent 主 Shell 误配 Git Bash 致原生 CLI 斜杠开关批量失效
+├── 112_agent_claude_flow_ClaudeCode接入DS双通道配置.md # [Stage 2: 专项流水线] 针对 Claude Code 接 DeepSeek 官方直连 / OpenCode Go 双配方、1M 上下文标记与验证
 └── ...（后续顺次扩充）
 ```
 
@@ -257,7 +264,7 @@ kbman touch <id>
 | Sublime Text 或 Sublime Merge 代码中文乱码、字体发虚或想使用清晰的等宽混合字体 | [`033_ide_sublime_flow_YaHeiConsolasHybrid字体渲染与Sublime配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/033_ide_sublime_flow_YaHeiConsolasHybrid字体渲染与Sublime配置.md) | YaHei Consolas Hybrid, Sublime 字体设置, 字体发虚, UI 字体补丁 |
 | Windows 11 下希望为文件和文件夹添加“Open with Sublime Text”经典与新型右键菜单 | [`034_ide_sublime_flow_Win11右键菜单注册Sublime与注册表快捷管理.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/034_ide_sublime_flow_Win11右键菜单注册Sublime与注册表快捷管理.md) | Sublime 右键菜单, Win11 注册表右键, 经典右键菜单, Open with Sublime |
 | 使用 Pi 终端时快捷键冲突、滚轮误触发历史命令或需要自定义按键动作 | [`035_ide_pi_fix_Pi终端改键与滚轮协议冲突修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/035_ide_pi_fix_Pi终端改键与滚轮协议冲突修复.md) | Pi 终端改键, 按键映射, 滚轮翻历史, 终端按键协议, keybindings |
-| Windows 各 AI Agent 终端默认是 CMD 或 PowerShell，经常乱码或脚本语法报错，希望统一走 Git Bash | [`036_agent_core_flow_各Agent客户端终端机制与GitBash切换.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/036_agent_core_flow_各Agent客户端终端机制与GitBash切换.md) | Agent 终端乱码, 切换 Git Bash, Codex 终端设置, OpenCode 终端 |
+| Windows 各 AI Agent 终端默认是 CMD 或 PowerShell，经常乱码或脚本语法报错，希望统一走 Git Bash | [`036_agent_core_flow_各Agent客户端终端机制与GitBash切换.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/036_agent_core_flow_各Agent客户端终端机制与GitBash切换.md) | Agent 终端乱码, 切换 Git Bash, Codex 终端设置, OpenCode 终端, OpenCode shell 回退 pwsh |
 | opencode 需要通过 chrome-devtools-mcp 控制本机浏览器，遇到远程端口连不上或握手失败 | [`037_browser_devtools_flow_opencode集成chrome-devtools-mcp浏览器控制.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/037_browser_devtools_flow_opencode集成chrome-devtools-mcp浏览器控制.md) | chrome-devtools-mcp, 浏览器自动化控制, opencode 浏览器插件, 调试端口 |
 | Zed 的 opencode 插件思考档位失灵、服务进程断连或无法成功读取自定义 API 配置 | [`038_agent_zed_flow_Zed集成opencodeAgent思考档位与供应商迁移.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/038_agent_zed_flow_Zed集成opencodeAgent思考档位与供应商迁移.md) | Zed opencode, 思考档位, 供应商配置迁移, opencode 启动脚本 |
 | 需要核实「某个公开信息到底有没有/是什么」（如某公司内部工具名），手上只有终端、没有搜索 API，且担心把「我没查到」误当「不存在」 | [`039_agent_core_flow_无搜索API时DDG端点核查与一手信源收敛.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/039_agent_core_flow_无搜索API时DDG端点核查与一手信源收敛.md) | 公开信息核查, 到底有没有, 第一方信源, DuckDuckGo HTML, html.duckduckgo.com, uddg 解包, SERP 降级页, 假阴性, site: 收敛, 是不是不存在 |
@@ -347,6 +354,10 @@ kbman touch <id>
 | Zed 侧边栏会话混杂在多个 agent 条目下（如官方 antigravity-acp 与自建代理条目），需要就地过户归属、批量归档历史会话并实现 VACUUM INTO 快照回滚 | [`107_ide_zed_flow_Zed会话Agent归属过户与归档.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/107_ide_zed_flow_Zed会话Agent归属过户与归档.md) | Zed 会话过户, agent 归属迁移, sidebar_threads 批量归档, VACUUM INTO, antigravity-acp 迁移, 会话收编, 回滚流水线 |
 | Google Antigravity Desktop App 在 GLOBAL.md/AGENTS.md 里怎么强调中文但生成的标题始终为首字母大写英文，探究底层硬编码 System Prompt 与独立 RPC 沙箱隔离机制及解决方案谱系 | [`108_agent_agy_fix_Antigravity原生标题英文硬编码逆向与官方RPC隔离.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/108_agent_agy_fix_Antigravity原生标题英文硬编码逆向与官方RPC隔离.md) | Antigravity 自动生成中文标题, Antigravity 标题英文, language_server.exe 逆向, GenerateConversationTitle, title-cased, CascadeManager.maybeGenerateConversationTitle, 会话标题汉化 |
 | 想在 Windows 上把 REA 逆向工程 MCP 工具只接入 DeepSeek Harness，或 `rea doctor` 报 provider_unavailable / Ghidra unsupported_version / npm install EBADENGINE，需一次配完源码+预编译原生插件+Ghidra 引擎并在重启后直接可用 | [`109_agent_rea_flow_REA接入DSH与Ghidra引擎部署.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/109_agent_rea_flow_REA接入DSH与Ghidra引擎部署.md) | REA 安装, rea-agents 配置, DSH 挂 MCP, cordis.patch.yml, rea-windows-x64.node, EBADENGINE, engine-strict, GHIDRA_INSTALL_DIR, provider_unavailable, unsupported_version, Ghidra 12.1.x, unblob invalid path, mcp__rea__ |
+| OpenCode 插件将 skills 动态注册为斜杠命令后，在 Zed ACP 界面输入 `/sh-cmd-*` 发送完全无响应、无 Thinking、无报错，去掉斜杠后正常对话 | [`110_agent_opencode_fix_OpenCode插件ACP斜杠命令静默无响应排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/110_agent_opencode_fix_OpenCode插件ACP斜杠命令静默无响应排障.md) | opencode skill 无响应, opencode 斜杠命令没反应, acp_turn, eager return, session.wait, editor.add, CommandEditor, detectSlashCommand, availableCommands |
+| Git Bash / MSYS2 中执行 `cmd /c "..."` 只打印 cmd banner 与交互提示符、无任何业务输出却返回 exit code 0，把"命令根本没执行"误判成"执行成功且无匹配项"，伴生 `FINDSTR: 无法打开 xxx` 参数错位 | [`111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md) | cmd /c 没输出, cmd 只打印 banner, cmd 进入交互模式, MSYS_NO_PATHCONV, MSYS2_ARG_CONV_EXCL, cmd //c, 路径转换, POSIX to Windows path conversion, Git Bash cmd 参数丢失, FINDSTR 无法打开, exit code 0 但没结果, 命令没执行却返回成功, schtasks 查不到, cmd /c 被转成 C:/ |
+| 把 Agent（OpenCode 等）的 `shell` 配成 Git Bash 后，`/Validate` 这类带 `/flag` 的原生 CLI 调用挂死或空输出，Agent 把环境问题误判成脚本语法错误、连续多轮修不存在的 bug | [`111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md) | Agent shell 配成 Git Bash, opencode shell, 原生 CLI 斜杠开关失效, /Validate 挂死, AHK 参数被吃, 命令超时却无报错, ErrorStdOut 弹窗, 主 Shell 选型 |
+| Claude Code 接入 DeepSeek（官方直连或 OpenCode Go）后 `/context` 只有 200k、模型名带不带 `[1m]` 分不清、`deepseek-flash` 与 `deepseek-v4.1-flash` 混用报 Model is unavailable，或新电脑需要让 agent 一键生成 settings.json 并保住 effort 配置 | [`112_agent_claude_flow_ClaudeCode接入DS双通道配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/112_agent_claude_flow_ClaudeCode接入DS双通道配置.md) | Claude Code 接入 DeepSeek, opencode go 接 deepseek, /context 200k, [1m] 后缀, contextWindow 1000000, deepseek-flash, deepseek-v4.1-flash, Model is unavailable, CC Switch effortLevel, CLAUDE_CODE_EFFORT_LEVEL 丢失, settings.json 配置, 新电脑配置, 模型名映射 |
 
 ---
 
@@ -485,5 +496,8 @@ kbman touch <id>
 | 107 | [`107_ide_zed_flow_Zed会话Agent归属过户与归档.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/107_ide_zed_flow_Zed会话Agent归属过户与归档.md) | `107_ide_zed_flow_Zed会话Agent归属过户与归档.md` | `ide` | `flow` | Zed 会话 agent 归属过户、批量归档与 VACUUM INTO 快照回滚流水线 |
 | 108 | [`108_agent_agy_fix_Antigravity原生标题英文硬编码逆向与官方RPC隔离.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/108_agent_agy_fix_Antigravity原生标题英文硬编码逆向与官方RPC隔离.md) | `108_agent_agy_fix_Antigravity原生标题英文硬编码逆向与官方RPC隔离.md` | `agent` | `fix` | Antigravity 原生标题英文硬编码逆向、独立 RPC 隔离机制与解决方案谱系 |
 | 109 | [`109_agent_rea_flow_REA接入DSH与Ghidra引擎部署.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/109_agent_rea_flow_REA接入DSH与Ghidra引擎部署.md) | `109_agent_rea_flow_REA接入DSH与Ghidra引擎部署.md` | `agent` | `flow` | REA 源码部署、只接入 DSH（Cordis patch）与 Ghidra 12.1.x 引擎配置流水线 |
+| 110 | [`110_agent_opencode_fix_OpenCode插件ACP斜杠命令静默无响应排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/110_agent_opencode_fix_OpenCode插件ACP斜杠命令静默无响应排障.md) | `110_agent_opencode_fix_OpenCode插件ACP斜杠命令静默无响应排障.md` | `agent` | `fix` | OpenCode v2 插件注册 skills 致 ACP 斜杠命令静默掐断与 session.wait 修复排障 |
+| 111 | [`111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md) | `111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md` | `win` | `fix` | MSYS2 路径转换吞掉 cmd 斜杠开关、交互态静默退出 0、命令成功判据，以及 Agent 主 Shell 误配 Git Bash 的批量失效与选型判据 |
+| 112 | [`112_agent_claude_flow_ClaudeCode接入DS双通道配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/112_agent_claude_flow_ClaudeCode接入DS双通道配置.md) | `112_agent_claude_flow_ClaudeCode接入DS双通道配置.md` | `agent` | `flow` | Claude Code 接入 DeepSeek 官方直连 / OpenCode Go 双通道配置、`[1m]` 上下文标记与 1M 窗口验证流水线 |
 
 
