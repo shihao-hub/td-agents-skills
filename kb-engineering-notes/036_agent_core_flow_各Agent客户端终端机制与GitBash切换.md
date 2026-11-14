@@ -1,6 +1,6 @@
 ---
 name: kb-windows-agent-shell
-description: Windows 各 Agent 客户端（Codex/Claude/OpenCode/Pi/AGY）终端机制与 Git Bash 切换指南。
+description: Windows 各 Agent 客户端（Codex/Claude/OpenCode/Pi/AGY）终端机制与 Git Bash 切换指南；含 OpenCode 主 Shell 已实测回退 pwsh 的判据（Git Bash 会触发 MSYS 参数转换静默失真，详见 111 第五节）。
 id: "036"
 domain: agent
 scope: core
@@ -8,7 +8,8 @@ type: flow
 slug: "各Agent客户端终端机制与GitBash切换"
 status: verified
 created: "2026-09-22"
-last_verified: "2026-10-20"
+updated: "2026-11-14"
+last_verified: "2026-11-14"
 compatibility:
   os: ["windows"]
 invocation:
@@ -49,7 +50,7 @@ invocation:
 | :--- | :--- | :--- | :---: | :--- |
 | **pi** | Git Bash | **Git Bash** | ✅ **天然是** | 源码写死探测 `%ProgramFiles%\Git\bin\bash.exe`，直接以 `bash -c` 执行 |
 | **Claude Code** | Git Bash | **Git Bash** | ✅ **天然是** | 官方核心工具仅设计为 `Bash`，Windows 强制依赖并挂载 Git Bash/MSYS2 快照 |
-| **OpenCode** | PowerShell | **PowerShell** | ✅ **原生配置支持** | `opencode.json` 原生提供 `shell` 字段，填绝对路径即可一键切换 |
+| **OpenCode** | PowerShell | **PowerShell** | ⚠️ **可配但已实测回退** | `opencode.json` 原生 `shell` 字段，但配 Git Bash 会触发 MSYS 参数转换静默失真（见 111 第五节），已实测回退 pwsh |
 | **Codex** | **Git Bash** (已支持) | **PowerShell** (硬编码) | ⚠️ **仅界面可改** | 桌面端支持 `integratedTerminalShell`；但后台 Agent 沙箱硬编码 Rust 原生 PowerShell 管道 |
 | **Antigravity** | PowerShell | **PowerShell** (宿主绑定) | ⚠️ **仅界面可改** | IDE 基于 VS Code 可配终端 Profile；底层 Agent 任务调度与信号绑定在 PowerShell 宿主 |
 
@@ -58,23 +59,41 @@ invocation:
 ## 二、各 Agent 配置与切换 SOP
 
 ### 1. OpenCode (`opencode-ai`)
-OpenCode 在 Windows 下未声明 `shell` 时，会自动探测并回退到 `pwsh.exe` 或 `powershell.exe`。
 
-**切换步骤**：
-1. 编辑配置文件 `~/.config/opencode/opencode.json`（Windows 路径 `C:/Users/<User>/.config/opencode/opencode.json`）。
-2. 在根对象中加入 `shell` 字段，必须填 Git Bash 绝对路径（用正斜杠或转义双反斜杠）：
-   ```json
-   {
-     "$schema": "https://opencode.ai/config.json",
-     "shell": "D:/Program Files/Git/bin/bash.exe",
-     "mcp": { ... }
-   }
-   ```
-3. 验证配置解析：
-   ```powershell
-   opencode debug config
-   ```
-   检查输出中的 `"shell"` 字段是否正确指向 Git Bash。
+> **结论先行（2026-11-14 修正）**：**保持 pwsh 7 全路径，不要把 Git Bash 设成 OpenCode 主 Shell**。OpenCode 在 Windows 下未声明 `shell` 时，会自动探测并回退到 `pwsh.exe` 或 `powershell.exe`，这是正确行为。
+
+**推荐配置（根级）**：
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "shell": "C:/Users/<User>/AppData/Local/Programs/PowerShell/7/pwsh.exe",
+  "mcp": { ... }
+}
+```
+
+**验证配置解析**：
+
+```powershell
+opencode debug config | Select-String '"shell"'
+```
+
+**实测回退记录（2026-11-14，Windows 11 25H2）**：
+
+- 曾把 `shell` 配成 `D:/Program Files/Git/bin/bash.exe`，随后在给 AutoHotkey 脚本做 `/Validate` 语法校验时，命令挂死并弹出标题为 `ErrorStdOut` 的"文件未找到"对话框——MSYS 把 `/ErrorStdOut` 转成了 `C:\Program Files\Git\ErrorStdOut`。
+- Agent 侧只能看到「超时 + 零输出」，因此把**环境问题误判成脚本语法错误**，连续多轮走偏。
+- 同机对照：同一条命令在 pwsh 7.6.9 下 `ExitCode=0` 秒回；`cmd /c "echo ok"` 在 Git Bash 下只打印 banner + exit 0，在 pwsh 下正常输出。
+- 完整机理、判据与回归断言见 **`111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md` 第五节**。
+
+**若仍要切换到 Git Bash（不推荐，仅在确认无原生 CLI 调用时）**：
+
+```json
+"shell": "D:/Program Files/Git/bin/bash.exe"
+```
+
+切换后必须接受 111 第五节列出的系统性风险：任何带 `/flag` 的 Windows 原生 CLI 调用都可能被静默改写。
+
+**需要 POSIX 工具链时的正确做法**：保留 pwsh 主 Shell，按需显式调 Git Bash（绝对路径，禁止裸写 `bash`）。
 
 ---
 
@@ -144,6 +163,7 @@ Antigravity IDE 内核基于 VS Code，编辑其用户设置 `AppData/Roaming/An
 | 症状 / 报错 | 根因分析 | 修复方案 |
 | :--- | :--- | :--- |
 | `WSL ERROR: execvpe(/bin/bash) failed` | 命令直接调用 `bash`，命中了 System32 下损坏或未初始化的 WSL stub | 配置和脚本中禁止裸调 `bash`，统一换成 `D:/Program Files/Git/bin/bash.exe` |
-| OpenCode 依然调用 PowerShell 跑命令 | `opencode.json` 漏配了 `shell`，或填了相对名 `bash` 导致回退 | 检查 `opencode.json` 根级是否配置了全路径，运行 `opencode debug config` 确认 |
+| 想确认 OpenCode 到底用哪个解释器执行命令 | `opencode.json` 根级 `shell` 字段决定；未声明时自动回退 pwsh/powershell | `opencode debug config | Select-String '"shell"'`，应指向 pwsh 全路径（详见 111 第五节） |
 | Codex 桌面终端还是 cmd / powershell | `config.toml` 中 `[desktop]` 未配或拼写错误 | 确保在 `[desktop]` 段下配置 `integratedTerminalShell = "gitBash"` 并完全重启应用 |
 | Antigravity Agent 执行 bash 命令报路径不存在 | 在 PowerShell 宿主中混用了 Linux 风格根路径 `/d/...` | 在传给 `bash.exe -c` 时使用标准正斜杠路径 `D:/path/to/file` 或让 MSYS2 自动挂载转换 |
+| 把 Agent（OpenCode 等）的 shell 配成 Git Bash 后，`AutoHotkey64.exe /Validate` 之类带 `/flag` 的原生 CLI 调用挂死或空输出，Agent 误判为脚本语法错误 | MSYS 把 `/ErrorStdOut` 等单字母开关改写成 `C:\...` 并弹出"文件未找到"对话框阻塞 | 把 `shell` 改回 `pwsh.exe` 绝对路径，判据与回归断言见 111 第五节 |
