@@ -8,7 +8,7 @@ type: flow
 slug: "Win单手盲切与抽屉式Toggle窗口AHK配置"
 status: verified
 created: "2026-09-22"
-last_verified: "2026-11-01"
+last_verified: "2026-11-14"
 compatibility:
   os: ["windows"]
 invocation:
@@ -392,8 +392,8 @@ ToggleChrome() {
 ### 步骤 3：重载脚本使配置生效（WMI 脱钩热重载 SOP）
 AHK 脚本加载进内存后，修改文件不会自动热更新，需通过以下方式重载：
 - **托盘右键**：在任务栏右下角找到绿色“H”图标，右键选择 **Reload Script**；
-- **终端远程热重启（严禁裸跑 Start-Process，详见第 095 篇 SOP）**：
-  在 Agent、CI 或远程 PowerShell 下，若使用 `Start-Process`，子进程会被捆绑进当前终端的 **Job Object（作业对象）** 树中，命令退出时 **AHK 会被系统连带掐死**。必须通过 WMI 创建脱钩的独立后台常驻守护：
+- **终端远程热重启（Job Object 边界与 WMI 脱钩 SOP 详见第 095 篇）**：
+  在启用 kill-on-close 作业树的 Agent/CI 终端中，`Start-Process` 或前台 `& AutoHotkey64.exe` 启动的 AHK 可能随命令结束被连带掐死；Git Bash 直接传 `/restart` 会被 MSYS 路径转换改写（参见第 111 篇），须加 `MSYS2_ARG_CONV_EXCL='*'`。跨环境稳妥做法是通过 WMI 创建脱钩的独立后台常驻守护：
   ```powershell
   # 1. 优雅终止旧实例
   Stop-Process -Name AutoHotkey64 -Force -ErrorAction SilentlyContinue
@@ -457,8 +457,9 @@ AHK 脚本加载进内存后，修改文件不会自动热更新，需通过以�
   4. **全工具一致性静默**：若以上全部未运行，彻底保持静默，绝不盲目调用外部快捷方式冷启动。
 
 ### 10. 终端远程热重载 AHK 的 Job Object 强杀陷阱与 WMI 脱钩规范（参见第 095 篇）
-- **致命陷阱**：在 Agent、CI 或远程 PowerShell 终端中执行修改后，若直接使用常规的 `Start-Process` 或 `& AutoHotkey64.exe` 重启脚本，子进程会被自动绑定到**当前终端会话的 Job Object（作业对象）树**中。当远程命令执行完毕、子进程退出时，Windows **会将整棵作业树下的所有子进程（包括刚刚启动的 AHK）连带强行杀死**，表现为终端提示启动成功但实际界面立刻退出的假象；
-- **标准解法**：必须执行第 095 篇 SOP，使用 WMI `Invoke-CimMethod -ClassName Win32_Process -MethodName Create` 将 AHK 进程从终端树中彻底脱钩剥离，创建真正的系统独立后台常驻守护。
+- **条件性致命陷阱**：在 Agent、CI 或远程 PowerShell 终端中执行修改后，若宿主把命令放进 kill-on-close 的 **Job Object（作业对象）树**，`Start-Process` 或 `& AutoHotkey64.exe` 启动的 AHK 会在命令结束时被整树连带强杀，表现为“终端提示启动成功但界面立刻退出”；
+- **不要绝对化**：是否触发取决于宿主的作业树实现，并非所有环境都会发生（2026-11-14 在 Claude Code Bash 工具实测：短命 PowerShell 内 `Start-Process` 启动后，父进程退出而 AHK 仍存活）；但跨环境不能赌这一偶然性；
+- **标准解法**：执行第 095 篇 SOP，用 WMI `Invoke-CimMethod -ClassName Win32_Process -MethodName Create` 脱钩；或至少确认新 PID 在父进程退出后仍存活。
 
 ### 11. 浏览器标签页精准直达的架构选型与踩坑复盘
 - **为什么外部 Win32 / UIA 无法做到**：当 Chrome 切到其他标签页时，Win32 窗口标题与地址栏显示的是“当前标签页”的信息；未激活后台标签页的 URL 在 Win32 与 UIAutomation (UIA) 树中完全不透明，且垂直侧边栏插件会破坏标准 Chromium Tab 控件树，外部轮询极易失灵或串台；

@@ -1,6 +1,6 @@
 ---
 name: kb-autohotkey-non-invasive-enhancement
-description: Windows 非侵入式 AutoHotkey v2 桌面增强与自动化实战全景。包含针对 Electron 等软件启动固定尺寸的自动最大化外挂设计模式（防反复强行拉大机制）、Windows 终端 WMI 脱离无感热重启 SOP，以及面向开发者与 AI 的 AHK 五大核心能力版图（窗口工效/键盘魔改/文本扩展/剪贴板管道/上下文隔离）。
+description: Windows 非侵入式 AutoHotkey v2 桌面增强与自动化实战全景。包含针对 Electron 等软件启动固定尺寸的自动最大化外挂、Windows 终端 WMI 脱离无感热重启 SOP（Git Bash /restart 阻塞与参数转义、tasklist 加载验证），以及 AHK 五大核心能力版图（窗口工效/键盘魔改/文本扩展/剪贴板管道/上下文隔离）。
 id: "095"
 domain: win
 scope: ahk
@@ -8,7 +8,7 @@ type: flow
 slug: "Win非侵入式AHK启动外挂与极客桌面自动化全景"
 status: verified
 created: "2026-10-24"
-last_verified: "2026-10-24"
+last_verified: "2026-11-14"
 compatibility:
   os: ["windows"]
 invocation:
@@ -146,8 +146,10 @@ AutoMinimizeConhost() {
 
 ### 1. 终端与 Job Object 误杀陷阱
 在开发自动化脚本、通过 Agent 或 CI 终端远程修改 AHK 脚本后，常规的 `Start-Process` 或 `& AutoHotkey.exe` 会导致以下灾难：
-- 命令行子进程退出时，Windows **Job Object** 会将依附于该终端树的所有子进程（包括 AHK）连带强行杀死；
-- 传递 `/restart` 时可能受到提权对话框或会话隔离阻断。
+- **Job Object 连带强杀（条件性）**：当宿主把命令放进 kill-on-close 的作业树（常见于 CI runner、VS Code 任务与部分 Agent 终端）时，命令行子进程退出会连带杀死该树下的 AHK，表现为“启动成功但界面立刻退出”。是否触发取决于宿主实现，不能当作必然事件；
+- **前台常驻导致命令挂死**：`AutoHotkey64.exe` 本身就是常驻 GUI 宿主，直接前台执行 `AutoHotkey64.exe /restart script.ahk` 永远不会返回；Agent Bash 工具会在超时后把命令转为后台任务，若随后回收该任务，仍可能带走 AHK。启动命令必须走 WMI/`Start-Process` 等立即返回的通道；
+- **Git Bash 参数改写**：Git Bash（MSYS2 runtime）下直接传 `/restart` 会被路径转换吞掉或改写成盘符路径（机制见第 111 篇），必须加 `MSYS2_ARG_CONV_EXCL='*'`，或干脆改走 PowerShell/WMI 通道；
+- **`/restart` 的阻断面**：该参数依赖 AutoHotkey 对同脚本旧实例的识别，跨会话或提权隔离时可能失效。
 
 ### 2. 标准无感脱离重载流水线（PowerShell）
 利用 WMI `Win32_Process.Create` 机制，创建与当前终端父进程完全脱离的独立后台守护：
@@ -170,6 +172,27 @@ if ($result.ReturnValue -eq 0) {
     Write-Error "启动失败，WMI 返回码: $($result.ReturnValue)"
 }
 ```
+
+### 3. 重载后加载成功验证（先验证，再调热键）
+
+```powershell
+# 1. 确认实例数量与命令行（#SingleInstance Force 下旧实例应已消失）
+Get-CimInstance Win32_Process -Filter "Name='AutoHotkey64.exe'" |
+    Select-Object ProcessId, ParentProcessId, CommandLine | Format-List
+
+# 2. 读取窗口标题：正常加载时为 "<脚本绝对路径> - AutoHotkey v2.0.x"
+tasklist /v /fi "PID eq <PID>" /fo list
+```
+
+- 窗口标题显示脚本路径与版本号 → 脚本无语法错误、热键注册阶段已通过；
+- 若启动时存在语法错误，AutoHotkey 会弹错误对话框，窗口标题/形态与上述不符；
+- 还要确认新 PID 在父进程（PowerShell/bash）退出后仍存活，才说明本次重载真正脱离了终端进程树。
+
+### 4. 精准重启与同类实例隔离
+
+- `Stop-Process -Name AutoHotkey64 -Force` 会无差别杀掉所有 AHK 脚本实例，若同时运行其他 `.ahk`（如独立小工具）会被误杀；
+- 只重启单个脚本时，优先让 AHK 自己做：`AutoHotkey64.exe /restart "<脚本路径>"`（仅作用于同一脚本）；
+- 若必须手工终止，先用 CIM 按 `CommandLine` 过滤出目标 PID 再 `Stop-Process -Id`，不要按进程名一把梭。
 
 ---
 
