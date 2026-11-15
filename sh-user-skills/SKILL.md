@@ -7,9 +7,9 @@ description: |
   开发与重构（后端系统设计、OOP 重构、饥荒模组逆向探索、前端去 AI 味、UI浮层与弹窗选型、PyStand 打包、Nuitka 单文件打包、WT 独立版定制守卫）；
   文档、检索与媒资归档（PRD/技术方案、技能创作与知识库规范、书转 skill、全盘找文件/大文件、本地文档知识库语义检索、Everything秒搜、音视频下载转写字幕、字幕转精读本HTML、网页存档、飞书归档、简历制作与木及mujicv导出）；
   另有飞书、Redis/Iris、Mem0、antigravity、Matt Pocock、备用库六个族路由器；用户直接点名 `sh-*` 或 `sh-cmd-*`（含拼写近似）时均由本入口解析；用户问“有哪些技能/技能库”时列出完整清单。
-version: 1.14.0
+version: 1.14.1
 created: 2026-10-07
-updated: 2026-10-27
+updated: 2026-11-15
 ---
 
 # sh-user-skills：个人技能库总目录与分流导航
@@ -48,8 +48,9 @@ updated: 2026-10-27
 | 加个弹窗／浮层选型／弹窗还是抽屉／Modal规范／Tooltip与Toast／弹窗防坑／UI弹出提示 | `sh-ui-layer-guide` |
 | 编写技能规范／新建技能规则／技能创作规则／知识库沉淀规范／子技能回填闭环／技能提级暴露 | `sh-skill-authoring-rules`（全局规范技能，已暴露，可直接点名） |
 | 把视频/音频转成字幕 | `sh-video-transcribe` |
-| 字幕转精读本／访谈转写做成HTML／对话转网页阅读／生成精读单页 | `sh-transcript-reader` |
+| 字幕转精读本／访谈转写做成HTML／对话转网页阅读／生成精读单页／精读本加侧栏注解／页边注／margin notes／这段转写看不懂逐句解释 | `sh-transcript-reader` |
 | 抖音/B站无水印下载、知乎文章存 Markdown | `sh-zhangshihao-douyin-dl` |
+| 手绘水彩动画／制作音乐MV／代码生成MV／Claude MV／painted-animation／歌词动效视频 | `painted-animation`（已安装为根级技能，可直接点名） |
 | 图片去水印／去角标 | `sh-image-watermark-removal` |
 | 网页存档／离线保存网页 | `sh-web-archive` |
 | 飞书群聊记录导出成 HTML | `sh-lark-chat-archive` |
@@ -136,8 +137,9 @@ updated: 2026-10-27
 | `sh-everything-search` | 全盘/跨盘文件秒搜（Everything es.exe 一次性查询，查完即退）。点名使用 |
 | `sh-docsearch` | 本地文档与知识库语义检索（docsearch 一次性查询，即查即退，0 内存驻留）。点名使用 |
 | `sh-zhangshihao-douyin-dl` | 本机抖音/B 站视频下载 + 知乎文章提取为 Markdown 与本地原图。点名使用 |
+| `painted-animation` | 手绘水彩动画与音乐MV生成（p5.js + p5.brush + Chrome 逐帧渲染 + ffmpeg 合成）。点名使用 |
 | `sh-video-transcribe` | 视频/音频提取字幕并总结：ffmpeg 抽音轨→faster-whisper 本地转写 SRT/TXT→AI 总结。点名使用 |
-| `sh-transcript-reader` | 字幕与访谈转写稿转杂志风精读本 HTML：解析 SRT/TXT、提炼模型与金句、生成规范命名的独立阅读单页。点名使用 |
+| `sh-transcript-reader` | 字幕与访谈转写稿转杂志风精读本 HTML：解析 SRT/TXT、提炼模型与金句、生成规范命名的独立阅读单页；可选侧栏注解版（点名触发）。点名使用 |
 | `sh-image-watermark-removal` | 去水印/角标：PIL+numpy 局部修补，擅长水印压在图案笔画上的复杂情形。点名使用 |
 | `sh-web-archive` | 公开网页存档为离线三 tab 页面（原文转录+AI 总结+可编辑），媒体本地化。点名使用 |
 | `sh-lark-chat-archive` | 飞书聊天记录归档为单文件 HTML（私聊/群聊/话题，纸面排版+图注+lightbox）。点名使用 |
