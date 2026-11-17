@@ -1,22 +1,22 @@
 ---
 name: kb-tinta-markdown-reader-editor
 description: |
-  Tinta 原生极轻 Markdown 阅读器与双栏编辑流水线：彻底解决 Typora/Obsidian 多窗口 1GB 内存暴涨与 QuickLook 常驻 300MB 痛点，基于纯 C++ 与 Direct2D/DirectWrite 硬件加速打造零 Chromium/零 WebView2 的 2.8MB 单文件神器。实测多文档仅 88MB，支持标签页、Mermaid 图表、暗黑主题、图片剪贴板直贴与双栏编辑。
-version: 1.0.0
+  Tinta 原生极轻 Markdown 阅读器与双栏编辑流水线：彻底解决 Typora/Obsidian 多窗口 1GB 内存暴涨与 QuickLook 常驻 300MB 痛点，基于纯 C++ 与 Direct2D/DirectWrite 硬件加速打造零 Chromium/零 WebView2 的 2.8MB 单文件神器。实测多文档仅 88MB，支持标签页、Mermaid 图表、暗黑主题、图片剪贴板直贴与双栏编辑。4.1.1 起支持 themes/*.css 自定义主题，可按 Rider Dark 调色板整套换皮。
+version: 1.1.0
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-11-14
 id: "097"
 domain: win
 scope: tinta
 type: flow
 slug: "Tinta原生极轻Markdown阅读与双栏编辑"
 status: verified
-last_verified: "2026-10-24"
+last_verified: "2026-11-14"
 compatibility:
   os: ["windows"]
 invocation:
   auto_trigger: true
-  trigger_keywords: ["Tinta", "Typora替代", "轻量Markdown阅读器", "Direct2D", "低内存Markdown", "Markdown双栏编辑", "截图贴图", "tinta"]
+  trigger_keywords: ["Tinta", "Typora替代", "轻量Markdown阅读器", "Direct2D", "低内存Markdown", "Markdown双栏编辑", "截图贴图", "tinta", "Tinta 主题", "Tinta 4.1.1", "themes.ini", "Rider Dark"]
 ---
 
 # win_tinta_flow_097_Tinta原生极轻Markdown阅读与双栏编辑
@@ -212,3 +212,113 @@ Tinta 完整还原了 Windows 11 记事本风格的现代多标签页：
    确认 `D:\Users\Softwares\Tinta\settings.ini` 文件存在。一旦存在，Tinta 不会在 `%APPDATA%\Tinta` 生成任何配置文件，U 盘打包即走。
 3. **Mermaid 离线渲染支持**：
    Tinta 内置了纯 C++ 编写的 Mermaid 离线解析引擎，支持 22 类常见图表（flowchart、sequence、class、state、er、gantt、pie 等），断网环境下完全正常绘制矢量图形。
+
+---
+
+## 六、Tinta 4.1.1 升级与 Rider Dark 自定义主题（CSS，2026-11-14 实测）
+
+> **一句话**：3.9.0 只有 `themes.ini`；4.1.1 起 `themes\*.css` 才是完整主题方案（含窗口 chrome 与 Mermaid）。要对齐 JetBrains Rider Dark，先升 4.1.1，再放一个 CSS。
+
+### 6.1 版本分水岭
+
+| 版本 | 自定义主题能力 |
+| :--- | :--- |
+| 3.9.0 | 仅 `themes.ini` 的 `[theme]` 段：背景/文字/标题/链接/代码/语法色，够用但管不到标签栏与面板 |
+| 4.1.0+ | `themes\*.css`：`@import` 内置主题 + CSS 变量 + `--ui-*` 窗口色 + `.token.*` 语法色，可整套换皮 |
+
+判定方法：3.9.0 的 exe 内搜 `--page` / `accent-color` / `@import` / `tinta.css` 全部 0 命中；4.1.1 的源码里有 `themes_css.cpp` / `css.cpp`。
+
+### 6.2 升级流水线（便携单 exe，含校验与回滚）
+
+```powershell
+$dst = Join-Path $env:TEMP 'tinta-4.1.1.exe'
+curl.exe -L --fail -o $dst "https://github.com/oipoistar/tinta/releases/download/v4.1.1/tinta.exe"
+(Get-FileHash $dst -Algorithm SHA256).Hash
+# 期望：ed176d56c5d86565767802dde1db2fe8a2f4d90ac8bf5723d197df5c86245585（5,260,288 bytes）
+
+Get-Process tinta | Stop-Process -Force
+Copy-Item 'D:\Users\Softwares\Tinta\tinta.exe' 'D:\Users\Softwares\Tinta\tinta.exe.3.9.0.bak'
+Copy-Item $dst 'D:\Users\Softwares\Tinta\tinta.exe' -Force
+Unblock-File 'D:\Users\Softwares\Tinta\tinta.exe'
+Start-Process 'D:\Users\Softwares\Tinta\tinta.exe'
+```
+
+- 便携模式判定：`settings.ini` 在 exe 旁 → 配置全部落在 `D:\Users\Softwares\Tinta\`，不碰 `%APPDATA%\Tinta`（旧副本作废）。
+- 升级后 `FileVersion` 应为 `4.1.1`；`settings.ini` 会被 4.x 重写（字段有增减，正常）。
+
+### 6.3 CSS 主题落盘
+
+路径：`D:\Users\Softwares\Tinta\themes\Rider Dark.css`（文件夹不存在则新建；文件名即主题名）。
+
+```css
+@import "Midnight";
+
+:root {
+  accent-color: #3574f0;
+  --page: #262626;
+  --ink: #dfdfdf;
+  --ink-strong: #dfdfdf;
+  --ink-soft: #858585;
+  --link: #5a89da;
+  --line: #393b41;
+  --line-firm: #4a4d51;
+  --surface: #2b2b2b;
+  --surface-edge: #393b41;
+  --code: #dfdfdf;
+  --quote: #4a4d51;
+  --ui-background: #262626;
+  --ui-panel: #2b2b2b;
+  --ui-text: #dfdfdf;
+  --ui-border: #393b41;
+  --ui-accent: #3574f0;
+}
+
+a { text-decoration-color: rgba(90, 137, 218, 0.4); }
+
+.token.keyword, .token.control { color: #6c95eb; }
+.token.string  { color: #c9a26d; }
+.token.comment { color: #85c46c; }
+.token.number  { color: #ed94c0; }
+.token.function{ color: #39cc8f; }
+.token.class-name { color: #bdbdbd; }
+```
+
+变量语义见官方 `THEMES.md`：`--page` 页面、`--ink` 正文、`--ink-strong` 标题、`--ink-soft` 引用/列表标记、`--link` 链接、`--line`/`--line-firm` 发丝线与表头线、`--surface`/`--surface-edge` 代码块、`--code` 代码文字、`--quote` 引用条、`--ui-*` 标签栏/面板/菜单。
+
+### 6.4 索引与切换
+
+`themeCount = 10 个内置 + themes.ini 自定义段 + CSS 主题（按文件名排序）`。只有一个 CSS 主题时索引 = **10**。
+
+- 直接写 `settings.ini` 的 `themeIndex=10` 可免菜单；
+- 或在 Tinta 里按 `T`，列表末尾选 **Rider Dark**。
+
+### 6.5 验证
+
+```powershell
+# PrintWindow 抓窗口（不抢焦点），再取背景像素
+$bmp = [System.Drawing.Bitmap]::FromFile("$env:TEMP\tinta-check.png")
+$bmp.GetPixel(900,900)   # 期望 R=38 G=38 B=38（#262626）
+```
+
+- 背景 `#262626`、链接 `#5A89DA`、代码块 `#2B2B2B`、语法关键字 `#6C95EB` 即对齐成功；
+- 内置 10 个主题仍在，`T` 切回 Midnight 立即还原。
+
+### 6.6 本轮踩坑（务必记住）
+
+1. **`--exporthtml` 的参数是输出路径，输入是位置参数**：写成 `tinta.exe --exporthtml in.md out.html` 会把 `in.md` 当输出、`out.html` 当输入，**直接把源文档覆盖成 HTML**。正确：`tinta.exe <input.md> --exporthtml <out.html>`。已被覆盖且文件在 git 里：`git checkout -- <file>` 恢复（本次 README.md 就这样救回）。
+2. **`SendKeys` 抢不到前台时会打进当前前台应用**（本次 `t` 落进 Chrome）。UI 自动化前先查 `GetForegroundWindow` 的进程，别盲按。
+3. **满屏 CSS 不是文档损坏**：那是 Tinta 的主题编辑器视图（`renderThemeEditor`），按 `Esc` 或切 tab，重启必恢复；文件本身没变。
+4. **CSS 注释用 ASCII**：`themes\*.css` 注释里别用长破折号 `—`，换 `-`，避免解析器在编码路径上认错。
+5. **别用 `--exporthtml` 验证主题**：它会写 HTML 到指定路径；验证主题请用 PrintWindow 截图 + 像素采样。
+6. **打印不受主题控制**：Tinta 打印固定浅色 palette，CSS 主题改不了。
+
+### 6.7 新机完整配置清单（整个目录拷走即可）
+
+| 文件/目录 | 作用 |
+| :--- | :--- |
+| `D:\Users\Softwares\Tinta\tinta.exe` | 4.1.1 主程序 |
+| `D:\Users\Softwares\Tinta\settings.ini` | 便携锁 + `themeIndex=10` + 窗口/会话 |
+| `D:\Users\Softwares\Tinta\themes\Rider Dark.css` | Rider Dark 主题 |
+| `D:\Users\Softwares\Tinta\tinta.exe.*.bak` | 升级回滚备份 |
+
+> 与 Codex 桌面端同一套色板（见 `113_agent_codex_flow_Codex桌面端外观RiderDark对齐.md`），改色时两边一起改。
