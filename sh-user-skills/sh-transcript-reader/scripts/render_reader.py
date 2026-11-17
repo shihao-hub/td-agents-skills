@@ -15,8 +15,28 @@ import argparse
 import os
 import re
 import sys
+from html import escape as html_escape
 from pathlib import Path
 import opencc
+
+try:
+    from annotation_engine import (
+        ANNOTATION_CSS,
+        ANNOTATION_JS,
+        ANNOTATION_OVERLAY_HTML,
+        ANNOTATION_TOOLBAR_BUTTONS,
+        inject_annotation_engine,
+        strip_annotation_engine,
+    )
+except ImportError:  # 作为包导入时的兜底
+    from scripts.annotation_engine import (
+        ANNOTATION_CSS,
+        ANNOTATION_JS,
+        ANNOTATION_OVERLAY_HTML,
+        ANNOTATION_TOOLBAR_BUTTONS,
+        inject_annotation_engine,
+        strip_annotation_engine,
+    )
 
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -396,7 +416,7 @@ def generate_monologue_html(
       </section>
 """
 
-    return f"""<!DOCTYPE html>
+    return inject_annotation_engine(f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -682,6 +702,7 @@ def generate_monologue_html(
       body {{ background: #FFF; font-size: 12pt; line-height: 1.6; }}
       .masthead, .executive-card, .pull-quote {{ box-shadow: none; border-color: #DDD; }}
     }}
+    {ANNOTATION_CSS}
   </style>
 </head>
 <body>
@@ -713,8 +734,13 @@ def generate_monologue_html(
 
   <div class="reader-toolbar">
     <div class="reader-toolbar-inner">
-      <span style="color:var(--text-soft);">阅读体验：</span>
-      <button class="font-btn" id="btn-font-toggle">增大字号</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="color:var(--text-soft);">阅读体验：</span>
+        <button class="font-btn" id="btn-font-toggle">增大字号</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        {ANNOTATION_TOOLBAR_BUTTONS}
+      </div>
     </div>
   </div>
 
@@ -752,10 +778,12 @@ def generate_monologue_html(
       const isLarge = document.body.classList.toggle('large-text');
       fontBtn.textContent = isLarge ? '还原字号' : '增大字号';
     }});
+    {ANNOTATION_JS}
   </script>
+  {ANNOTATION_OVERLAY_HTML}
 </body>
 </html>
-"""
+""")
 
 
 def build_monologue_sections(segments, title: str = ""):
@@ -901,6 +929,292 @@ def build_monologue_sections(segments, title: str = ""):
     return sections
 
 
+
+
+def build_turns(segments, guest_name: str = "嘉宾", host_name: str = "主持人"):
+    """
+    将对话字幕片段智能归并为主持人与嘉宾交替的对话轮次
+    """
+    turns = []
+    cur_role = "host"
+    cur_start = segments[0]["start"] if segments else "00:00:00"
+    cur_texts = []
+
+    host_starters = ("那比如说", "比如说你", "那你觉得", "你怎么看", "如果说现在", "你觉得", "你刚刚说", "核心的东西是指", "我怎么听起来")
+    for s in segments:
+        txt = s["text"]
+        is_q = any(txt.startswith(k) for k in host_starters) or (len(txt) < 28 and txt.endswith(("吗", "呢", "？")))
+        next_role = "host" if is_q else "guest"
+        if cur_texts and next_role != cur_role and len("".join(cur_texts)) >= 12:
+            turns.append({
+                "role": cur_role,
+                "speaker": host_name if cur_role == "host" else guest_name,
+                "start": cur_start,
+                "text": "，".join(cur_texts) + ("？" if cur_role == "host" else "。"),
+            })
+            cur_role = next_role
+            cur_start = s["start"]
+            cur_texts = [txt]
+        else:
+            if not cur_texts:
+                cur_role = next_role
+                cur_start = s["start"]
+            cur_texts.append(txt)
+
+    if cur_texts:
+        turns.append({
+            "role": cur_role,
+            "speaker": host_name if cur_role == "host" else guest_name,
+            "start": cur_start,
+            "text": "，".join(cur_texts) + ("？" if cur_role == "host" else "。"),
+        })
+    return turns
+
+
+def generate_html(
+    title: str,
+    guest_name: str,
+    host_name: str,
+    guest_desc: str,
+    host_desc: str,
+    turns: list,
+    duration_str: str,
+    models: list = None,
+) -> str:
+    """
+    双人深度对谈模式 HTML 渲染模板（内置划词加粗/4色背景高亮 + 右侧全局抽屉跳转 + 自包含 HTML 导出）
+    """
+    if not models:
+        models = [
+            ("❌ 盲信 Demo 的「工具快捷键幻觉」", "迷信下班速成教程，把百里挑一的测试特例当成工具日常平均水平。",
+             "⚡ 工作场域的「判断力与审美」", "工具摩擦力终将归零，唯一能被 AI 放大的是领域内分辨好坏的稀缺判断力。"),
+            ("❌ 全天候依赖的「认知外包」", "事事交由 AI 代劳，产出看似像专家，实则切断了理解与产出的训练回路。",
+             "🏋️ 健身房式的「AI Off 离线训练」", "定期主动关掉 AI 独立作答，再让 AI 挑刺批评，用基础深蹲保住心智肌肉。"),
+        ]
+
+    models_html = ""
+    for l_title, l_desc, r_title, r_desc in models:
+        models_html += f"""
+        <div class="model-card left">
+          <h4>{html_escape(l_title)}</h4>
+          <p>{html_escape(l_desc)}</p>
+        </div>
+        <div class="model-card right">
+          <h4>{html_escape(r_title)}</h4>
+          <p>{html_escape(r_desc)}</p>
+        </div>
+"""
+
+    turns_html = ""
+    total_words = 0
+    for t in turns:
+        role = t["role"]
+        spk = html_escape(t["speaker"])
+        ts = html_escape(t["start"])
+        txt = html_escape(t["text"])
+        total_words += len(txt)
+        turns_html += f"""
+      <article class="turn-block speaker-{role}" data-speaker="{role}">
+        <header class="turn-header">
+          <span class="speaker-badge {role}">{spk}</span>
+          <time class="turn-time">[{ts}]</time>
+        </header>
+        <div class="turn-content">
+          <p>{txt}</p>
+        </div>
+      </article>
+"""
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{html_escape(title)} ｜ 深度访谈精读本</title>
+  <style>
+    :root {{
+      --bg-canvas: #FBFBFA;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F4F6F3;
+      --text-main: #1C221E;
+      --text-muted: #56645D;
+      --text-soft: #85938B;
+      --border-light: #E5E9E3;
+      --border-accent: #CBD5CA;
+      --pine-deep: #1A4432;
+      --pine-mid: #2A5E47;
+      --pine-light: #EBF3EE;
+      --clay-deep: #8E4A28;
+      --clay-mid: #B0623B;
+      --clay-light: #FBF2EC;
+      --ochre-mark: #E68A36;
+      --font-serif: "Songti SC", "Source Han Serif SC", "Noto Serif SC", STSong, Georgia, serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      --font-mono: "SF Mono", Consolas, Monaco, monospace;
+      --reading-width: 780px;
+      --line-height-body: 1.88;
+      --font-size-body: 17.5px;
+    }}
+    body.large-text {{
+      --font-size-body: 19.5px;
+      --line-height-body: 1.95;
+      --reading-width: 820px;
+    }}
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-body);
+      line-height: var(--line-height-body);
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 120px;
+    }}
+    #progress-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: transparent; z-index: 1000; }}
+    #progress-bar {{ height: 100%; width: 0%; background: var(--pine-mid); transition: width 0.1s ease-out; }}
+    .masthead {{ border-bottom: 1px solid var(--border-light); background: var(--bg-card); padding: 56px 24px 44px; }}
+    .masthead-inner {{ max-width: var(--reading-width); margin: 0 auto; }}
+    .publication-tag {{
+      display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-serif);
+      font-size: 13.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pine-mid);
+      margin-bottom: 20px; font-weight: 600;
+    }}
+    .publication-tag::after {{ content: ""; display: inline-block; width: 28px; height: 1px; background: var(--pine-mid); vertical-align: middle; }}
+    h1.article-title {{ font-family: var(--font-serif); font-size: clamp(26px, 4.2vw, 36px); font-weight: 700; line-height: 1.34; color: var(--text-main); margin-bottom: 16px; }}
+    .speaker-grid {{
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;
+      margin: 24px 0; padding: 20px; background: var(--bg-subtle); border-radius: 8px; border: 1px solid var(--border-light);
+    }}
+    .speaker-item {{ display: flex; flex-direction: column; gap: 4px; }}
+    .speaker-role {{ font-size: 12.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }}
+    .speaker-role.guest {{ color: var(--pine-deep); }}
+    .speaker-role.host {{ color: var(--clay-deep); }}
+    .speaker-name {{ font-family: var(--font-serif); font-size: 17px; font-weight: 600; color: var(--text-main); }}
+    .speaker-desc {{ font-size: 13.5px; line-height: 1.55; color: var(--text-muted); }}
+    .meta-bar {{ display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-top: 20px; border-top: 1px dashed var(--border-light); font-size: 13.5px; color: var(--text-soft); }}
+    .reader-toolbar {{ position: sticky; top: 0; background: rgba(251, 251, 250, 0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border-light); z-index: 900; padding: 10px 24px; }}
+    .reader-toolbar-inner {{ max-width: var(--reading-width); margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; }}
+    .toolbar-group {{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }}
+    .filter-btn, .font-btn {{ background: transparent; border: 1px solid var(--border-light); padding: 5px 12px; border-radius: 4px; color: var(--text-muted); cursor: pointer; font-size: 13px; font-family: var(--font-sans); transition: all 0.15s ease; }}
+    .filter-btn:hover, .font-btn:hover {{ border-color: var(--border-accent); color: var(--text-main); background: #FFFFFF; }}
+    .filter-btn.active {{ background: var(--pine-deep); border-color: var(--pine-deep); color: #FFFFFF; font-weight: 500; }}
+    .main-container {{ max-width: var(--reading-width); margin: 40px auto 0; padding: 0 24px; }}
+    .executive-card {{ background: var(--bg-card); border: 1px solid var(--border-light); border-left: 4px solid var(--pine-mid); border-radius: 6px; padding: 28px 32px; margin-bottom: 40px; }}
+    .executive-title {{ font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: var(--pine-deep); margin-bottom: 14px; }}
+    .model-comparison-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }}
+    @media (max-width: 650px) {{ .model-comparison-grid {{ grid-template-columns: 1fr; }} }}
+    .model-card {{ padding: 16px 18px; border-radius: 6px; background: var(--bg-subtle); border: 1px solid var(--border-light); }}
+    .model-card.left {{ border-top: 3px solid var(--clay-mid); }}
+    .model-card.right {{ border-top: 3px solid var(--pine-mid); }}
+    .model-card h4 {{ font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }}
+    .model-card p {{ font-size: 13.5px; line-height: 1.6; color: var(--text-muted); }}
+    .dialogue-flow {{ display: flex; flex-direction: column; gap: 26px; }}
+    .turn-block {{ position: relative; }}
+    .turn-block.hidden {{ display: none; }}
+    .turn-header {{ display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }}
+    .speaker-badge {{ font-size: 14px; font-weight: 600; font-family: var(--font-serif); padding: 2px 10px; border-radius: 4px; }}
+    .speaker-badge.guest {{ background: var(--pine-light); color: var(--pine-deep); border: 1px solid #D6E5DC; }}
+    .speaker-badge.host {{ background: var(--clay-light); color: var(--clay-deep); border: 1px solid #EFE0D5; }}
+    .turn-time {{ font-family: var(--font-mono); font-size: 12px; color: var(--text-soft); }}
+    .turn-content {{ font-size: var(--font-size-body); line-height: var(--line-height-body); color: var(--text-main); }}
+    .turn-block.speaker-host .turn-content {{ color: #38423B; font-weight: 500; }}
+    .colophon {{ margin-top: 88px; padding: 36px 0; border-top: 1px solid var(--border-light); font-size: 13.5px; color: var(--text-soft); text-align: center; }}
+    {ANNOTATION_CSS}
+  </style>
+</head>
+<body>
+  <div id="progress-container"><div id="progress-bar"></div></div>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="publication-tag">访谈实录 · 深度精读本</div>
+      <h1 class="article-title">{html_escape(title)}</h1>
+      <div class="speaker-grid">
+        <div class="speaker-item">
+          <span class="speaker-role guest">特邀对话嘉宾</span>
+          <span class="speaker-name">{html_escape(guest_name)}</span>
+          <span class="speaker-desc">{html_escape(guest_desc)}</span>
+        </div>
+        <div class="speaker-item">
+          <span class="speaker-role host">对话主持人</span>
+          <span class="speaker-name">{html_escape(host_name)}</span>
+          <span class="speaker-desc">{html_escape(host_desc)}</span>
+        </div>
+      </div>
+      <div class="meta-bar">
+        <div>
+          <span>⏱️ 时长：{html_escape(duration_str)}</span> &nbsp;·&nbsp;
+          <span>📖 规模：{len(turns)} 轮对谈 / 约 {total_words:,} 字</span>
+        </div>
+        <div><span>格式：纯正简体中文校订版 · 支持划词标注与全局跳转</span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="reader-toolbar">
+    <div class="reader-toolbar-inner">
+      <div class="toolbar-group">
+        <span style="color:var(--text-soft); font-size:12.5px;">视图筛选：</span>
+        <button class="filter-btn active" data-filter="all">全文实录</button>
+        <button class="filter-btn" data-filter="guest">仅嘉宾回应</button>
+        <button class="filter-btn" data-filter="host">仅主持提问</button>
+        <button class="font-btn" id="btn-font-toggle">增大字号</button>
+      </div>
+      <div class="toolbar-group">
+        {ANNOTATION_TOOLBAR_BUTTONS}
+      </div>
+    </div>
+  </div>
+
+  <main class="main-container">
+    <section class="executive-card">
+      <div class="executive-title">🧭 核心认知模型与论点对照</div>
+      <div class="model-comparison-grid">
+        {models_html}
+      </div>
+    </section>
+    <div class="dialogue-flow" id="dialogue-container">
+      {turns_html}
+    </div>
+    <footer class="colophon">
+      <p>本页遵循 <code>sh-frontend-deai</code> 与 <code>sh-transcript-reader</code> 纯净纸面排版标准构建</p>
+    </footer>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {{
+      const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+      document.getElementById('progress-bar').style.width = scrolled + '%';
+    }});
+    const fontBtn = document.getElementById('btn-font-toggle');
+    fontBtn.addEventListener('click', () => {{
+      const isLarge = document.body.classList.toggle('large-text');
+      fontBtn.textContent = isLarge ? '还原字号' : '增大字号';
+    }});
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const turnBlocks = document.querySelectorAll('.turn-block');
+    filterBtns.forEach(btn => {{
+      btn.addEventListener('click', () => {{
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        turnBlocks.forEach(block => {{
+          if (filter === 'all') block.classList.remove('hidden');
+          else if (block.dataset.speaker === filter) block.classList.remove('hidden');
+          else block.classList.add('hidden');
+        }});
+      }});
+    }});
+    {ANNOTATION_JS}
+  </script>
+  {ANNOTATION_OVERLAY_HTML}
+</body>
+</html>
+"""
+
+
 def main():
     parser = argparse.ArgumentParser(description="访谈转写稿与演讲录渲染为精美去AI味HTML精读本")
     parser.add_argument("input", help="输入 SRT、TXT 或媒体文件路径")
@@ -915,11 +1229,36 @@ def main():
     parser.add_argument("--mode", choices=["auto", "monologue", "dialogue"], default="auto", help="排版模态")
     parser.add_argument("--outdir", default=None, help="产物输出目录")
     parser.add_argument("--outname", default=None, help="指定文件名（不随意）")
+    parser.add_argument("--inject-only", action="store_true", help="仅向已生成的精读本 HTML 注入/升级划词标注引擎")
+    parser.add_argument("--force-inject", action="store_true", help="替换已有标注引擎并重新注入（用于升级旧版精读本）")
 
     args = parser.parse_args()
     input_path = Path(args.input)
     if not input_path.exists():
         sys.exit(f"错误: 输入文件不存在: {input_path}")
+    if args.force_inject and not args.inject_only:
+        sys.exit("错误: --force-inject 需要与 --inject-only 一起使用")
+
+    if args.inject_only:
+        if input_path.suffix.lower() not in [".html", ".htm"]:
+            sys.exit("错误: --inject-only 需要输入 .html 精读本文件")
+        original = input_path.read_text(encoding="utf-8")
+        if args.force_inject:
+            upgraded = inject_annotation_engine(strip_annotation_engine(original))
+        else:
+            upgraded = inject_annotation_engine(original)
+        out_dir = Path(args.outdir) if args.outdir else input_path.parent
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_name = args.outname or input_path.name
+        if not out_name.lower().endswith((".html", ".htm")):
+            out_name += ".html"
+        out_file = out_dir / out_name
+        out_file.write_text(upgraded, encoding="utf-8")
+        if upgraded == original:
+            print(f"标注引擎已存在，无需重复注入: {out_file}")
+        else:
+            print(f"标注引擎注入成功: {out_file}")
+        return
 
     if input_path.suffix.lower() in [".mp4", ".mkv", ".mov", ".wav", ".mp3", ".m4a"]:
         srt_candidate = input_path.with_suffix(".srt")
@@ -1071,7 +1410,6 @@ def main():
     else:
         # dialogue mode fallback
         # ...
-        from scripts.render_reader import build_turns, generate_html
         turns = build_turns(segments, args.guest, args.host)
         html_content = generate_html(
             title=title,
