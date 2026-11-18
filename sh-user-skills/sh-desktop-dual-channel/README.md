@@ -1,9 +1,9 @@
 ---
 name: sh-desktop-dual-channel
 description: 桌面双通道应用脚手架（Go/Wails 与 Python/pywebview）：GUI 只开窗口、CLI 只跑终端，内嵌 WebUI、托盘常驻、关窗销毁重建、窗口几何记忆、dev/release 五维隔离与图标双通道。点名使用
-version: 2.1.1
+version: 2.2.0
 created: 2026-10-21
-updated: 2026-10-27
+updated: 2026-11-18
 disable-model-invocation: true
 ---
 
@@ -17,6 +17,8 @@ disable-model-invocation: true
 ---
 
 ## 一、模块分流（先读这里）
+
+在 `language_projects/go_projects` 内工作时，先读父仓《[Go 项目统一结构](../../../../docs/projects/go_projects/Go 项目统一结构.md)》，再进入 Go SOP。仓库规则可直接要求读取这些参考文件；命令门面仍保留点名调用。Python 项目继续走 Python 模块，不加载 Go 仓库约定。
 
 | 技术栈信号 | 模块 |
 |---|---|
@@ -45,6 +47,7 @@ disable-model-invocation: true
 
 ### Go / Wails v3
 
+- 结构与职责 → 父仓《Go 项目统一结构》；本模块提供实施步骤与版本相关示例，不将案例项目整体作为模板。
 - 前置检查、适用范围、Step 1–9、反模式、验收与回滚 → `references/go-wails.md`
 - 深度材料：`go-architecture.md`（蓝图 / `gui.go` / 几何）、`go-build-pipeline.md`（`build.py` / go-winres / 图标）、`go-troubleshooting.md`（白框 / 日志 / 门禁）
 

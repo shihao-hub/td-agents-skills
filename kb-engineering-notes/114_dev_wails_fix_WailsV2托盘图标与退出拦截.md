@@ -1,7 +1,7 @@
 ---
 name: kb-wails-v2-tray-icon-and-quit
-description: 针对 Go + Wails v2 托盘常驻应用（裸 go build 而非 wails build）的三类典型故障：标题栏图标空白（资源 ID 必须为 3）、托盘「退出」无反应（Frontend.Quit 被 OnBeforeClose 拦截）、左键单击弹菜单而非开窗（getlantern/systray 左右键合并）。含源码级根因、go-winres 的 #n 数字 ID 语法与 WM_GETICON 验证手法。
-version: 1.0.0
+description: 仅用于既有 Go + Wails v2 托盘应用的图标、退出拦截与左右键故障排查；不作为新项目选型依据。新 Go GUI 使用统一结构入口中的 Wails v3 双通道方案。
+version: 1.0.1
 created: 2026-11-18
 updated: 2026-11-18
 id: "114"
@@ -20,6 +20,7 @@ invocation:
 # 114-Wails v2 托盘应用三坑：图标空白、退出失效、左键弹菜单
 
 > 适用：Go + Wails v2 自建窗口/托盘应用，且**不用 `wails build`**（自己 `go build` + go-winres）。
+> **存量排障边界**：先确认目标项目已使用 Wails v2，再应用本文；新 Go GUI 先读父仓《[Go 项目统一结构](../../../docs/projects/go_projects/Go 项目统一结构.md)》及 [Go SOP](../sh-user-skills/sh-desktop-dual-channel/references/go-wails.md)，默认 Wails v3。本文的 verified 仅表示 v2 故障结论，不表示推荐 v2 新选型；本次只补充资料边界，未重新实测运行时。
 > 三个坑互不相关，但会在同一次交付里同时出现，且都能被"看着像正常"掩盖。
 
 ## 一、标题栏图标是空白方块

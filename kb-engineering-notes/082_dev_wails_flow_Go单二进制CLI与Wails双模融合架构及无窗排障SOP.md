@@ -1,10 +1,10 @@
 ---
 name: kb-go-cli-wails-dual-mode
 description: |
-  [已转正] 原「Go 单二进制 CLI + Wails v3 双模融合架构与无窗排障」条目，正文已迁移至技能 sh-desktop-dual-channel；本条目仅保留检索入口与历史锚点。
-version: 1.4.0
+  [历史方案，已取代] 单二进制双模不再作为新项目实施依据；当前使用 sh-desktop-dual-channel 双通道方案。本条目仅保留旧链接与检索锚点。
+version: 1.4.1
 created: 2026-10-20
-updated: 2026-10-21
+updated: 2026-11-18
 id: "082"
 domain: dev
 scope: wails
@@ -20,10 +20,11 @@ invocation:
   auto_trigger: false
 ---
 
-# dev_flow_082_Go单二进制CLI与Wails双模融合架构及无窗排障SOP（已转正）
+# 082：历史单二进制方案，已由双通道方案取代
 
 > **状态：deprecated（2026-10-21 转正）**
 > **替代者：`sh-desktop-dual-channel`**（真身目录：`sh-user-skills/sh-desktop-dual-channel/`）
+> 当前采用 CLI、GUI 两个 exe；新 Go 项目先读父仓《[Go 项目统一结构](../../../docs/projects/go_projects/Go 项目统一结构.md)》，再读 [双通道 Go SOP](../sh-user-skills/sh-desktop-dual-channel/references/go-wails.md)。旧文件名仅为链接兼容保留。
 
 ## 迁移说明
 

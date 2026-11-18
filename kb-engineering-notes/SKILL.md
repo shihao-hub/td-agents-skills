@@ -6,9 +6,9 @@ description: |
   【简历排版】木及简历mujicv、简历导入导出、PDF行首裁字、简历CSS不生效、简历制作SOP。
   【实战流水线】uv全机环境统一；Worktree跨语言依赖复用；Word试卷排版；GUI自动化UIA阶梯；无窗口自启服务与WMI脱离；离线向量检索；无API事实核查；Issue高穿透提交与证据链；AGY/Codex/Tinta外观Rider配色；AHK非侵入启动外挂与WMI脱离；Zed ACP代理架构与Mode拦截及YOLO安全手刹；Zed会话归属过户与归档。
   检索协议：先读本路由表命中条目，再读具体手记SOP；条目持续生长，全量索引以本路由表为准；报错或点名查阅时使用。命中后先看status：deprecated弃用改读superseded_by，suspect先只读探测再执行。
-version: 2.3.7
+version: 2.3.8
 created: 2026-10-07
-updated: 2026-11-14
+updated: 2026-11-18
 ---
 
 # 工程实战手记与疑难排障知识库 (Engineering Notes Playbook)
@@ -133,7 +133,7 @@ kb-engineering-notes/
 ├── 079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md # [Stage 2: 专项流水线] 针对向头部开源项目(如Zed)提交高穿透力Bug Report的标准流程、置顶前言破局、内核级取证与三重对照实验设计
 ├── 080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md # [Stage 2: 专项排障·架构设计] 针对提级暴露技能过度加disable导致Kiro Spec/Plan规范失盲故障、时序软失效与知识库自愈元数据标准契约
 ├── 081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md # [Stage 2: 专项排障] 针对 dsh 启动 Cursor ACP 裸命令 agent 与 xAI Grok CLI 命名冲突致强制弹窗 accounts.x.ai 排障
-├── 082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md # [已转正 → sh-desktop-dual-channel，本文件仅存根] 原 Go 单二进制四位一体架构、任务栏PE图标、dev/release 通道隔离、图标双通道、开机自启门禁与无控制台排障
+├── 082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md # [历史方案，已由双通道方案取代] 仅保留旧链接；当前 CLI、GUI 分别产出 exe
 ├── 083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md # [Stage 2: 专项排障] 针对 Zed 外接 ACP Agent（如 antigravity-acp）在经历 600+ 步长会话或 502 网络重试后，模型文本已全部输出但界面永久转圈、正文末尾挂三点脉冲、输入框死锁无法发送下一条及 $/cancel_request 缺失排障
 ├── 084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md # [Stage 2: 专项排障] 针对 Pi 飞书桥接保活器 CLI 入口解析失败 + PI_CLI_ENTRY 指向包装层致 child.pid ≠ owner pid、每 10 秒误杀重生 daemon，且 spawn 缺 windowsHide 在定制版 WT 委托断层下弹标题 pi 的裸 conhost 黑窗排障；并覆盖 pi 自更新迁移后旧全局入口失效与 settings.json 丢失 packages 致扩展静默不加载
 ├── 085_dev_bruno_flow_api_test_collection.md # [Stage 2: 专项流水线] 针对后端接口提取、Bruno OpenCollection YAML 测试集生成、认证隔离与语法校验
@@ -359,7 +359,7 @@ kbman touch <id>
 | 把 Agent（OpenCode 等）的 `shell` 配成 Git Bash 后，`/Validate` 这类带 `/flag` 的原生 CLI 调用挂死或空输出，Agent 把环境问题误判成脚本语法错误、连续多轮修不存在的 bug | [`111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md) | Agent shell 配成 Git Bash, opencode shell, 原生 CLI 斜杠开关失效, /Validate 挂死, AHK 参数被吃, 命令超时却无报错, ErrorStdOut 弹窗, 主 Shell 选型 |
 | Claude Code 接入 DeepSeek（官方直连或 OpenCode Go）后 `/context` 只有 200k、模型名带不带 `[1m]` 分不清、`deepseek-flash` 与 `deepseek-v4.1-flash` 混用报 Model is unavailable，或新电脑需要让 agent 一键生成 settings.json 并保住 effort 配置 | [`112_agent_claude_flow_ClaudeCode接入DS双通道配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/112_agent_claude_flow_ClaudeCode接入DS双通道配置.md) | Claude Code 接入 DeepSeek, opencode go 接 deepseek, /context 200k, [1m] 后缀, contextWindow 1000000, deepseek-flash, deepseek-v4.1-flash, Model is unavailable, CC Switch effortLevel, CLAUDE_CODE_EFFORT_LEVEL 丢失, settings.json 配置, 新电脑配置, 模型名映射 |
 | Codex 桌面应用（OpenAI.Codex / ChatGPT 壳）默认深色 #181818/#FFFFFF 想改成 JetBrains Rider Dark；或新电脑要复现 Codex 外观、搞不清 config.toml 里为什么没有颜色项 | [`113_agent_codex_flow_Codex桌面端外观RiderDark对齐.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/113_agent_codex_flow_Codex桌面端外观RiderDark对齐.md) | Codex 外观, Codex 主题, ChatGPT 桌面端主题, appearanceTheme, Codex Rider Dark, config.toml desktop, Codex 强调色, Codex 背景色, surface 181818, accent 3574F0 |
-| Go + Wails v2 托盘应用（裸 go build + go-winres）标题栏图标空白、图标白底、托盘「退出」无效、左键单击弹菜单而非开窗 | [`114_dev_wails_fix_WailsV2托盘图标与退出拦截.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/114_dev_wails_fix_WailsV2托盘图标与退出拦截.md) | 窗口图标空白, 白块, WM_GETICON=0, AppIconID=3, go-winres #3, 图标白底, 托盘退出无效, OnBeforeClose, quitting 标志, 左键弹菜单, getlantern/systray, fyne.io/systray, SetOnTapped |
+| 既有 Go + Wails v2 托盘应用（新项目不据此选型；裸 go build + go-winres）标题栏图标空白、图标白底、托盘「退出」无效、左键单击弹菜单而非开窗 | [`114_dev_wails_fix_WailsV2托盘图标与退出拦截.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/114_dev_wails_fix_WailsV2托盘图标与退出拦截.md) | 窗口图标空白, 白块, WM_GETICON=0, AppIconID=3, go-winres #3, 图标白底, 托盘退出无效, OnBeforeClose, quitting 标志, 左键弹菜单, getlantern/systray, fyne.io/systray, SetOnTapped |
 
 ---
 
@@ -470,7 +470,7 @@ kbman touch <id>
 | 079 | [`079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md) | `079_dev_core_flow_开源上游Issue高穿透提交与证据链设计SOP.md` | `dev` | `flow` | 开源上游 Issue 高穿透提交、置顶前言破局与证据链设计流水线 |
 | 080 | [`080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md) | `080_agent_skills_fix_过度disable致Agent规范失盲与时序元数据防腐治理.md` | `agent` | `fix` | 提级暴露过度 disable 致规范失盲故障与知识库时序元数据防腐治理 |
 | 081 | [`081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md) | `081_agent_dsh_fix_Cursor别名冲突致Grok误唤起与xai弹窗修复.md` | `agent` | `fix` | dsh 启动 Cursor ACP 裸命令 agent 与 Grok CLI 冲突致 accounts.x.ai 弹窗修复 |
-| 082 | [`082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md) | `082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md` | `dev` | `flow` | [已转正 → `sh-desktop-dual-channel`] Go 单二进制 CLI 与 Wails v3 双模融合架构、通道隔离与图标双通道（正文已迁移，本条目为存根） |
+| 082 | [`082：历史单二进制方案（已取代）`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md) | `082_dev_wails_flow_Go单二进制CLI与Wails双模融合架构及无窗排障SOP.md` | `dev` | `flow` | 历史方案，已由 `sh-desktop-dual-channel` 双通道方案取代；新 Go 项目先读父仓统一结构 |
 | 083 | [`083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md) | `083_ide_zed_fix_Zed外接ACP长会话生成完毕转圈卡死与PromptResponse丢失排障.md` | `ide` | `fix` | Zed 外接 ACP 长会话生成完毕转圈卡死与 PromptResponse 丢失排障 |
 | 084 | [`084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md) | `084_agent_pi_fix_飞书桥接keeper空转重生pi弹conhost黑窗.md` | `agent` | `fix` | 飞书桥接 keeper 空转重生 pi、conhost 黑窗与自更新后扩展静默掉线排障 |
 | 085 | [`085_dev_bruno_flow_api_test_collection.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/085_dev_bruno_flow_api_test_collection.md) | `085_dev_bruno_flow_api_test_collection.md` | `dev` | `flow` | 后端接口提取与 Bruno OpenCollection YAML 脚本生成流水线 |
@@ -502,6 +502,6 @@ kbman touch <id>
 | 111 | [`111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md) | `111_win_shell_fix_MSYS路径转换吃掉cmd开关与静默失败.md` | `win` | `fix` | MSYS2 路径转换吞掉 cmd 斜杠开关、交互态静默退出 0、命令成功判据，以及 Agent 主 Shell 误配 Git Bash 的批量失效与选型判据 |
 | 112 | [`112_agent_claude_flow_ClaudeCode接入DS双通道配置.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/112_agent_claude_flow_ClaudeCode接入DS双通道配置.md) | `112_agent_claude_flow_ClaudeCode接入DS双通道配置.md` | `agent` | `flow` | Claude Code 接入 DeepSeek 官方直连 / OpenCode Go 双通道配置、`[1m]` 上下文标记与 1M 窗口验证流水线 |
 | 113 | [`113_agent_codex_flow_Codex桌面端外观RiderDark对齐.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/113_agent_codex_flow_Codex桌面端外观RiderDark对齐.md) | `113_agent_codex_flow_Codex桌面端外观RiderDark对齐.md` | `agent` | `flow` | Codex 桌面端外观对齐 Rider Dark 的配置流水线、外观模型与账号级同步边界 |
-| 114 | [`114_dev_wails_fix_WailsV2托盘图标与退出拦截.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/114_dev_wails_fix_WailsV2托盘图标与退出拦截.md) | `114_dev_wails_fix_WailsV2托盘图标与退出拦截.md` | `dev` | `fix` | 裸 go build 的 Wails v2 托盘三坑：图标资源 ID 必须 #3、图标需透明底、OnBeforeClose 拦截 Quit、托盘左右键需 fyne fork |
+| 114 | [`114_dev_wails_fix_WailsV2托盘图标与退出拦截.md`](file:///d:/Users/language_projects/.agents/skills/kb-engineering-notes/114_dev_wails_fix_WailsV2托盘图标与退出拦截.md) | `114_dev_wails_fix_WailsV2托盘图标与退出拦截.md` | `dev` | `fix` | 仅存量 Wails v2 排障，不作新项目选型：图标资源 ID 必须 #3、图标需透明底、OnBeforeClose 拦截 Quit、托盘左右键需 fyne fork |
 
 

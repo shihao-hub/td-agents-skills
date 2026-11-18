@@ -1,13 +1,13 @@
 # 架构参考：双通道产物与桌面壳实现
 
-> 归属：`sh-desktop-dual-channel`。本文是深度材料，日常执行以 `README.md` 的 SOP 为准。
+> 归属：`sh-desktop-dual-channel`。结构与职责以父仓《[Go 项目统一结构](../../../../../docs/projects/go_projects/Go 项目统一结构.md)》为准；本文为窗口实现深度参考，实施步骤见 [Go SOP](go-wails.md)。
 > 验证环境：Windows 11 24H2、Go 1.26、Wails v3.0.0-beta.33、Edge WebView2。
 
 ---
 
 ## 一、双通道蓝图
 
-同一份源码，用 build tag 编译出**两个子系统不同的二进制**（详见 `README.md` Step 2 / Step 3）：
+同一份源码，用 build tag 编译出**两个子系统不同的二进制**（详见 [Go SOP](go-wails.md) Step 2 / Step 3）；图中内存值和业务命令来自历史案例，不是通用验收阈值：
 
 ```text
                  ┌─────────────────────── 同一份 internal/ 源码 ───────────────────────┐
@@ -46,7 +46,7 @@
 └──────────────────────┘             └──────────────────────┘
 ```
 
-两端共享 `internal/api`（HTTP 层，GUI 与 CLI `serve` 调用同一个 `Handler()`，静态 WebUI + REST）、`internal/storage`（持久层）、`internal/web`（embed 前端资产）与 `internal/app`（托盘、自启、数据目录、日志），因此两条通道看到的是同一个数据库与同一套 REST。**CLI `serve` 必须打开与 GUI 相同的 WebUI 根路径，不得退化成裸 API 端口。**
+CLI 与 HTTP 适配器复用 `internal/service` 公共用例；GUI 与 CLI `serve` 共用 `internal/api.Handler()`，提供相同 WebUI/API。持久层按需接入，窗口、托盘等宿主能力位于 `internal/app`；CLI 直接调用公共用例时不必启动 HTTP 服务。
 
 > **例外（旧项目）**：Wails-only 项目（前端依赖 bindings/Events、没有 HTTP 层）不强制改造成上述形态；保持现状时必须在 README 声明「无浏览器入口」。只有明确需要 CLI + 浏览器/远程入口时，才单独立项做 HTTP 化 + SSE + 单写者锁。新项目不适用此例外。
 
@@ -63,6 +63,8 @@ your_app/
 │       └── rsrc_windows_amd64.syso     # 编译生成的 PE 资源段 (必须与入口文件同目录!)
 ├── internal/
 │   ├── api/                            # HTTP 层：静态 WebUI + REST，GUI 与 CLI serve 共用 Handler()
+│   ├── cli/                            # CLI 参数与结果适配
+│   ├── service/                        # 公共业务用例，CLI 与 HTTP 均调用
 │   ├── app/
 │   │   ├── gui.go                      # Wails v3 托盘与窗口生命周期
 │   │   ├── autostart.go                # 开机自启封装与 Dev 防呆
@@ -73,12 +75,12 @@ your_app/
 │   │   ├── icon.ico                    # release 运行时图标 (render_icon.py 生成)
 │   │   ├── icon_dev.ico                # dev 运行时图标 (静态入库，约 43KB)
 │   │   └── log.go                      # 滚动双写落盘日志
-│   ├── storage/                        # 本地 SQLite 数据层
+│   ├── storage/                        # 持久层（按需；原案例使用 SQLite）
 │   └── web/                            # 嵌入式 WebUI 前端资产 (HTML/JS/CSS)
 ├── scripts/
 │   ├── render_icon.py                  # 专属图标渲染流水线 (Pillow，仅 release 图标)
 │   └── build.py                        # 一键构建：通道判定 + 图标 + go-winres 资源段 + 双通道 go build（GUI/Console 各一）
-├── bin/                                # 构建产物（gitignore）：四个 exe 统一落位，根目录保持干净
+├── bin/                                # 构建产物（gitignore）：一次构建产出 CLI、GUI 两个 exe
 ├── winres/
 │   ├── gui.json                        # VERSIONINFO + manifest + 图标模板（GUI 产物）
 │   └── cli.json                        # 同上，FileDescription/InternalName 换成 CLI 文案
@@ -587,6 +589,6 @@ func GUIRunning(release bool) bool {
 - `appDataDir()`：`%APPDATA%\language_projects\<app>\{dev,prod}`，回退 `~/.language_projects/<app>/<通道>`。
 - `webviewDataPath()`：`<appDataDir>/webview2`，避免 WebView2 缓存散落到可执行文件目录。
 - 日志：`<appDataDir>/<app>.log`，`logf()` 同时写 `os.Stderr` 与追加文件；GUI 产物（`-H windowsgui`）无控制台，日志文件是唯一事后取证入口。
-- 旧库迁移：新库不存在且旧库存在时复制主库与 `-wal`/`-shm`，旧文件保留。
-- **并发**：同一通道库被 GUI 与多个 CLI 共用，DSN 必须带 `busy_timeout(5000)` + `journal_mode(WAL)`；GUI 退出前 `store.Close()` 触发 checkpoint（详见 README Step 7）。
-- **写的唯一入口是 CLI**：GUI 的 HTTP 层保持只读，这是「WAL 足够、无需跨进程写锁」的前提。
+- 旧库迁移：仅本次明确涉及迁移时设计校验与恢复，保留旧数据；新项目不自动加入迁移逻辑。
+- **SQLite 并发（条件适用）**：有该数据库及多进程访问时按 [Go SOP](go-wails.md) Step 7 核对驱动、WAL、锁等待与关闭行为，其他存储不套用 DSN。
+- **原案例 GUI 只读**：不是新项目限制；有 GUI 写能力时复用公共用例，并验证真实写入模型。

@@ -2,7 +2,8 @@
 
 > 归属：`sh-desktop-dual-channel`。本文是 Go/Wails 分支的完整 SOP；
 > 通用不变式与分流入口见上级 `README.md`。
-> **定位**：把一个 Go 工具做成**两条通道、四个产物**——`<app>-gui` 只开桌面壳（Wails v3 托盘 + 内嵌 HTTP/WebUI），`<app>-cli` 只做终端 CLI；四个 exe 统一落 `<project>/bin/`，并让 dev / release 两个通道在产物名、版本号、数据目录、单实例 ID、图标五个维度完全隔离。
+> **结构依据**：本仓先读《[Go 项目统一结构](../../../../../docs/projects/go_projects/Go 项目统一结构.md)》。本文负责实施；示例中的业务命令、数据库和并发模型按实际需求选用。
+> **构建形态**：CLI、GUI 两种入口 × dev、release 两种形态；一次选择一种形态，产出两个 exe，统一落 `<project>/bin/`，并非每次同时构建四份。
 > **硬约束**：GUI 产物不解析任何子命令（不管从哪里启动都只出窗口），CLI 产物不开窗口。**禁止**用 `-H windowsgui` + `AttachConsole` 把两者合成单产物（原因见「三、反模式警示」）。
 > **来源**：由知识库条目 `kb-engineering-notes/082` 转正（原条目保留为 deprecated 存根，历史排障细节可回溯）。
 > **验证锚点**：Windows 11 24H2、Go 1.26、Wails v3.0.0-beta.33、Edge WebView2；实机项目 `go_projects/anatomymanager`（2026-10-21 全链路实测；同日二次实测推翻了本 skill 1.2.0 的「单产物双模」旧范式，产物改名 `-gui` / `-cli`；1.4.0 补齐 Step 4b 窗口几何记忆）。
@@ -30,7 +31,9 @@ go install github.com/tc-hib/go-winres@latest   # PE 资源（VERSIONINFO+manife
 
 ## 二、适用范围：新项目强制，旧项目评估
 
-**新项目：必须完整遵循本 SOP。** 双通道产物、GUI 与 `serve` 共用同一 HTTP Handler、业务通信只走 HTTP/SSE、Wails 仅承担宿主能力，四项缺一不可。
+**新桌面项目**：结构与职责按《Go 项目统一结构》，按下列步骤实现；纯 CLI 不进入桌面 SOP。CLI 与 HTTP 适配器都调用公共用例，桌面页面通过 HTTP/SSE 访问业务，普通 CLI 子命令无需转发到 daemon。
+
+**按需加载**：窗口实现读 `go-architecture.md`，构建/图标读 `go-build-pipeline.md`，具体故障读 `go-troubleshooting.md`。Step 7 的 SQLite 示例仅用于使用该数据库的项目；无数据库时跳过，存在多进程写入时才补相应并发验证。已验证案例只供局部对照，不整体复制。
 
 **旧项目改造：先评估成本收益，不强制全量对齐。** 旧项目的技术债可能来自历史架构，改造前先分类：
 
@@ -57,11 +60,13 @@ go install github.com/tc-hib/go-winres@latest   # PE 资源（VERSIONINFO+manife
 ```text
 cmd/<app>/          main.go(GUI 入口 //go:build !cli) / cli.go(CLI 入口 //go:build cli) / rsrc_windows_amd64.syso(生成物)
 internal/api        HTTP REST
+internal/cli        CLI 参数与结果适配
+internal/service    CLI 与 HTTP 复用的公共用例
 internal/app        gui.go / autostart.go / version.go / datadir.go / icon_*.go / log.go
-internal/storage    SQLite（或你的持久层）
+internal/storage    持久层（按需；SQLite 仅为示例）
 internal/web        //go:embed 前端资产
 scripts/            render_icon.py / build.py
-bin/                构建产物（gitignore，四个 exe 统一落位）
+bin/                构建产物（gitignore，一次构建两个 exe）
 根目录              icon.png / icon.ico / icon_dev 静态资产 / info.json / wails.exe.manifest
 ```
 
@@ -258,9 +263,9 @@ uv run scripts/build.py --release   # 无 tag/脏工作区应退出码 2，且�
 
 ### Step 7 运行数据隔离
 
-`appDataDir()` 返回 `%APPDATA%\language_projects\<app>\{dev,prod}`（取不到则 `~/.language_projects/<app>/<通道>`）；首次启动把旧库及 `-wal`/`-shm` 复制到新目录，**旧文件保留不删**。
+`appDataDir()` 返回 `%APPDATA%\language_projects\<app>\{dev,prod}`（取不到则 `~/.language_projects/<app>/<通道>`）。仅当本次明确涉及旧数据迁移时设计复制、校验与恢复，不在新项目中加入无来源的迁移代码。
 
-**同通道多进程并发（必做，别用单实例/端口去解决）**：同一通道的库会被「GUI 内嵌服务 + 多个 CLI（`serve` / `ingest`）」同时打开。动态端口下多进程共存是常态，因此数据层必须自带守卫：
+**SQLite 多进程访问示例（条件适用）**：使用 SQLite 且 GUI 内嵌服务与多个 CLI 同时访问同一库时，核对驱动的锁等待与 WAL 配置；以下参数来自原案例，不是所有持久层的固定选型：
 
 ```go
 // 上游默认 busy_timeout=0 + rollback journal，并发写会直接报 database is locked。
@@ -268,13 +273,13 @@ const sqliteDSNParams = "?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_
 db, err := sql.Open("sqlite", dbPath+sqliteDSNParams)
 ```
 
-- **并发模型前提**：GUI 的 HTTP 层保持只读（写只走 CLI），这样 WAL 下「读不阻塞写、写不阻塞读」即可覆盖全部场景；将来给 GUI 加写接口时，才需要引入跨进程写锁（命名 Mutex）。
+- **原案例前提**：GUI HTTP 层只读、写走 CLI；这是案例的产品边界，不限制新项目 GUI 的写能力。若存在多进程写入，按实际事务、冲突和重试语义验证，不能只凭 WAL 或窗口单实例认定写入安全。
 - **`busy_timeout` 是每连接的 busy handler**，跨进程同样生效；WAL 是持久化到库文件的设置，写一次后对新连接持续有效。
 - **驱动注意**：`modernc.org/sqlite` 在 DSN 不以 `file:` 开头时，`?` 之后按 query 解析、路径原样保留，Windows 反斜杠路径可直接拼接。
 - **GUI 退出前 `store.Close()`**：让 WAL 及时 checkpoint，避免 `-wal` 膨胀到下次启动。
 - **回归测试三断言**（少一条就可能被后人删掉参数）：带守卫的第二个写者必须等持锁方释放后成功；裸 DSN 必须立即失败；`NewStore` 产出的连接必须 `journal_mode=wal` 且 `busy_timeout=5000`。
 
-**校验**：dev 与 release 各执行一次 `list`，两个通道目录各自出现数据库文件；再并行跑两个 `ingest`（含首次建表 DDL 竞争）并其间请求 `/api/artworks`，应全部成功。
+**校验**：有持久层时验证 dev/prod 数据隔离；存在并发写入时，用本项目实际写操作覆盖初始化与冲突。`list`、`ingest`、`/api/artworks` 仅是原案例命令，不要求新项目实现。
 
 ### Step 8 开机自启门禁
 

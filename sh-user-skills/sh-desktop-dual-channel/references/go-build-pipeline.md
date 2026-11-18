@@ -8,7 +8,7 @@
 
 ## 零、产物落位：统一 `<project>/bin/`
 
-四个产物一律输出到 `<project>/bin/`，项目根目录只保留源码与静态资产：
+两种入口 × dev/release 两种构建形态的产物统一输出到 `<project>/bin/`；每次选择一种形态构建 CLI、GUI 两个 exe，项目根目录只保留源码与静态资产：
 
 - **禁止根目录平铺**：否则 `.gitignore` 只能逐文件写 `/your_app-gui.exe`，产物一多就与源码资产混在一起；
 - **不要用 `build/`**：Wails 官方脚手架已占用该目录（`Taskfile.yml`、`appicon.*`、`darwin/`、`docker/`），产物混入会被误当资源或误清理；
@@ -37,10 +37,10 @@ dev 与 release 必须在以下五个维度同时隔离，缺一项就会出现"
 3. **版本号自解释**：dev 基线取最近项目 tag，无 tag 回退 `info.json` 的 `fixed.file_version`；脏工作区追加 `-dirty`；版本由 `-ldflags -X` 注入。
 4. **`IsRelease` 单一真源**：只认编译期注入的 `BuildMode`，禁止用 `Version` 前缀猜测（否则 `--version v1.0.0` 会造出混合体并绕过自启门禁）。
 5. **数据目录与单例同步隔离**：`appDataDir()` 按 `IsRelease()` 追加 `dev`/`prod`；Wails `UniqueID` 在 dev 追加 `.dev`。
-6. **旧库一次性迁移**：复制主库与 `-wal`/`-shm`，旧文件保留并写日志。
+6. **旧库迁移（仅有迁移需求时）**：设计复制、校验与恢复；保留旧数据。新项目不自动加入迁移逻辑。
 7. **dirty 判定过滤构建生成物**：`git -c status.relativePaths=false status --porcelain` 剔除 `*.exe`、图标、`rsrc_*.syso` 后为空才算干净；git 异常时保守按脏处理。
 8. **`.gitignore` 根路径限定**：`/icon.ico`、`/icon.png` 必须带前导斜杠，否则会误忽略 `internal/app/icon.ico`（`go:embed` 必需资产）。
-9. **双通道契约**：GUI 产物（`-H windowsgui`）只开窗口、不解析任何子命令；Console 产物（`-tags cli`，console 子系统）只跑终端、不开窗口。一条通道必须出两个二进制，严禁用 `AttachConsole` 合成单产物（原因见 `README.md` 反模式警示与 `references/troubleshooting.md` §3）。
+9. **双通道契约**：GUI 产物（`-H windowsgui`）只开窗口、不解析任何子命令；Console 产物（`-tags cli`，console 子系统）只跑终端、不开窗口。一次构建选定 dev 或 release，产出两个二进制（原因见 [Go SOP](go-wails.md) 反模式警示与 [Go 排障](go-troubleshooting.md) §3）。
 10. **Windows 产物安全防腐**：在受沙箱或容器 ACL 策略影响的工作区（如挂有 `Low Mandatory Level` 的目录），编译出的 exe 会默认继承 Low 级别，导致内核禁止接入交互式桌面窗口站 `WinSta0`，启动报 `ERROR_DLL_INIT_FAILED (0xC0000142)` 闪退。构建脚本在产物生成后必须自动调用 `icacls ... /setintegritylevel Medium` 提权并解开 `Zone.Identifier` 附件锁。
 
 
@@ -402,7 +402,7 @@ if __name__ == "__main__":
 ## 五、`.gitignore` 片段
 
 ```gitignore
-# 构建产物目录（脚本自动重建，不入库）；一次覆盖四个 exe
+# 构建产物目录（不入库）；覆盖两种入口的 dev/release 产物名
 /bin/
 
 # 其他构建生成物

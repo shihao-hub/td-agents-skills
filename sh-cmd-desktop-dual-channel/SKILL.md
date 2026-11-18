@@ -9,6 +9,8 @@ disable-model-invocation: true
 > 本技能为用户直调命令门面包装器（Command Wrapper Facade）。  
 > 调度真身：`sh-user-skills/sh-desktop-dual-channel/README.md`
 
+本门面仅供点名调用；仓库规则要求前置阅读时，直接读取真身中的 Go 参考文件即可，不需要先调用本门面。
+
 ## 命令派发协议
 
 当用户通过 `/skill:sh-cmd-desktop-dual-channel` 或显式输入点名唤起本命令时，AI 请遵循以下调度动作：

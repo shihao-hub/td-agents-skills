@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "帮我起一个 Go 桌面项目：既能在终端跑 CLI 子命令，双击又能开 Wails 托盘窗口，内嵌一个本地 WebUI；dev 版和正式版要能同时运行、数据分开存，双击都不能弹黑框。",
-      "expected_output": "产出双通道骨架（每条通道两个产物，禁止单产物双模）：cmd/<app> 下 main.go（//go:build !cli，GUI 入口：不解析任何子命令，任何启动方式只出窗口，仅识别 --hidden/--tray 静默托盘）与 cli.go（//go:build cli，CLI 入口：子命令派发 + 无参打印用法 + --hidden 退化为无窗 serve）；两个文件各自提供一个 main()。internal/app 下 gui.go（托盘常驻、单实例）。internal/api 提供 GUI 与 CLI serve 共用的 Handler()（静态 WebUI + REST），CLI serve 根路径即 WebUI 且打印访问 URL，禁止只起裸 API 端口。dev 与 release 五维隔离：产物统一落 bin/（bin/<app>-gui-dev.exe/bin/<app>-cli-dev.exe vs bin/<app>-gui.exe/bin/<app>-cli.exe）、版本 vX.Y.Z-dev[-dirty] vs vX.Y.Z、数据目录 %APPDATA%\\language_projects\\<app>\\{dev,prod}、单实例 UniqueID dev 追加 .dev、图标 dev 地鼠 / release 专属；build.py 在同一通道内循环构建两次（仅 GUI 目标加 -H windowsgui、仅 CLI 目标加 -tags cli），默认 dev，仅精确 tag + 干净工作区才 release，--release 条件不足退出码 2。明确禁止用 console_windows.go + AttachConsole 合成单 exe。",
+      "expected_output": "在 language_projects 中按统一结构实现 Wails v3 + 内嵌 HTML/CSS/JS，参考已验证基线而非复制归档 v2 项目。cmd/<app> 用 !cli / cli 标签分别组装 GUI、CLI，公共业务放 internal/service，CLI 与 HTTP 适配器复用；GUI 与 CLI serve 共用完整 WebUI/API Handler，页面通过 HTTP、按需 SSE 访问业务。一次构建选择 dev 或 release，只产出两个 exe 到 bin/；仅 GUI 用 -H windowsgui，CLI 用 console 子系统。GUI 关窗销毁 WebView、托盘重建并恢复几何；日志落盘。产物名、版本、数据目录、单例和图标隔离；精确 tag + 干净工作区才 release，--release 条件不足拒绝。SQLite、只读 GUI 与旧库迁移均按项目需求，不作为通用骨架强制项。",
       "files": []
     },
     {
@@ -16,7 +16,7 @@
     {
       "id": 3,
       "prompt": "dev 版 exe 的文件图标和正式版一模一样，我分不清哪个是开发版；想让 dev 用 Go 地鼠图标，窗口和托盘图标也要一起换。",
-      "expected_output": "同时切换两条通道：rsrc 编译 syso 时按通道选 ico（dev 用 internal/app/icon_dev.ico 静态地鼠资产，release 用 render_icon.py 生成的 icon.ico）；窗口/托盘用 build tag 拆 icon_release.go（//go:build !dev）与 icon_dev.go（//go:build dev）两个 //go:embed 变量，dev 构建加 -tags dev。提醒 gofmt 要求文档注释与 //go:embed 之间有空 // 行。验证方式：PowerShell ExtractAssociatedIcon 取 32x32 图标算哈希，两个通道必须不同，并可再用 Pillow 比对 dev 图标与 icon_dev.ico 的 32x32 帧像素一致。注意 dev 通道要同时校验 -gui-dev 与 -cli-dev 两个产物。",
+      "expected_output": "同时切换两条通道：go-winres 生成 syso 时按通道选 ico（dev 用 internal/app/icon_dev.ico 静态地鼠资产，release 用 render_icon.py 生成的 icon.ico）；窗口/托盘用 build tag 拆 icon_release.go（//go:build !dev）与 icon_dev.go（//go:build dev）两个 //go:embed 变量，dev 构建加 -tags dev。提醒 gofmt 要求文档注释与 //go:embed 之间有空 // 行。验证方式：PowerShell ExtractAssociatedIcon 取 32x32 图标算哈希，两个通道必须不同，并可再用 Pillow 比对 dev 图标与 icon_dev.ico 的 32x32 帧像素一致。注意 dev 通道要同时校验 -gui-dev 与 -cli-dev 两个产物。",
       "files": []
     },
     {
@@ -76,7 +76,31 @@
     {
       "id": 13,
       "prompt": "我双击 dev 版 gui exe，没看到任何控制台窗口，日志去哪了？是不是构建把日志关掉了？要不要给 dev 单独保留控制台方便调试？",
-      "expected_output": "dev 没有控制台是设计如此，不是日志被关掉：GUI 产物在 dev 与 release 都加 -H windowsgui（Subsystem=2），构建出的 -gui-dev.exe 不分配控制台，stderr 不可见。日志与通道无关地落盘：internal/logx.Init(dataDir) 双写 <appDataDir>/{dev,prod}/<app>.log（teeWriter 忽略 stderr 失败、2MB+1 份轮转、启动横幅 version/commit/mode、filterHandler 去掉 [AssetFileServerFS] Handling request）。验收：跑 build/<app>-gui-dev.exe --hidden 5s 后 <appDataDir>/dev/<app>.log 有启动横幅，双击零黑框。不要为 dev 单独放开 console 子系统或加 console_windows.go + AttachConsole：那会导致终端启动阻塞、双击闪黑框、prompt 错位。需要实时控制台时用 go run . / wails3 dev；panic 弹窗只在 release 提供，dev 一律看日志文件。",
+      "expected_output": "dev 没有控制台是设计如此，不是日志被关掉：GUI 产物在 dev 与 release 都加 -H windowsgui（Subsystem=2），构建出的 -gui-dev.exe 不分配控制台，stderr 不可见。日志与通道无关地落盘：internal/logx.Init(dataDir) 双写 <appDataDir>/{dev,prod}/<app>.log（teeWriter 忽略 stderr 失败、2MB+1 份轮转、启动横幅 version/commit/mode、filterHandler 去掉 [AssetFileServerFS] Handling request）。验收：跑 bin/<app>-gui-dev.exe --hidden 5s 后 <appDataDir>/dev/<app>.log 有启动横幅，双击零黑框。不要为 dev 单独放开 console 子系统或加 console_windows.go + AttachConsole：那会导致终端启动阻塞、双击闪黑框、prompt 错位。需要实时控制台时用 go run . / wails3 dev；panic 弹窗只在 release 提供，dev 一律看日志文件。",
+      "files": []
+    },
+    {
+      "id": 14,
+      "prompt": "在 language_projects/go_projects 新建一个只用于终端的查询工具，需要人读、JSON 和契约导出。",
+      "expected_output": "实现公共用例与 CLI，默认人读，支持 --json 与 schema 子命令，契约导出不启动业务 I/O；不因统一结构添加 Wails、GUI 或 daemon，不额外强制 --schema 别名，MCP 范围仍按 CLI 标准处理。",
+      "files": []
+    },
+    {
+      "id": 15,
+      "prompt": "在 language_projects/go_projects 新建 Go GUI，有人建议复制归档 file-sync-native 的 Wails v2 实现，也有人建议 CLI 工具标准 v2 的 daemon 结构。",
+      "expected_output": "默认使用 Wails v3 双通道与内嵌 WebUI；CLI/HTTP 共用公共用例，GUI/serve 共用 Handler；归档案例与 daemon 试点都不覆盖默认结构。没有明确 daemon 需求时不引入薄客户端架构。",
+      "files": []
+    },
+    {
+      "id": 16,
+      "prompt": "已有 Wails v2 项目用 go-winres 裸构建，窗口图标空白，请修复，暂不改架构。",
+      "expected_output": "确认实际依赖 v2 后参考 114 检查资源 ID 与图标加载路径，按当前范围修复；不把排障文档当作 v2 新选型依据，不自动迁移至 v3，不将 v3 生命周期 API 套入 v2。",
+      "files": []
+    },
+    {
+      "id": 17,
+      "prompt": "已有 Go 项目只需修正一个 CLI 查询结果字段，是否顺便按统一结构改目录并加托盘？",
+      "expected_output": "保持本次字段与契约相关的范围，检查人读/JSON/schema 受影响行为；不重命名现有目录、不引入 GUI 或启动架构迁移，现有结构偏差按需记录。",
       "files": []
     }
   ]
