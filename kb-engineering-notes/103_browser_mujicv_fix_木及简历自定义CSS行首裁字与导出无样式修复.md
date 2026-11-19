@@ -16,6 +16,11 @@ falsification_signals:
 invocation:
   auto_trigger: true
   trigger_keywords: ["木及简历", "mujicv", "简历导出裁字", "行首被裁", "导出PDF没有样式", "自定义CSS不生效"]
+id: "103"
+domain: browser
+scope: mujicv
+type: fix
+slug: "木及简历自定义CSS行首裁字与导出无样式修复"
 ---
 
 # 木及简历自定义CSS被平台动态margin裁字与导出无样式修复
