@@ -9,7 +9,7 @@
     "video": "node render.mjs --clip --out=out/video.mp4"
   },
   "dependencies": {
-    "p5": "^2.3.3",
+    "p5": "^2.4.0",
     "p5.brush": "^2.2.3",
     "puppeteer-core": "^25.11.0"
   }
